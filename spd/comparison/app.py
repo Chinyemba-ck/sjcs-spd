@@ -169,6 +169,74 @@ def get_run_images(run_data: Dict[str, Any]) -> Dict[str, str]:
     return images
 
 
+def compare_metrics(run1_data: Dict[str, Any], run2_data: Dict[str, Any]) -> pd.DataFrame:
+    """
+    Compare metrics between two runs.
+    
+    Args:
+        run1_data: Data from first run
+        run2_data: Data from second run
+    
+    Returns:
+        DataFrame with side-by-side comparison
+    """
+    metrics1 = get_run_metrics(run1_data)
+    metrics2 = get_run_metrics(run2_data)
+    
+    # Get all unique metric names
+    all_metrics = set()
+    if not metrics1.empty:
+        all_metrics.update(metrics1['Metric'].values)
+    if not metrics2.empty:
+        all_metrics.update(metrics2['Metric'].values)
+    
+    # Build comparison dataframe
+    comparison_data = []
+    for metric in sorted(all_metrics):
+        row = {'Metric': metric}
+        
+        # Get values from each run
+        value1 = metrics1[metrics1['Metric'] == metric]['Value'].values
+        value2 = metrics2[metrics2['Metric'] == metric]['Value'].values
+        
+        # Handle numeric values
+        if value1.size > 0:
+            val1 = value1[0]
+            if isinstance(val1, (int, float)):
+                row['Run 1'] = f"{val1:.6g}"
+            else:
+                row['Run 1'] = str(val1)[:50]  # Truncate long strings
+        else:
+            row['Run 1'] = "N/A"
+            
+        if value2.size > 0:
+            val2 = value2[0]
+            if isinstance(val2, (int, float)):
+                row['Run 2'] = f"{val2:.6g}"
+            else:
+                row['Run 2'] = str(val2)[:50]  # Truncate long strings
+        else:
+            row['Run 2'] = "N/A"
+        
+        # Calculate difference for numeric values
+        if value1.size > 0 and value2.size > 0:
+            if isinstance(value1[0], (int, float)) and isinstance(value2[0], (int, float)):
+                diff = value2[0] - value1[0]
+                if value1[0] != 0:
+                    pct_diff = (diff / abs(value1[0])) * 100
+                    row['Difference'] = f"{diff:.6g} ({pct_diff:+.1f}%)"
+                else:
+                    row['Difference'] = f"{diff:.6g}"
+            else:
+                row['Difference'] = "-"
+        else:
+            row['Difference'] = "-"
+        
+        comparison_data.append(row)
+    
+    return pd.DataFrame(comparison_data)
+
+
 def main():
     """Main Streamlit app for comparing SPD runs."""
     st.set_page_config(
