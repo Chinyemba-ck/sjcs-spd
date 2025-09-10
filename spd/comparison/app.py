@@ -58,3 +58,75 @@ def fetch_run_data(run_path: str) -> Optional[Dict[str, Any]]:
     except Exception as e:
         print(f"Error fetching run {run_path}: {e}")
         return None
+
+
+def get_run_metrics(run_data: Dict[str, Any]) -> pd.DataFrame:
+    """
+    Extract key metrics from run summary into a pandas DataFrame.
+    
+    Args:
+        run_data: Dictionary from fetch_run_data containing run information
+    
+    Returns:
+        DataFrame with metric names and values
+    """
+    if not run_data or "summary" not in run_data:
+        return pd.DataFrame()
+    
+    summary = run_data["summary"]
+    
+    # Filter out system metrics (those starting with underscore)
+    metrics = {k: v for k, v in summary.items() if not k.startswith("_")}
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(list(metrics.items()), columns=["Metric", "Value"])
+    
+    # Sort by metric name for consistent display
+    df = df.sort_values("Metric").reset_index(drop=True)
+    
+    return df
+
+
+def get_run_history(run_data: Dict[str, Any]) -> pd.DataFrame:
+    """
+    Extract training history from a W&B run.
+    
+    Args:
+        run_data: Dictionary from fetch_run_data containing run information
+    
+    Returns:
+        DataFrame with training history (steps, losses, metrics over time)
+    """
+    if not run_data or "history" not in run_data:
+        return pd.DataFrame()
+    
+    history = run_data["history"]
+    
+    # History is already a DataFrame from W&B
+    if history.empty:
+        return pd.DataFrame()
+    
+    # Filter out system columns (those starting with underscore)
+    user_columns = [col for col in history.columns if not col.startswith("_")]
+    
+    # Return filtered history
+    return history[user_columns].copy()
+
+
+def get_run_config(run_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Extract run configuration from a W&B run.
+    
+    Args:
+        run_data: Dictionary from fetch_run_data containing run information
+    
+    Returns:
+        Dictionary with configuration parameters
+    """
+    if not run_data or "config" not in run_data:
+        return {}
+    
+    config = run_data["config"]
+    
+    # Return a copy of the config
+    return dict(config)
