@@ -167,3 +167,82 @@ def get_run_images(run_data: Dict[str, Any]) -> Dict[str, str]:
                 images[key] = url
     
     return images
+
+
+def main():
+    """Main Streamlit app for comparing SPD runs."""
+    st.set_page_config(
+        page_title="SPD Run Comparison",
+        page_icon="📊",
+        layout="wide"
+    )
+    
+    st.title("SPD Run Comparison Dashboard")
+    
+    # Sidebar for run selection
+    with st.sidebar:
+        st.header("Select Runs to Compare")
+        
+        # Input fields for run paths
+        run1_path = st.text_input(
+            "Run 1 Path",
+            placeholder="entity/project/run_id",
+            help="Format: entity/project/run_id (e.g., goodfire/spd/uz2lmdjz)"
+        )
+        
+        run2_path = st.text_input(
+            "Run 2 Path", 
+            placeholder="entity/project/run_id",
+            help="Format: entity/project/run_id (e.g., goodfire/spd/w6zdzkfp)"
+        )
+        
+        # Fetch button
+        fetch_button = st.button("Fetch Run Data", type="primary")
+        
+        # Status placeholder
+        status_placeholder = st.empty()
+    
+    # Main content area
+    if fetch_button and run1_path and run2_path:
+        with status_placeholder:
+            st.info("Fetching run data...")
+        
+        # Fetch data for both runs
+        run1_data = fetch_run_data(run1_path)
+        run2_data = fetch_run_data(run2_path)
+        
+        if run1_data and run2_data:
+            with status_placeholder:
+                st.success("Successfully fetched both runs!")
+            
+            # Store in session state
+            st.session_state['run1_data'] = run1_data
+            st.session_state['run2_data'] = run2_data
+            st.session_state['run1_path'] = run1_path
+            st.session_state['run2_path'] = run2_path
+        else:
+            with status_placeholder:
+                st.error("Failed to fetch one or both runs. Please check the run paths.")
+    
+    # Display comparison if data is available
+    if 'run1_data' in st.session_state and 'run2_data' in st.session_state:
+        run1_data = st.session_state['run1_data']
+        run2_data = st.session_state['run2_data']
+        run1_path = st.session_state['run1_path']
+        run2_path = st.session_state['run2_path']
+        
+        # Display run names
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader(f"Run 1: {run1_path.split('/')[-1]}")
+        with col2:
+            st.subheader(f"Run 2: {run2_path.split('/')[-1]}")
+        
+        # Placeholder for tabs (will be implemented next)
+        st.info("Comparison features will be added here...")
+    else:
+        st.info("Please enter run paths in the sidebar and click 'Fetch Run Data' to begin.")
+
+
+if __name__ == "__main__":
+    main()
