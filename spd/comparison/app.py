@@ -130,3 +130,40 @@ def get_run_config(run_data: Dict[str, Any]) -> Dict[str, Any]:
     
     # Return a copy of the config
     return dict(config)
+
+
+def get_run_images(run_data: Dict[str, Any]) -> Dict[str, str]:
+    """
+    Extract image URLs from a W&B run summary.
+    
+    Args:
+        run_data: Dictionary from fetch_run_data containing run information
+    
+    Returns:
+        Dictionary mapping image names to their W&B URLs
+    """
+    if not run_data or "summary" not in run_data:
+        return {}
+    
+    summary = run_data["summary"]
+    run = run_data.get("run")
+    
+    images = {}
+    
+    # Look for image-file entries in summary
+    for key, value in summary.items():
+        # Check if value has dict-like interface (handles SummarySubDict)
+        if hasattr(value, 'get') and value.get("_type") == "image-file":
+            # Build W&B media URL
+            if run and "path" in value:
+                # W&B media URL format
+                entity = run.entity
+                project = run.project
+                run_id = run.id
+                file_path = value["path"]
+                
+                # Construct the media URL
+                url = f"https://api.wandb.ai/files/{entity}/{project}/{run_id}/{file_path}"
+                images[key] = url
+    
+    return images
