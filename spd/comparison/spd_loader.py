@@ -48,21 +48,43 @@ def get_component_activations(
     Args:
         _component_model: ComponentModel (underscore prefix for streamlit caching)
         batch_size: Size of batch to generate
-        seq_len: Sequence length for generation
+        seq_len: Sequence length for generation (used for language models)
         device: Device to run on
         
     Returns:
         Dictionary of component activations per module
     """
     with torch.no_grad():
-        # Generate random token IDs as sample data
-        # This matches the expected input format for language models
-        batch = torch.randint(
-            0, 1000,  # Vocab size assumption
-            (batch_size, seq_len),
-            dtype=torch.long,
-            device=device
-        )
+        # Check model type to generate appropriate input
+        model_name = _component_model.patched_model.__class__.__name__
+        
+        if "TMS" in model_name or "ToyModel" in model_name:
+            # TMS models expect (batch_size, n_features) float input
+            # Get input dimension from model
+            try:
+                # Try to get n_features from model config
+                n_features = _component_model.patched_model.n_features
+            except AttributeError:
+                # Default to 100 if not found
+                n_features = 100
+            
+            batch = torch.randn(batch_size, n_features, device=device)
+        elif "ResidMLP" in model_name:
+            # ResidMLP models expect (batch_size, n_features) float input
+            try:
+                n_features = _component_model.patched_model.n_features
+            except AttributeError:
+                n_features = 100
+            
+            batch = torch.randn(batch_size, n_features, device=device)
+        else:
+            # Language models expect (batch_size, seq_len) long input
+            batch = torch.randint(
+                0, 1000,  # Vocab size assumption
+                (batch_size, seq_len),
+                dtype=torch.long,
+                device=device
+            )
         
         # Get component activations
         _, pre_weight_acts = _component_model._forward_with_pre_forward_cache_hooks(
