@@ -58,8 +58,20 @@ class SPDRunInfo(RunInfo[Config]):
                 wandb_path = path.removeprefix(WANDB_PATH_PREFIX)
                 comp_model_path, config_path = ComponentModel._download_wandb_files(wandb_path)
         else:
-            comp_model_path = Path(path)
-            config_path = Path(path).parent / "final_config.yaml"
+            path = Path(path)
+            # Check if this is a wandb cache directory with files
+            if (path / "final_config.yaml").exists():
+                config_path = path / "final_config.yaml"
+                # Find the model checkpoint file
+                model_files = list(path.glob("*.pth")) + list(path.glob("*.pt")) + list(path.glob("model*.bin"))
+                if model_files:
+                    comp_model_path = model_files[0]
+                else:
+                    comp_model_path = path
+            else:
+                # Regular SPD output structure
+                comp_model_path = path
+                config_path = path.parent / "final_config.yaml"
 
         with open(config_path) as f:
             config = Config(**yaml.safe_load(f))
