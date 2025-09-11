@@ -59,19 +59,28 @@ class SPDRunInfo(RunInfo[Config]):
                 comp_model_path, config_path = ComponentModel._download_wandb_files(wandb_path)
         else:
             path = Path(path)
-            # Check if this is a wandb cache directory with files
-            if (path / "final_config.yaml").exists():
-                config_path = path / "final_config.yaml"
+            # Find any YAML config file in the directory
+            yaml_files = list(path.glob("*.yaml"))
+            
+            if yaml_files:
+                # Directory contains config files - this is likely the files directory
+                # Prefer final_config.yaml if it exists, otherwise use any yaml file
+                config_candidates = [f for f in yaml_files if f.name == "final_config.yaml"]
+                config_path = config_candidates[0] if config_candidates else yaml_files[0]
+                
                 # Find the model checkpoint file
-                model_files = list(path.glob("*.pth")) + list(path.glob("*.pt")) + list(path.glob("model*.bin"))
+                model_files = list(path.glob("*.pth")) + list(path.glob("*.pt")) + list(path.glob("*.bin"))
                 if model_files:
                     comp_model_path = model_files[0]
                 else:
                     comp_model_path = path
             else:
-                # Regular SPD output structure
+                # No yaml files in current dir, check parent (regular SPD output structure)
                 comp_model_path = path
-                config_path = path.parent / "final_config.yaml"
+                parent_yaml = list(path.parent.glob("*.yaml"))
+                if not parent_yaml:
+                    raise ValueError(f"No config files found in {path} or its parent directory")
+                config_path = parent_yaml[0]
 
         with open(config_path) as f:
             config = Config(**yaml.safe_load(f))
@@ -449,14 +458,23 @@ class ComponentModel(LoadableModule):
         api = wandb.Api()
         run: Run = api.run(wandb_project_run_id)
 
-        checkpoint = fetch_latest_wandb_checkpoint(run, prefix="model")
+        # Get any .pth or .pt checkpoint file (no specific prefix required)
+        checkpoint = fetch_latest_wandb_checkpoint(run, prefix=None)
 
         run_dir = fetch_wandb_run_dir(run.id)
 
-        final_config_path = download_wandb_file(run, run_dir, "final_config.yaml")
+        # Try to find a config file - could be named differently in different runs
+        config_files = [f.name for f in run.files() if f.name.endswith(".yaml")]
+        if not config_files:
+            raise ValueError(f"No config files found in run {wandb_project_run_id}")
+        
+        # Prefer final_config.yaml if it exists, otherwise take any yaml file
+        config_file = "final_config.yaml" if "final_config.yaml" in config_files else config_files[0]
+        
+        config_path = download_wandb_file(run, run_dir, config_file)
         checkpoint_path = download_wandb_file(run, run_dir, checkpoint.name)
 
-        return checkpoint_path, final_config_path
+        return checkpoint_path, config_path
 
     @classmethod
     @override
