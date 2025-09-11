@@ -78,13 +78,13 @@ def main():
             help="Components with max activation below this are filtered"
         )
         
-        n_samples = st.number_input(
-            "Number of samples for activations",
+        batch_size = st.number_input(
+            "Batch size for activations",
             min_value=10,
             max_value=10000,
             value=1000,
             step=100,
-            help="Number of random samples to generate for component activations"
+            help="Batch size for generating component activations"
         )
         
         device = st.selectbox(
@@ -140,7 +140,7 @@ def main():
                 with st.spinner("Generating component activations..."):
                     activations_dict = get_component_activations(
                         model, 
-                        n_samples=n_samples,
+                        batch_size=batch_size,
                         device=device
                     )
                     
@@ -194,7 +194,7 @@ def main():
                     # Add theoretical FLOPs
                     metrics.theoretical_flops = estimate_mdl_flops(
                         n_components=stats["alive"],
-                        n_samples=n_samples,
+                        n_samples=batch_size,
                         n_iterations=results.timing_info['num_iterations']
                     )
                 
