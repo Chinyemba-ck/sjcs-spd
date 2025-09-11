@@ -52,17 +52,14 @@ def main():
         )
         
         if run_source == "W&B Path":
-            default_run = "wandb:goodfire/spd/runs/pziyck78"
             run_path = st.text_input(
                 "W&B Run Path:",
-                value=default_run,
-                help="Format: wandb:project/runs/run_id"
+                help="Format: wandb:project/spd/runs/run_id - Must be an SPD run with ComponentModel"
             )
         else:
             run_path = st.text_input(
                 "Local Path:",
-                placeholder="/path/to/spd/run",
-                help="Path to local SPD run directory"
+                help="Path to local SPD run directory with final_config.yaml or similar"
             )
         
         # Clustering parameters

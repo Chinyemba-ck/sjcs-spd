@@ -83,7 +83,29 @@ class SPDRunInfo(RunInfo[Config]):
                 config_path = parent_yaml[0]
 
         with open(config_path) as f:
-            config = Config(**yaml.safe_load(f))
+            config_data = yaml.safe_load(f)
+            
+            # Check if this is W&B sweep format (values wrapped in {value: ...} dicts)
+            # by checking if any top-level values are dicts with 'value' key
+            is_sweep_format = any(
+                isinstance(v, dict) and 'value' in v 
+                for v in config_data.values() 
+                if v is not None
+            )
+            
+            if is_sweep_format:
+                # Unwrap W&B sweep format
+                unwrapped_data = {}
+                for key, val in config_data.items():
+                    if isinstance(val, dict) and 'value' in val:
+                        unwrapped_data[key] = val['value']
+                    else:
+                        # Keep as-is if not in sweep format (e.g., _wandb metadata)
+                        if not key.startswith('_'):  # Skip metadata keys
+                            unwrapped_data[key] = val
+                config_data = unwrapped_data
+            
+            config = Config(**config_data)
 
         return cls(checkpoint_path=comp_model_path, config=config)
 
