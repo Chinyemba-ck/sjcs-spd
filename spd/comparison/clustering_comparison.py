@@ -9,7 +9,11 @@ import torch
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-# Import our modules
+# Import our modules - add parent directory to path for imports
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent))
+
 from spd.comparison.spd_loader import load_spd_model, get_component_activations
 from spd.comparison.dead_filter import filter_dead_components_with_stats
 from spd.comparison.mdl_clustering import run_mdl_clustering, display_mdl_results, get_clustering_summary
