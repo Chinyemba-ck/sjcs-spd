@@ -119,21 +119,25 @@ spd/comparison/
 
 ### Working Examples
 
-#### Local Cached Models
+**Important**: The interface requires **SPD runs** (with ComponentModel), not training checkpoints.
+
+#### Local Cached SPD Runs
 ```python
-# Models already downloaded via W&B
-"wandb/pziyck78/files"  # ResidMLP1
-"wandb/any9ekl9/files"  # ResidMLP2
-"wandb/6hk3uciu/files"  # ResidMLP3
-"wandb/84yirdkb/files"  # Models with final_config.yaml
+# SPD runs with ComponentModel and final_config.yaml
+"wandb/84yirdkb/files"   # TMS SPD run
+"wandb/xawvyhq3/files"   # TMS SPD run  
+"wandb/glbtwl6g/files"   # TMS SPD run
+
+# Note: wandb/pziyck78/files, wandb/any9ekl9/files, wandb/6hk3uciu/files 
+# are ResidMLP training checkpoints, NOT SPD runs - they won't work
 ```
 
 #### W&B Paths
 ```python
 # Direct W&B paths (requires authentication)
-"wandb:goodfire/spd/runs/pziyck78"  # ResidMLP1
-"wandb:goodfire/spd/runs/any9ekl9"  # ResidMLP2
-"wandb:goodfire/spd/runs/6hk3uciu"  # ResidMLP3
+# These should be SPD runs, not training runs
+# Check that the run has ComponentModel checkpoints
+"wandb:project/spd/runs/run_id"  # Format for SPD runs
 ```
 
 ### Configuration
