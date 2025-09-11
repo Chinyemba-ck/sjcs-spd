@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from spd.comparison.spd_loader import load_spd_model, get_component_activations
+from spd.comparison.spd_loader import load_spd_run, get_component_activations
 from spd.comparison.dead_filter import filter_dead_components_with_stats
 from spd.comparison.mdl_clustering import run_mdl_clustering, display_mdl_results, get_clustering_summary
 from spd.comparison.metrics import MetricsTracker, estimate_mdl_flops
@@ -133,7 +133,7 @@ def main():
             try:
                 # Step 1: Load model
                 with st.spinner("Loading SPD model..."):
-                    model = load_spd_model(run_path, device)
+                    model = load_spd_run(run_path, device)
                     st.success(f"✅ Loaded model from {run_path}")
                 
                 # Step 2: Get activations

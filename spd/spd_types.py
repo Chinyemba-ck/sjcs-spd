@@ -46,3 +46,6 @@ RootPath = Annotated[
 
 
 Probability = Annotated[float, Field(strict=True, ge=0, le=1)]
+
+from typing import Literal
+TaskName = Literal["lm", "tms", "resid_mlp"]

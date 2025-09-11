@@ -1,0 +1,22 @@
+# Configuration for clustering comparison interface
+default_experiment: resid_mlp1
+filter_dead_threshold: 0.01
+
+# MDL clustering configuration (based on spd/clustering/configs/resid_mlp1.json)
+mdl_config:
+  activation_threshold: 0.01
+  alpha: 1
+  iters: 140
+  merge_pair_sampling_method: "range"
+  merge_pair_sampling_kwargs:
+    threshold: 0.05
+  pop_component_prob: 0
+  filter_dead_threshold: 0.01
+  n_batches: 4
+  batch_size: 1024
+
+# Interface settings
+interface:
+  max_components_display: 1000
+  default_wandb_project: "spd"
+  cache_models: true
