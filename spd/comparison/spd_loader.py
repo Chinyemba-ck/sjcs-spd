@@ -22,6 +22,13 @@ def load_spd_run(run_path: str, device: str = "cpu") -> ComponentModel:
     Returns:
         ComponentModel loaded from the run
     """
+    # If it's a local wandb cache path, ensure we point to the files directory
+    if not run_path.startswith("wandb:") and "wandb" in run_path:
+        path = Path(run_path)
+        # If path doesn't end with 'files', add it
+        if path.name != "files" and (path / "files").exists():
+            run_path = str(path / "files")
+    
     spd_run_info = SPDRunInfo.from_path(run_path)
     component_model = ComponentModel.from_pretrained(spd_run_info.checkpoint_path)
     component_model.to(device)

@@ -52,7 +52,7 @@ def main():
         )
         
         if run_source == "W&B Path":
-            default_run = "wandb:spd-resid-mlp/target-runs/6hk3uciu"
+            default_run = "wandb:goodfire/spd/runs/pziyck78"
             run_path = st.text_input(
                 "W&B Run Path:",
                 value=default_run,
@@ -99,7 +99,7 @@ def main():
             "Alpha (complexity penalty)",
             min_value=0.1,
             max_value=10.0,
-            value=config["mdl_config"]["alpha"],
+            value=float(config["mdl_config"]["alpha"]),
             step=0.1
         )
         
