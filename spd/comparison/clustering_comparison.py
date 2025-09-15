@@ -77,13 +77,24 @@ def discover_local_runs() -> List[Tuple[str, str, Dict[str, Any]]]:
             except Exception:
                 pass
 
-            # Find model files
+            # Find model files with proper format (model_XXXXX.pth)
             model_files = list(files_dir.glob("model_*.pth"))
-            if model_files:
-                metadata['model_file'] = model_files[0].name
+            valid_model_found = False
+            for model_file in model_files:
+                try:
+                    # Check if filename follows expected pattern
+                    parts = model_file.stem.split("_")
+                    if len(parts) == 2 and parts[1].isdigit():
+                        metadata['model_file'] = model_file.name
+                        valid_model_found = True
+                        break
+                except:
+                    pass
 
-            label = f"{metadata.get('experiment', 'Unknown')} ({run_dir.name[:8]})"
-            runs.append((str(files_dir), label, metadata))
+            # Only add if we found a valid model file
+            if valid_model_found:
+                label = f"{metadata.get('experiment', 'Unknown')} ({run_dir.name[:8]})"
+                runs.append((str(files_dir), label, metadata))
 
     return sorted(runs, key=lambda x: x[1])
 
@@ -115,10 +126,23 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
 
             # Check if it's an SPD run (has ComponentModel in files)
             files = [f.name for f in run.files()]
-            has_model = any("model_" in f and f.endswith(".pth") for f in files)
+
+            # Check for properly formatted model files (model_XXXXX.pth where XXXXX is a number)
+            model_files = [f for f in files if f.startswith("model_") and f.endswith(".pth")]
+            has_valid_model = False
+            for mf in model_files:
+                try:
+                    # Check if the file follows the expected pattern model_<number>.pth
+                    parts = mf.replace(".pth", "").split("_")
+                    if len(parts) == 2 and parts[1].isdigit():
+                        has_valid_model = True
+                        break
+                except:
+                    pass
+
             has_config = "final_config.yaml" in files
 
-            if has_model and has_config:
+            if has_valid_model and has_config:
                 metadata = {
                     "run_id": run.id,
                     "type": "SPD",
