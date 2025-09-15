@@ -7,7 +7,8 @@ import streamlit as st
 import yaml
 import torch
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, Tuple
+import os
 
 # Import our modules - add parent directory to path for imports
 import sys
@@ -35,6 +36,108 @@ if config_path.exists():
 else:
     st.error(f"Config file not found: {config_path}")
     st.stop()
+
+
+@st.cache_data(ttl=60)  # Cache for 60 seconds to allow refresh
+def discover_local_runs() -> List[Tuple[str, str, Dict[str, Any]]]:
+    """
+    Discover local SPD runs in wandb/ directory.
+
+    Returns:
+        List of (path, label, metadata) tuples
+    """
+    runs = []
+    wandb_dir = Path("wandb")
+
+    if not wandb_dir.exists():
+        return runs
+
+    for run_dir in wandb_dir.iterdir():
+        if not run_dir.is_dir():
+            continue
+
+        files_dir = run_dir / "files"
+        if not files_dir.exists():
+            continue
+
+        # Check if this is an SPD run (has final_config.yaml)
+        config_path = files_dir / "final_config.yaml"
+        if config_path.exists():
+            # This is an SPD run
+            metadata = {"run_id": run_dir.name, "type": "SPD"}
+
+            # Try to read config for more info
+            try:
+                with open(config_path, 'r') as f:
+                    run_config = yaml.safe_load(f)
+                    if 'experiment' in run_config:
+                        metadata['experiment'] = run_config['experiment']
+                    if 'model_id' in run_config:
+                        metadata['model_id'] = run_config['model_id']
+            except Exception:
+                pass
+
+            # Find model files
+            model_files = list(files_dir.glob("model_*.pth"))
+            if model_files:
+                metadata['model_file'] = model_files[0].name
+
+            label = f"{metadata.get('experiment', 'Unknown')} ({run_dir.name[:8]})"
+            runs.append((str(files_dir), label, metadata))
+
+    return sorted(runs, key=lambda x: x[1])
+
+
+@st.cache_data(ttl=300)  # Cache for 5 minutes
+def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[Tuple[str, str, Dict[str, Any]]]:
+    """
+    Discover SPD runs from W&B API.
+
+    Args:
+        project: W&B project path
+        limit: Maximum number of runs to fetch
+
+    Returns:
+        List of (wandb_path, label, metadata) tuples
+    """
+    runs = []
+
+    try:
+        import wandb
+        api = wandb.Api(timeout=30)
+
+        # Get runs from project
+        wandb_runs = api.runs(project, filters={"state": "finished"})
+
+        for i, run in enumerate(wandb_runs):
+            if i >= limit:
+                break
+
+            # Check if it's an SPD run (has ComponentModel in files)
+            files = [f.name for f in run.files()]
+            has_model = any("model_" in f and f.endswith(".pth") for f in files)
+            has_config = "final_config.yaml" in files
+
+            if has_model and has_config:
+                metadata = {
+                    "run_id": run.id,
+                    "type": "SPD",
+                    "created_at": run.created_at,
+                    "runtime": run.runtime,
+                }
+
+                # Get experiment type from config
+                if 'experiment' in run.config:
+                    metadata['experiment'] = run.config['experiment']
+
+                label = f"{metadata.get('experiment', 'Unknown')} ({run.id[:8]}) - {run.created_at}"
+                wandb_path = f"wandb:{project}/runs/{run.id}"
+                runs.append((wandb_path, label, metadata))
+
+    except Exception as e:
+        st.warning(f"Could not fetch W&B runs: {e}")
+
+    return runs
 
 
 def display_notebook_results(results: NotebookClusteringResults):
@@ -87,21 +190,79 @@ def main():
         
         # SPD run input
         st.subheader("SPD Run Selection")
-        run_source = st.radio(
-            "Run source:",
-            ["W&B Path", "Local Path"]
+
+        # Selection method
+        selection_method = st.radio(
+            "Selection method:",
+            ["Browse Runs", "Manual Input"]
         )
-        
-        if run_source == "W&B Path":
-            run_path = st.text_input(
-                "W&B Run Path:",
-                help="Format: wandb:project/spd/runs/run_id - Must be an SPD run with ComponentModel"
+
+        run_path = None
+
+        if selection_method == "Browse Runs":
+            # Refresh button
+            col1, col2 = st.columns([3, 1])
+            with col2:
+                if st.button("🔄 Refresh"):
+                    st.cache_data.clear()
+
+            # Run source for browsing
+            browse_source = st.selectbox(
+                "Browse from:",
+                ["Local Cached Runs", "W&B Remote Runs", "Both"]
             )
-        else:
-            run_path = st.text_input(
-                "Local Path:",
-                help="Path to local SPD run directory with final_config.yaml or similar"
+
+            # Discover runs based on source
+            discovered_runs = []
+
+            if browse_source in ["Local Cached Runs", "Both"]:
+                local_runs = discover_local_runs()
+                discovered_runs.extend(local_runs)
+
+            if browse_source in ["W&B Remote Runs", "Both"]:
+                # W&B project selection
+                wandb_project = st.text_input(
+                    "W&B Project (optional):",
+                    value="SJCS-SPD/spd",
+                    help="Leave default or enter your W&B project"
+                )
+                if wandb_project:
+                    wandb_runs = discover_wandb_runs(wandb_project)
+                    discovered_runs.extend(wandb_runs)
+
+            # Display discovered runs
+            if discovered_runs:
+                run_labels = ["Select a run..."] + [label for _, label, _ in discovered_runs]
+                selected_index = st.selectbox(
+                    "Available SPD runs:",
+                    range(len(run_labels)),
+                    format_func=lambda x: run_labels[x]
+                )
+
+                if selected_index > 0:
+                    run_path, label, metadata = discovered_runs[selected_index - 1]
+                    # Show metadata
+                    with st.expander("Run Details"):
+                        st.json(metadata)
+            else:
+                st.info("No SPD runs found. Check your wandb/ directory or W&B project.")
+
+        else:  # Manual Input
+            input_type = st.radio(
+                "Input type:",
+                ["Local Path", "W&B Path"]
             )
+
+            if input_type == "W&B Path":
+                run_path = st.text_input(
+                    "W&B Run Path:",
+                    help="Format: wandb:project/spd/runs/run_id - Must be an SPD run with ComponentModel"
+                )
+            else:
+                run_path = st.text_input(
+                    "Local Path:",
+                    help="Path to local SPD run directory with final_config.yaml"
+                )
         
         # Clustering parameters
         st.subheader("Clustering Parameters")
