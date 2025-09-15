@@ -18,6 +18,7 @@ from spd.comparison.spd_loader import load_spd_run, get_component_activations
 from spd.comparison.dead_filter import filter_dead_components_with_stats
 from spd.comparison.mdl_clustering import run_mdl_clustering, display_mdl_results, get_clustering_summary
 from spd.comparison.metrics import MetricsTracker, estimate_mdl_flops
+from spd.comparison.notebook_clustering import run_notebook_clustering, NotebookClusteringResults
 
 # Page config
 st.set_page_config(
@@ -34,6 +35,46 @@ if config_path.exists():
 else:
     st.error(f"Config file not found: {config_path}")
     st.stop()
+
+
+def display_notebook_results(results: NotebookClusteringResults):
+    """Display notebook clustering results in a structured format."""
+    st.subheader("Clustering Results")
+    
+    # Basic stats
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Components", results.total_components)
+    with col2:
+        st.metric("Clusters Found", results.n_clusters)
+    with col3:
+        st.metric("Similarity Method", results.similarity_method)
+    
+    # Cluster size distribution
+    st.subheader("Cluster Sizes")
+    cluster_sizes_data = []
+    for cluster_id, size in results.cluster_sizes.items():
+        cluster_sizes_data.append({"Cluster": f"Cluster {cluster_id}", "Size": size})
+    
+    if cluster_sizes_data:
+        st.bar_chart({item["Cluster"]: item["Size"] for item in cluster_sizes_data})
+    
+    # Detailed cluster information
+    with st.expander("Cluster Details"):
+        for cluster_id in sorted(results.cluster_sizes.keys()):
+            st.write(f"**Cluster {cluster_id}** ({results.cluster_sizes[cluster_id]} components)")
+            members = results.get_cluster_members(cluster_id)
+            
+            # Show first few components in each cluster
+            component_info = []
+            for idx in members[:5]:  # Show first 5 components
+                comp = results.components[idx]
+                component_info.append(f"  - {comp.layer}:{comp.component_index}")
+            
+            st.text("\n".join(component_info))
+            if len(members) > 5:
+                st.text(f"  ... and {len(members) - 5} more")
+            st.write("")
 
 
 def main():
@@ -108,20 +149,101 @@ def main():
             step=10
         )
         
+        # Notebook clustering specific parameters
+        st.subheader("Notebook Clustering Parameters")
+        similarity_method = st.selectbox(
+            "Similarity Method",
+            ["fused", "directional", "correlation", "coactivation"],
+            index=0,
+            help="Method for computing component similarity"
+        )
+        
+        n_clusters = st.slider(
+            "Number of clusters",
+            min_value=2,
+            max_value=50,
+            value=10,
+            step=1,
+            help="Number of clusters for SpectralClustering (None for auto-detect)"
+        )
+        
+        n_samples = st.number_input(
+            "Samples for gate computation",
+            min_value=100,
+            max_value=5000,
+            value=1000,
+            step=100,
+            help="Number of samples for computing gate profiles"
+        )
+        
         run_clustering = st.button("Run Clustering", type="primary")
     
     # Main content area - two columns
     col_left, col_right = st.columns(2)
     
     with col_left:
-        st.header("Custom Clustering (Future)")
-        st.info("This column is reserved for your custom clustering method.")
-        st.markdown("""
-        ### Placeholder for future implementation
-        - Will use same preprocessed activations
-        - Will display same metrics format
-        - Ready for side-by-side comparison
-        """)
+        st.header("Notebook Clustering (Spectral)")
+        
+        if run_clustering and run_path:
+            try:
+                # Step 1: Load model (shared with MDL clustering)
+                with st.spinner("Loading SPD model..."):
+                    model = load_spd_run(run_path, device)
+                    st.success(f"✅ Loaded model from {run_path}")
+                
+                # Step 2: Run notebook clustering
+                with st.spinner("Running notebook clustering..."):
+                    # Track metrics
+                    tracker = MetricsTracker()
+                    with tracker.track():
+                        results = run_notebook_clustering(
+                            component_model=model,
+                            similarity_method=similarity_method,
+                            n_clusters=n_clusters,
+                            n_samples=n_samples,
+                            random_state=42,  # For reproducibility
+                            verbose=False
+                        )
+                    
+                    metrics = tracker.get_metrics()
+                
+                # Step 3: Display results
+                st.success("✅ Notebook Clustering complete!")
+                
+                # Display metrics
+                st.subheader("Performance Metrics")
+                metrics_dict = metrics.to_dict()
+                col1, col2 = st.columns(2)
+                with col1:
+                    for key in list(metrics_dict.keys())[:3]:
+                        st.metric(key, metrics_dict[key])
+                with col2:
+                    for key in list(metrics_dict.keys())[3:]:
+                        st.metric(key, metrics_dict[key])
+                
+                # Display clustering results
+                display_notebook_results(results)
+                
+                # Store results in session state for comparison
+                if "clustering_results" not in st.session_state:
+                    st.session_state.clustering_results = {}
+                st.session_state.clustering_results["notebook"] = {
+                    "results": results,
+                    "metrics": metrics,
+                    "summary": {
+                        "method": f"Spectral ({similarity_method})",
+                        "total_time": metrics.wall_time,
+                        "final_groups": results.n_clusters,
+                        "total_components": results.total_components
+                    }
+                }
+                
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+                st.exception(e)
+        
+        elif run_clustering:
+            st.warning("Please provide an SPD run path")
     
     with col_right:
         st.header("MDL Clustering")
@@ -233,19 +355,55 @@ def main():
         st.divider()
         st.header("Results Summary")
         
-        # Display comparison table
-        if "mdl" in st.session_state.clustering_results:
-            summary = st.session_state.clustering_results["mdl"]["summary"]
+        # Create comparison table for both methods
+        results = st.session_state.clustering_results
+        
+        if len(results) == 2:  # Both methods completed
+            st.subheader("Side-by-Side Comparison")
+            col1, col2 = st.columns(2)
             
-            col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Method", summary["method"])
+                if "notebook" in results:
+                    nb_summary = results["notebook"]["summary"]
+                    st.write("**Notebook Clustering**")
+                    st.metric("Method", nb_summary["method"])
+                    st.metric("Time", f"{nb_summary['total_time']:.2f}s")
+                    st.metric("Clusters", nb_summary["final_groups"])
+                    st.metric("Components", nb_summary["total_components"])
+            
             with col2:
-                st.metric("Total Time", f"{summary['total_time']:.2f}s")
-            with col3:
-                st.metric("Final Groups", summary["final_groups"])
-            with col4:
-                st.metric("Final MDL Cost", f"{summary['final_cost']:.4f}")
+                if "mdl" in results:
+                    mdl_summary = results["mdl"]["summary"]
+                    st.write("**MDL Clustering**")
+                    st.metric("Method", mdl_summary["method"])
+                    st.metric("Time", f"{mdl_summary['total_time']:.2f}s")
+                    st.metric("Clusters", mdl_summary["final_groups"])
+                    st.metric("Final Cost", f"{mdl_summary['final_cost']:.4f}")
+        
+        else:  # Only one method completed
+            if "notebook" in results:
+                summary = results["notebook"]["summary"]
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Method", summary["method"])
+                with col2:
+                    st.metric("Total Time", f"{summary['total_time']:.2f}s")
+                with col3:
+                    st.metric("Final Groups", summary["final_groups"])
+                with col4:
+                    st.metric("Total Components", summary["total_components"])
+            
+            elif "mdl" in results:
+                summary = results["mdl"]["summary"]
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Method", summary["method"])
+                with col2:
+                    st.metric("Total Time", f"{summary['total_time']:.2f}s")
+                with col3:
+                    st.metric("Final Groups", summary["final_groups"])
+                with col4:
+                    st.metric("Final MDL Cost", f"{summary['final_cost']:.4f}")
 
 
 if __name__ == "__main__":
