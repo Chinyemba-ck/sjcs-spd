@@ -70,10 +70,24 @@ def discover_local_runs() -> List[Tuple[str, str, Dict[str, Any]]]:
             try:
                 with open(config_path, 'r') as f:
                     run_config = yaml.safe_load(f)
+
+                    # Try to get experiment type from various fields
                     if 'experiment' in run_config:
                         metadata['experiment'] = run_config['experiment']
+                    elif 'pretrained_model_class' in run_config:
+                        # Extract experiment type from model class path
+                        # e.g., "spd.experiments.resid_mlp.models.ResidMLP" -> "resid_mlp"
+                        model_class = run_config['pretrained_model_class']
+                        if 'experiments' in model_class:
+                            parts = model_class.split('.')
+                            exp_idx = parts.index('experiments')
+                            if exp_idx + 1 < len(parts):
+                                metadata['experiment'] = parts[exp_idx + 1]
+
                     if 'model_id' in run_config:
                         metadata['model_id'] = run_config['model_id']
+                    elif 'pretrained_model_id' in run_config:
+                        metadata['model_id'] = run_config['pretrained_model_id']
             except Exception:
                 pass
 
@@ -159,6 +173,14 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
                 # Get experiment type from config
                 if 'experiment' in run.config:
                     metadata['experiment'] = run.config['experiment']
+                elif 'pretrained_model_class' in run.config:
+                    # Extract from model class path
+                    model_class = run.config['pretrained_model_class']
+                    if 'experiments' in model_class:
+                        parts = model_class.split('.')
+                        exp_idx = parts.index('experiments')
+                        if exp_idx + 1 < len(parts):
+                            metadata['experiment'] = parts[exp_idx + 1]
 
                 # Create label
                 exp_name = metadata.get('experiment', 'Unknown')
