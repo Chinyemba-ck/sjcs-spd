@@ -122,15 +122,25 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
                 metadata = {
                     "run_id": run.id,
                     "type": "SPD",
-                    "created_at": run.created_at,
-                    "runtime": run.runtime,
+                    "state": run.state,
                 }
+
+                # Safely get optional attributes
+                if hasattr(run, 'created_at'):
+                    metadata['created_at'] = run.created_at
+                if hasattr(run, 'summary') and run.summary:
+                    if '_runtime' in run.summary:
+                        metadata['runtime_seconds'] = run.summary['_runtime']
 
                 # Get experiment type from config
                 if 'experiment' in run.config:
                     metadata['experiment'] = run.config['experiment']
 
-                label = f"{metadata.get('experiment', 'Unknown')} ({run.id[:8]}) - {run.created_at}"
+                # Create label
+                exp_name = metadata.get('experiment', 'Unknown')
+                date_str = metadata.get('created_at', 'N/A')
+                label = f"{exp_name} ({run.id[:8]}) - {date_str}"
+
                 wandb_path = f"wandb:{project}/runs/{run.id}"
                 runs.append((wandb_path, label, metadata))
 
