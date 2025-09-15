@@ -59,6 +59,7 @@ This repository implements methods from two key research papers on parameter dec
 
 - `make test` - Run tests (excluding slow tests)
 - `make test-all` - Run all tests including slow ones
+- `make coverage` - Run tests with coverage reporting (outputs to `docs/coverage/`)
 - `python -m pytest tests/test_specific.py` - Run specific test file
 - `python -m pytest tests/test_specific.py::test_function` - Run specific test
 
@@ -212,6 +213,21 @@ spd-run --no-create_report                   # Skip W&B report creation
 - DO NOT use more than 8 GPUs at one time
 - This includes not setting off multiple sweeps/evals that total >8 GPUs
 - Monitor jobs with: `squeue --format="%.18i %.9P %.15j %.12u %.12T %.10M %.9l %.6D %b %R" --me`
+
+**Clustering Comparison Interface:**
+
+Interactive Streamlit app for comparing clustering methods on SPD runs:
+
+```bash
+streamlit run spd/comparison/clustering_comparison.py --server.port 8510
+```
+
+Features:
+- Load SPD runs from WandB or local paths
+- Compare different clustering algorithms (K-means, Agglomerative, etc.)
+- Dead component filtering and analysis
+- MDL (Minimum Description Length) clustering evaluation
+- Side-by-side metrics comparison and visualization
 
 ## github
 - To view github issues and PRs, use the github cli (e.g. `gh issue view 28` or `gh pr view 30`).
