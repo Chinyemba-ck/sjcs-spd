@@ -91,21 +91,16 @@ def discover_local_runs() -> List[Tuple[str, str, Dict[str, Any]]]:
             except Exception:
                 pass
 
-            # Find model files with proper format (model_XXXXX.pth)
-            model_files = list(files_dir.glob("model_*.pth"))
+            # Find model files - be flexible with naming
+            model_files = list(files_dir.glob("*.pth"))
             valid_model_found = False
-            for model_file in model_files:
-                try:
-                    # Check if filename follows expected pattern
-                    parts = model_file.stem.split("_")
-                    if len(parts) == 2 and parts[1].isdigit():
-                        metadata['model_file'] = model_file.name
-                        valid_model_found = True
-                        break
-                except:
-                    pass
+            if model_files:
+                # Accept any .pth file as potential model
+                metadata['model_file'] = model_files[0].name
+                metadata['all_model_files'] = [f.name for f in model_files]
+                valid_model_found = True
 
-            # Only add if we found a valid model file
+            # Only add if we found a model file
             if valid_model_found:
                 label = f"{metadata.get('experiment', 'Unknown')} ({run_dir.name[:8]})"
                 runs.append((str(files_dir), label, metadata))
@@ -126,6 +121,7 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
         List of (wandb_path, label, metadata) tuples
     """
     runs = []
+    debug_info = {"total_checked": 0, "with_models": 0, "with_config": 0, "accepted": 0}
 
     try:
         import wandb
@@ -137,30 +133,33 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
         for i, run in enumerate(wandb_runs):
             if i >= limit:
                 break
+            debug_info["total_checked"] += 1
 
             # Check if it's an SPD run (has ComponentModel in files)
             files = [f.name for f in run.files()]
 
-            # Check for properly formatted model files (model_XXXXX.pth where XXXXX is a number)
-            model_files = [f for f in files if f.startswith("model_") and f.endswith(".pth")]
+            # Check for model files - be more flexible with naming
+            model_files = [f for f in files if f.endswith(".pth") and ("model" in f.lower() or "checkpoint" in f.lower())]
+
+            # Accept various model file patterns
             has_valid_model = False
-            for mf in model_files:
-                try:
-                    # Check if the file follows the expected pattern model_<number>.pth
-                    parts = mf.replace(".pth", "").split("_")
-                    if len(parts) == 2 and parts[1].isdigit():
-                        has_valid_model = True
-                        break
-                except:
-                    pass
+            if model_files:
+                # Accept any model file that looks reasonable
+                # This includes model_XXXXX.pth, final_model.pth, checkpoint.pth, etc.
+                has_valid_model = True
+                debug_info["with_models"] += 1
 
             has_config = "final_config.yaml" in files
+            if has_config:
+                debug_info["with_config"] += 1
 
             if has_valid_model and has_config:
+                debug_info["accepted"] += 1
                 metadata = {
                     "run_id": run.id,
                     "type": "SPD",
                     "state": run.state,
+                    "model_files": model_files[:3]  # Store first 3 for reference
                 }
 
                 # Safely get optional attributes
@@ -189,6 +188,10 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
 
                 wandb_path = f"wandb:{project}/runs/{run.id}"
                 runs.append((wandb_path, label, metadata))
+
+        # Show debug info if very few runs found
+        if debug_info["accepted"] < 2:
+            st.caption(f"Debug: Checked {debug_info['total_checked']} runs, {debug_info['with_models']} had models, {debug_info['with_config']} had config, {debug_info['accepted']} accepted")
 
     except Exception as e:
         st.warning(f"Could not fetch W&B runs: {e}")
@@ -283,8 +286,11 @@ def main():
                     help="Leave default or enter your W&B project"
                 )
                 if wandb_project:
-                    wandb_runs = discover_wandb_runs(wandb_project)
-                    discovered_runs.extend(wandb_runs)
+                    with st.spinner(f"Fetching runs from {wandb_project}..."):
+                        wandb_runs = discover_wandb_runs(wandb_project)
+                        discovered_runs.extend(wandb_runs)
+                        if not wandb_runs and browse_source == "W&B Remote Runs":
+                            st.info(f"No SPD runs found in {wandb_project}. Runs must have final_config.yaml and model files.")
 
             # Display discovered runs
             if discovered_runs:
@@ -300,6 +306,11 @@ def main():
                     # Show metadata
                     with st.expander("Run Details"):
                         st.json(metadata)
+                        # Show compatibility note for model files
+                        if 'model_files' in metadata:
+                            st.caption("Model files found: " + ", ".join(metadata['model_files']))
+                        elif 'all_model_files' in metadata:
+                            st.caption("Model files: " + ", ".join(metadata['all_model_files']))
             else:
                 st.info("No SPD runs found. Check your wandb/ directory or W&B project.")
 
