@@ -65,7 +65,7 @@ def extract_spd_components(
     comp_model = comp_model.to(device)
     comp_model.eval()
 
-    n_features = comp_model.model.config.n_features
+    n_features = comp_model.patched_model.config.n_features
 
     # Generate sample batch
     batch = torch.zeros(n_samples, n_features, device=device)
@@ -77,20 +77,20 @@ def extract_spd_components(
     spd_components = []
 
     for layer_name, component in components.items():
-        A_matrix = component.A.detach().cpu().numpy()  # (d_in, C)
-        B_matrix = component.B.detach().cpu().numpy()  # (C, d_out)
+        A_matrix = component.V.detach().cpu().numpy()  # (d_in, C) - V matrix is the input transformation
+        B_matrix = component.U.detach().cpu().numpy()  # (C, d_out) - U matrix is the output transformation
 
         gate_outputs = None
         if compute_gate_profiles:
             gate = gates[layer_name]
 
             with torch.no_grad():
-                _, pre_weight_acts = comp_model.forward_with_pre_forward_cache_hooks(
+                _, pre_weight_acts = comp_model._forward_with_pre_forward_cache_hooks(
                     batch, module_names=[layer_name]
                 )
 
             layer_input = pre_weight_acts[layer_name]
-            component_acts = torch.einsum('bd,dc->bc', layer_input, component.A)
+            component_acts = torch.einsum('bd,dc->bc', layer_input, component.V)
             gate_outputs = gate(component_acts.detach()).detach().cpu().numpy()
 
         n_components = A_matrix.shape[1]
