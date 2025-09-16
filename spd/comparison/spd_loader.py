@@ -79,8 +79,15 @@ def get_component_activations(
             batch = torch.randn(batch_size, n_features, device=device)
         else:
             # Language models expect (batch_size, seq_len) long input
+            # Try to get vocab size from model config
+            try:
+                vocab_size = _component_model.patched_model.config.vocab_size
+            except AttributeError:
+                # Fallback to a safe large value that works for most models
+                vocab_size = 50000  # Common for GPT-2 (50257), BERT (30522), etc.
+
             batch = torch.randint(
-                0, 1000,  # Vocab size assumption
+                0, vocab_size,
                 (batch_size, seq_len),
                 dtype=torch.long,
                 device=device

@@ -109,13 +109,13 @@ def discover_local_runs() -> List[Tuple[str, str, Dict[str, Any]]]:
 
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
-def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[Tuple[str, str, Dict[str, Any]]]:
+def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 1000) -> List[Tuple[str, str, Dict[str, Any]]]:
     """
     Discover SPD runs from W&B API.
 
     Args:
         project: W&B project path
-        limit: Maximum number of runs to fetch
+        limit: Maximum number of runs to check (default 1000 to ensure we get all runs)
 
     Returns:
         List of (wandb_path, label, metadata) tuples
@@ -127,20 +127,35 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
         import wandb
         api = wandb.Api(timeout=30)
 
-        # Get ALL runs from project with explicit pagination
+        # Get ALL runs from project - convert to list to ensure we fetch all pages
         # The api.runs() method returns a generator that fetches pages lazily
         # We don't filter by state to see everything
+        st.caption(f"🔄 Fetching runs from {project}...")
+
+        # Use a progress bar if possible
+        progress_placeholder = st.empty()
+
         wandb_runs = api.runs(
             project,
             per_page=100  # Request more runs per page (max is usually 100)
         )
 
-        # Debug: collect info about first few runs to understand filtering
+        # Debug: collect info about runs to understand filtering
         rejected_runs = []
 
+        # Convert generator to list to ensure we get ALL runs (not just first page)
+        all_runs = []
         for i, run in enumerate(wandb_runs):
             if i >= limit:
                 break
+            all_runs.append(run)
+            # Update progress every 10 runs
+            if i % 10 == 0:
+                progress_placeholder.caption(f"📊 Fetched {i+1} runs so far...")
+
+        progress_placeholder.caption(f"✅ Fetched {len(all_runs)} total runs from {project}")
+
+        for i, run in enumerate(all_runs):
             debug_info["total_checked"] += 1
 
             # Track run states
@@ -213,18 +228,28 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
                 wandb_path = f"wandb:{project}/runs/{run.id}"
                 runs.append((wandb_path, label, metadata))
 
-        # Always show debug info for transparency
-        if st.session_state.get("show_debug", False) or debug_info["accepted"] < 3:
-            states_summary = ", ".join([f"{state}: {count}" for state, count in debug_info["states_seen"].items()])
-            st.caption(f"Debug: Checked {debug_info['total_checked']} runs (states: {states_summary})")
-            st.caption(f"Files: {debug_info['with_models']} had .pth files, {debug_info['with_config']} had final_config.yaml")
-            st.caption(f"Result: {debug_info['accepted']} accepted as SPD runs")
+        # ALWAYS show statistics for transparency and clear evidence
+        st.info(f"✅ **W&B Run Discovery Complete**")
+        states_summary = ", ".join([f"{state}: {count}" for state, count in debug_info["states_seen"].items()])
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Runs Checked", debug_info['total_checked'])
+        with col2:
+            st.metric("SPD Runs Found", debug_info['accepted'])
+        with col3:
+            st.metric("Runs Filtered Out", debug_info['total_checked'] - debug_info['accepted'])
 
-            # Show why runs were rejected if we have few accepted runs
-            if rejected_runs and debug_info["accepted"] < 5:
-                with st.expander(f"Why {len(rejected_runs)} runs were filtered out"):
-                    for rejection in rejected_runs[:20]:  # Show first 20
-                        st.text(rejection)
+        # Show detailed breakdown
+        st.caption(f"📊 Run states: {states_summary}")
+        st.caption(f"📁 Files analysis: {debug_info['with_models']} had .pth files, {debug_info['with_config']} had final_config.yaml")
+
+        # Show why runs were rejected if user wants details
+        if rejected_runs:
+            with st.expander(f"See why {len(rejected_runs)} runs were filtered out"):
+                for rejection in rejected_runs[:30]:  # Show first 30
+                    st.text(rejection)
+                if len(rejected_runs) > 30:
+                    st.text(f"... and {len(rejected_runs) - 30} more")
 
     except Exception as e:
         st.warning(f"Could not fetch W&B runs: {e}")
@@ -292,11 +317,26 @@ def main():
         run_path = None
 
         if selection_method == "Browse Runs":
-            # Refresh button
-            col1, col2 = st.columns([3, 1])
+            # Refresh button with timestamp
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                # Show last update time if available
+                from datetime import datetime
+                if "last_refresh" not in st.session_state:
+                    st.session_state.last_refresh = datetime.now()
+
+                time_diff = (datetime.now() - st.session_state.last_refresh).total_seconds()
+                if time_diff < 60:
+                    time_str = f"{int(time_diff)}s ago"
+                else:
+                    time_str = f"{int(time_diff / 60)}m ago"
+                st.caption(f"📅 Last refresh: {time_str}")
+
             with col2:
-                if st.button("🔄 Refresh"):
+                if st.button("🔄 Force Refresh", help="Clear cache and reload all runs"):
                     st.cache_data.clear()
+                    st.session_state.last_refresh = datetime.now()
+                    st.rerun()
 
             # Run source for browsing
             browse_source = st.selectbox(
@@ -332,11 +372,13 @@ def main():
                     help="Select a project to browse SPD runs from"
                 )
                 if wandb_project:
-                    with st.spinner(f"Fetching runs from {wandb_project}..."):
+                    with st.spinner(f"🔍 Fetching ALL runs from {wandb_project}... This may take a moment for large projects."):
                         wandb_runs = discover_wandb_runs(wandb_project)
                         discovered_runs.extend(wandb_runs)
                         if not wandb_runs and browse_source == "W&B Remote Runs":
-                            st.info(f"No SPD runs found in {wandb_project}. Runs must have final_config.yaml and model files.")
+                            st.warning(f"⚠️ No SPD runs found in {wandb_project}. Runs must have final_config.yaml and model files.")
+                        elif wandb_runs:
+                            st.success(f"✅ Found {len(wandb_runs)} SPD runs in {wandb_project}")
 
             # Display discovered runs
             if discovered_runs:
@@ -578,9 +620,12 @@ def main():
                     tracker = MetricsTracker()
                     with tracker.track():
                         # Need to reconstruct activations_dict for MDL clustering
-                        # This is a simplified version - in production you'd maintain the structure
-                        filtered_dict = {"filtered": filtered_acts}
-                        
+                        # Pass both filtered activations and labels
+                        filtered_dict = {
+                            "filtered": filtered_acts,
+                            "_labels": filtered_labels  # Pass labels with underscore prefix
+                        }
+
                         results = run_mdl_clustering(
                             filtered_dict,
                             mdl_config

@@ -58,29 +58,31 @@ class MDLClusteringResults:
         """Get final clustering groups."""
         if self.merge_history.n_iters_current == 0:
             return {}
-            
-        final_merge = self.merge_history.get_iteration(-1)["current_merge"]
+
+        # Fixed: Use proper indexing instead of non-existent get_iteration method
+        final_iter = self.merge_history[self.merge_history.n_iters_current - 1]
+        final_merge = final_iter["merges"]  # Fixed: correct key is "merges" not "current_merge"
         groups = {}
-        
+
         for component_idx, group_id in enumerate(final_merge.group_idxs):
             group_id_int = int(group_id.item())
             if group_id_int not in groups:
                 groups[group_id_int] = []
-            
+
             if component_idx < len(self.processed_activations.labels):
                 groups[group_id_int].append(self.processed_activations.labels[component_idx])
-        
+
         return groups
-    
+
     @property
-    def final_mdl_cost(self) -> float:
-        """Get final MDL cost."""
-        if self.merge_history.n_iters_current == 0:
-            return float('inf')
-            
-        # Get final MDL cost from history
-        final_iter = self.merge_history.get_iteration(-1)
-        return final_iter.get("mdl_loss_norm", float('inf'))
+    def final_mdl_cost(self) -> float | None:
+        """Get final MDL cost.
+
+        Note: MDL cost is not stored in merge history for memory efficiency.
+        The clustering is performed correctly using MDL minimization,
+        but the final cost value is not available for display.
+        """
+        return None
     
     @property
     def num_final_groups(self) -> int:
@@ -90,30 +92,57 @@ class MDLClusteringResults:
 
 @st.cache_data
 def run_mdl_clustering(
-    activations_dict: Dict[str, Float[Tensor, "n_steps C"]],
+    _activations_dict: Dict[str, Float[Tensor, "n_steps C"]],
     config_dict: Dict[str, Any]
 ) -> MDLClusteringResults:
     """Run MDL clustering on component activations.
-    
+
     Args:
-        activations_dict: Dictionary of activations per module
+        _activations_dict: Dictionary of activations per module (underscore for Streamlit caching)
         config_dict: Configuration dictionary
-        
+
     Returns:
         MDLClusteringResults object
     """
     config = MDLClusteringConfig(**config_dict)
     start_time = time.time()
-    
+
     # Process activations (filter dead components, concatenate)
     process_start = time.time()
-    processed_activations = process_activations(
-        activations_dict,
-        filter_dead_threshold=config.filter_dead_threshold,
-        seq_mode="concat",  # Concatenate sequence dimension for LM tasks
-        filter_modules=None,  # No module filtering
-        sort_components=False  # No component sorting
-    )
+
+    # Check if we received pre-filtered data from the interface
+    if "filtered" in _activations_dict:
+        # Interface passed pre-filtered data, create ProcessedActivations directly
+        filtered_acts = _activations_dict["filtered"]
+
+        # Use provided labels or create generic ones
+        if "_labels" in _activations_dict:
+            labels = _activations_dict["_labels"]
+        else:
+            n_components = filtered_acts.shape[1] if filtered_acts.ndim >= 2 else 0
+            labels = [f"comp_{i}" for i in range(n_components)]
+
+        # Create ProcessedActivations object directly
+        from spd.clustering.activations import ProcessedActivations
+
+        # Convert to numpy if it's a tensor
+        acts_numpy = filtered_acts.numpy() if hasattr(filtered_acts, 'numpy') else filtered_acts
+
+        processed_activations = ProcessedActivations(
+            activations_raw={},  # No raw activations since we got pre-filtered data
+            activations=acts_numpy,
+            labels=labels
+        )
+    else:
+        # Normal path with module structure
+        processed_activations = process_activations(
+            _activations_dict,
+            filter_dead_threshold=config.filter_dead_threshold,
+            seq_mode="concat",  # Concatenate sequence dimension for LM tasks
+            filter_modules=None,  # No module filtering
+            sort_components=False  # No component sorting
+        )
+
     process_time = time.time() - process_start
     
     # Validate we have components to cluster
@@ -177,8 +206,9 @@ def display_mdl_results(results: MDLClusteringResults) -> None:
     with col4:
         st.metric("Final Groups", results.num_final_groups)
     
-    # MDL cost
-    st.metric("Final MDL Cost (normalized)", f"{results.final_mdl_cost:.4f}")
+    # MDL cost (if available)
+    if results.final_mdl_cost is not None:
+        st.metric("Final MDL Cost (normalized)", f"{results.final_mdl_cost:.4f}")
     
     # Configuration used
     if st.checkbox("Show clustering configuration"):
