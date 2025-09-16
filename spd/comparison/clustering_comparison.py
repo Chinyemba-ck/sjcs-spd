@@ -127,8 +127,16 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
         import wandb
         api = wandb.Api(timeout=30)
 
-        # Get runs from project
-        wandb_runs = api.runs(project, filters={"state": "finished"})
+        # Get ALL runs from project with explicit pagination
+        # The api.runs() method might have a default limit, so we need to be explicit
+        # Also check all states, not just "finished"
+        wandb_runs = api.runs(
+            project,
+            per_page=limit  # Explicitly request up to 'limit' runs per page
+        )
+
+        # Debug: collect info about first few runs to understand filtering
+        rejected_runs = []
 
         for i, run in enumerate(wandb_runs):
             if i >= limit:
@@ -153,6 +161,14 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
             has_spd_config = "final_config.yaml" in files
             if has_spd_config:
                 debug_info["with_config"] += 1
+
+            # Track why runs are rejected
+            if not has_spd_config and not has_model_file:
+                rejected_runs.append(f"{run.id[:8]} - No final_config.yaml or .pth files")
+            elif not has_spd_config:
+                rejected_runs.append(f"{run.id[:8]} - No final_config.yaml (has {len(all_pth_files)} .pth files)")
+            elif not has_model_file:
+                rejected_runs.append(f"{run.id[:8]} - No .pth files (has final_config.yaml)")
 
             # Accept runs with final_config.yaml and any .pth file
             if has_spd_config and has_model_file:
@@ -196,6 +212,12 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
         # Always show debug info for transparency
         if st.session_state.get("show_debug", False) or debug_info["accepted"] < 3:
             st.caption(f"Debug: Checked {debug_info['total_checked']} runs, {debug_info['with_models']} had .pth files, {debug_info['with_config']} had final_config.yaml, {debug_info['accepted']} accepted as SPD runs")
+
+            # Show why runs were rejected if we have few accepted runs
+            if rejected_runs and debug_info["accepted"] < 3:
+                with st.expander("Why runs were filtered out"):
+                    for rejection in rejected_runs[:10]:  # Show first 10
+                        st.text(rejection)
 
     except Exception as e:
         st.warning(f"Could not fetch W&B runs: {e}")
