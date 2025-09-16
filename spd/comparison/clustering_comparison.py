@@ -313,10 +313,23 @@ def main():
 
             if browse_source in ["W&B Remote Runs", "Both"]:
                 # W&B project selection
-                wandb_project = st.text_input(
-                    "W&B Project (optional):",
-                    value="SJCS-SPD/spd",
-                    help="Leave default or enter your W&B project"
+                project_options = {
+                    "SJCS-SPD/spd-tms": "spd-tms (TMS decomposition runs)",
+                    "SJCS-SPD/spd-resid-mlp": "spd-resid-mlp (ResidMLP decomposition runs)",
+                    "SJCS-SPD/spd-lm": "spd-lm (Language model decomposition runs)",
+                    "SJCS-SPD/spd": "spd (Mixed runs)",
+                    "SJCS-SPD/spd-cluster": "spd-cluster (Clustering experiments)",
+                    "SJCS-SPD/spd-train-tms": "spd-train-tms (TMS training runs)",
+                    "SJCS-SPD/spd-train-resid-mlp": "spd-train-resid-mlp (ResidMLP training runs)",
+                    "SJCS-SPD/seane-spd-tms": "seane-spd-tms (Sean's TMS experiments)"
+                }
+
+                wandb_project = st.selectbox(
+                    "W&B Project:",
+                    options=list(project_options.keys()),
+                    format_func=lambda x: project_options[x],
+                    index=0,  # Default to spd-tms
+                    help="Select a project to browse SPD runs from"
                 )
                 if wandb_project:
                     with st.spinner(f"Fetching runs from {wandb_project}..."):
