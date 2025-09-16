@@ -138,28 +138,32 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
             # Check if it's an SPD run (has ComponentModel in files)
             files = [f.name for f in run.files()]
 
-            # Check for model files - be more flexible with naming
-            model_files = [f for f in files if f.endswith(".pth") and ("model" in f.lower() or "checkpoint" in f.lower())]
+            # Check for ANY .pth files (SPD runs need at least one model file)
+            all_pth_files = [f for f in files if f.endswith(".pth")]
 
-            # Accept various model file patterns
-            has_valid_model = False
-            if model_files:
-                # Accept any model file that looks reasonable
-                # This includes model_XXXXX.pth, final_model.pth, checkpoint.pth, etc.
-                has_valid_model = True
+            # SPD runs should have model_XXXXX.pth files specifically
+            model_numbered_files = [f for f in all_pth_files if f.startswith("model_") and f.replace("model_", "").replace(".pth", "").isdigit()]
+
+            # Accept runs with any .pth file (be inclusive)
+            has_model_file = len(all_pth_files) > 0
+            if has_model_file:
                 debug_info["with_models"] += 1
 
-            has_config = "final_config.yaml" in files
-            if has_config:
+            # The key differentiator: SPD runs have final_config.yaml
+            has_spd_config = "final_config.yaml" in files
+            if has_spd_config:
                 debug_info["with_config"] += 1
 
-            if has_valid_model and has_config:
+            # Accept runs with final_config.yaml and any .pth file
+            if has_spd_config and has_model_file:
                 debug_info["accepted"] += 1
                 metadata = {
                     "run_id": run.id,
                     "type": "SPD",
                     "state": run.state,
-                    "model_files": model_files[:3]  # Store first 3 for reference
+                    "model_files": all_pth_files[:3],  # Store first 3 .pth files
+                    "has_numbered_model": len(model_numbered_files) > 0,
+                    "numbered_model": model_numbered_files[0] if model_numbered_files else None
                 }
 
                 # Safely get optional attributes
