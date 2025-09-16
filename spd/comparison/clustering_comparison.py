@@ -121,18 +121,18 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
         List of (wandb_path, label, metadata) tuples
     """
     runs = []
-    debug_info = {"total_checked": 0, "with_models": 0, "with_config": 0, "accepted": 0}
+    debug_info = {"total_checked": 0, "with_models": 0, "with_config": 0, "accepted": 0, "states_seen": {}}
 
     try:
         import wandb
         api = wandb.Api(timeout=30)
 
         # Get ALL runs from project with explicit pagination
-        # The api.runs() method might have a default limit, so we need to be explicit
-        # Also check all states, not just "finished"
+        # The api.runs() method returns a generator that fetches pages lazily
+        # We don't filter by state to see everything
         wandb_runs = api.runs(
             project,
-            per_page=limit  # Explicitly request up to 'limit' runs per page
+            per_page=100  # Request more runs per page (max is usually 100)
         )
 
         # Debug: collect info about first few runs to understand filtering
@@ -142,6 +142,10 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
             if i >= limit:
                 break
             debug_info["total_checked"] += 1
+
+            # Track run states
+            run_state = run.state if hasattr(run, 'state') else 'unknown'
+            debug_info["states_seen"][run_state] = debug_info["states_seen"].get(run_state, 0) + 1
 
             # Check if it's an SPD run (has ComponentModel in files)
             files = [f.name for f in run.files()]
@@ -211,12 +215,15 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
 
         # Always show debug info for transparency
         if st.session_state.get("show_debug", False) or debug_info["accepted"] < 3:
-            st.caption(f"Debug: Checked {debug_info['total_checked']} runs, {debug_info['with_models']} had .pth files, {debug_info['with_config']} had final_config.yaml, {debug_info['accepted']} accepted as SPD runs")
+            states_summary = ", ".join([f"{state}: {count}" for state, count in debug_info["states_seen"].items()])
+            st.caption(f"Debug: Checked {debug_info['total_checked']} runs (states: {states_summary})")
+            st.caption(f"Files: {debug_info['with_models']} had .pth files, {debug_info['with_config']} had final_config.yaml")
+            st.caption(f"Result: {debug_info['accepted']} accepted as SPD runs")
 
             # Show why runs were rejected if we have few accepted runs
-            if rejected_runs and debug_info["accepted"] < 3:
-                with st.expander("Why runs were filtered out"):
-                    for rejection in rejected_runs[:10]:  # Show first 10
+            if rejected_runs and debug_info["accepted"] < 5:
+                with st.expander(f"Why {len(rejected_runs)} runs were filtered out"):
+                    for rejection in rejected_runs[:20]:  # Show first 20
                         st.text(rejection)
 
     except Exception as e:
