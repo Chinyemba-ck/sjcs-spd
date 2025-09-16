@@ -193,9 +193,9 @@ def discover_wandb_runs(project: str = "SJCS-SPD/spd", limit: int = 50) -> List[
                 wandb_path = f"wandb:{project}/runs/{run.id}"
                 runs.append((wandb_path, label, metadata))
 
-        # Show debug info if very few runs found
-        if debug_info["accepted"] < 2:
-            st.caption(f"Debug: Checked {debug_info['total_checked']} runs, {debug_info['with_models']} had models, {debug_info['with_config']} had config, {debug_info['accepted']} accepted")
+        # Always show debug info for transparency
+        if st.session_state.get("show_debug", False) or debug_info["accepted"] < 3:
+            st.caption(f"Debug: Checked {debug_info['total_checked']} runs, {debug_info['with_models']} had .pth files, {debug_info['with_config']} had final_config.yaml, {debug_info['accepted']} accepted as SPD runs")
 
     except Exception as e:
         st.warning(f"Could not fetch W&B runs: {e}")
@@ -312,7 +312,11 @@ def main():
                         st.json(metadata)
                         # Show compatibility note for model files
                         if 'model_files' in metadata:
-                            st.caption("Model files found: " + ", ".join(metadata['model_files']))
+                            st.caption("Model files: " + ", ".join(metadata['model_files']))
+                            if metadata.get('has_numbered_model'):
+                                st.info(f"Has standard model file: {metadata.get('numbered_model')}")
+                            else:
+                                st.warning("Non-standard model naming - may require special handling")
                         elif 'all_model_files' in metadata:
                             st.caption("Model files: " + ", ".join(metadata['all_model_files']))
             else:
