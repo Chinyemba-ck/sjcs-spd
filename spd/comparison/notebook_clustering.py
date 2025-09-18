@@ -82,11 +82,14 @@ class NotebookClusteringResults:
         # Note: Not including similarity_matrix as it can be very large
         # If needed, it can be added with: "similarity_matrix": self.similarity_matrix.tolist()
 
+        # Convert cluster_sizes keys from numpy.int32 to Python int for JSON serialization
+        cluster_sizes_json = {int(k): v for k, v in self.cluster_sizes.items()}
+
         return {
             "n_clusters": self.n_clusters,
             "total_components": self.total_components,
             "similarity_method": self.similarity_method,
-            "cluster_sizes": self.cluster_sizes,
+            "cluster_sizes": cluster_sizes_json,
             "cluster_labels": labels_list,
             "cluster_details": cluster_details,
             "component_details": component_details
