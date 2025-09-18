@@ -2,6 +2,7 @@
 
 import json
 import time
+from datetime import datetime
 import torch
 import streamlit as st
 from typing import Dict, List, Tuple, Any
@@ -276,7 +277,28 @@ def display_mdl_results(results: MDLClusteringResults) -> None:
         st.write(f"- Activation threshold: {results.config.activation_threshold}")
         st.write(f"- Dead component threshold: {results.config.filter_dead_threshold}")
         st.write(f"- Merge sampling: {results.config.merge_pair_sampling_method}")
-    
+
+    # JSON Export section
+    st.subheader("Export Results")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("📥 Export Full JSON", key="mdl_export_json"):
+            json_data = results.to_json()
+            json_str = json.dumps(json_data, indent=2)
+
+            # Create download button
+            st.download_button(
+                label="💾 Download MDL Results JSON",
+                data=json_str,
+                file_name=f"mdl_clustering_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                key="mdl_download_json"
+            )
+
+    with col2:
+        st.info("JSON includes full clustering data for inspection")
+
     # Show final groups
     if st.checkbox("Show final component groups"):
         groups = results.final_groups
