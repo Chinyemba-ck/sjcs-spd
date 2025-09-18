@@ -5,7 +5,7 @@ import einops
 import torch
 from jaxtyping import Float, Int
 from torch import Tensor, nn
-from transformers.modeling_utils import Conv1D as RadfordConv1D
+from transformers.pytorch_utils import Conv1D as RadfordConv1D
 
 from spd.mask_info import WeightDeltaAndMask
 from spd.utils.module_utils import _NonlinearityType, init_param_

@@ -596,10 +596,10 @@ def main():
                         for i in range(acts.shape[-1]):
                             labels.append(f"{module_name}:{i}")
                     
-                    filtered_acts, filtered_labels, stats = filter_dead_components_with_stats(
+                    filtered_acts, filtered_labels, stats, dead_labels = filter_dead_components_with_stats(
                         all_acts, labels, dead_threshold
                     )
-                    
+
                     # Display filtering stats
                     col1, col2, col3 = st.columns(3)
                     with col1:
@@ -623,7 +623,8 @@ def main():
                         # Pass both filtered activations and labels
                         filtered_dict = {
                             "filtered": filtered_acts,
-                            "_labels": filtered_labels  # Pass labels with underscore prefix
+                            "_labels": filtered_labels,  # Pass labels with underscore prefix
+                            "_dead_labels": dead_labels  # Pass dead labels for ProcessedActivations
                         }
 
                         results = run_mdl_clustering(

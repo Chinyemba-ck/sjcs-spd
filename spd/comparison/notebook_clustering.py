@@ -21,8 +21,8 @@ class SPDComponent:
     """Represents a single SPD component with its associated data."""
     layer: str
     component_index: int
-    U: np.ndarray  # Input direction vector (A matrix column)
-    V: np.ndarray  # Output direction vector (B matrix row)
+    U: np.ndarray  # Output direction vector (U matrix row from LinearComponent)
+    V: np.ndarray  # Input direction vector (V matrix column from LinearComponent)
     g_profile: Optional[np.ndarray] = None
     causal_importance: Optional[float] = None
 
@@ -98,8 +98,8 @@ def extract_spd_components(
             spd_comp = SPDComponent(
                 layer=layer_name,
                 component_index=c,
-                U=A_matrix[:, c],          # d_in dimensional vector
-                V=B_matrix[c, :],          # d_out dimensional vector
+                U=B_matrix[c, :],          # d_out dimensional vector (output direction)
+                V=A_matrix[:, c],          # d_in dimensional vector (input direction)
                 g_profile=gate_outputs[:, c] if gate_outputs is not None else None
             )
             spd_components.append(spd_comp)
@@ -116,13 +116,13 @@ def directional_similarity(
     
     Ported exactly from Final pipeline notebook cell 6.
     """
-    u1, u2 = c1.U, c2.U
+    v1, v2 = c1.V, c2.V
 
-    if u1.shape != u2.shape:
-        raise ValueError(f"Dimension mismatch: {u1.shape} vs {u2.shape}")
+    if v1.shape != v2.shape:
+        raise ValueError(f"Dimension mismatch: {v1.shape} vs {v2.shape}")
 
-    numerator = float(np.dot(u1, u2))
-    denominator = float(np.linalg.norm(u1) * np.linalg.norm(u2) + epsilon)
+    numerator = float(np.dot(v1, v2))
+    denominator = float(np.linalg.norm(v1) * np.linalg.norm(v2) + epsilon)
 
     return numerator / denominator
 
@@ -198,7 +198,9 @@ def compute_fused_similarity(
                 S_fused[i, j] = 1.0
             else:
                 sim = 0
-                if alpha > 0:
+                # Only compute directional similarity if components have matching V dimensions
+                # This is mathematically required - cosine similarity is undefined for vectors of different dimensions
+                if alpha > 0 and components[i].V.shape == components[j].V.shape:
                     sim += alpha * directional_similarity(components[i], components[j])
                 if beta > 0 and has_profiles:
                     sim += beta * activation_correlation(components[i], components[j])

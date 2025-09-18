@@ -97,28 +97,28 @@ def filter_dead_components_with_stats(
     activations: Float[Tensor, "n_steps c"],
     labels: List[str],
     threshold: float = 0.01
-) -> Tuple[Float[Tensor, "n_steps c_alive"], List[str], Dict[str, int]]:
+) -> Tuple[Float[Tensor, "n_steps c_alive"], List[str], Dict[str, int], List[str]]:
     """Filter dead components and return statistics.
-    
+
     Args:
         activations: Component activations tensor
         labels: Component labels
         threshold: Threshold for considering a component dead
-        
+
     Returns:
-        Tuple of (filtered_activations, alive_labels, stats_dict)
+        Tuple of (filtered_activations, alive_labels, stats_dict, dead_labels)
     """
     filtered_acts, alive_labels, dead_labels = filter_dead_components(
         activations, labels, threshold
     )
-    
+
     stats = {
         "original": len(labels),
         "alive": len(alive_labels),
         "dead": len(dead_labels)
     }
-    
-    return filtered_acts, alive_labels, stats
+
+    return filtered_acts, alive_labels, stats, dead_labels
 
 
 def display_filtering_stats(filter_results: Dict[str, any]) -> None:

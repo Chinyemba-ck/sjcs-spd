@@ -122,6 +122,9 @@ def run_mdl_clustering(
             n_components = filtered_acts.shape[1] if filtered_acts.ndim >= 2 else 0
             labels = [f"comp_{i}" for i in range(n_components)]
 
+        # Get dead labels if provided
+        dead_labels = _activations_dict.get("_dead_labels", [])
+
         # Create ProcessedActivations object directly
         from spd.clustering.activations import ProcessedActivations
 
@@ -131,7 +134,8 @@ def run_mdl_clustering(
         processed_activations = ProcessedActivations(
             activations_raw={},  # No raw activations since we got pre-filtered data
             activations=acts_numpy,
-            labels=labels
+            labels=labels,
+            dead_components_lst=dead_labels
         )
     else:
         # Normal path with module structure
