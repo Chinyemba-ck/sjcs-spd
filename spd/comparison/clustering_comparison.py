@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from spd.comparison.spd_loader import load_spd_run, get_component_activations
+from spd.comparison.spd_loader import load_spd_run, get_component_activations, ModelLoadError
 from spd.comparison.dead_filter import filter_dead_components_with_stats
 from spd.comparison.mdl_clustering import run_mdl_clustering, display_mdl_results, get_clustering_summary
 from spd.comparison.metrics import MetricsTracker, estimate_mdl_flops
@@ -530,8 +530,71 @@ def main():
             try:
                 # Step 1: Load model (shared with MDL clustering)
                 with st.spinner("Loading SPD model..."):
-                    model = load_spd_run(run_path, device)
-                    st.success(f"✅ Loaded model from {run_path}")
+                    try:
+                        model = load_spd_run(run_path, device)
+                        st.success(f"✅ Loaded model from {run_path}")
+                    except ModelLoadError as e:
+                        # Handle specific model loading errors with detailed UI
+                        st.error(f"❌ Cannot load model: {str(e)}")
+
+                        # Provide detailed error information based on error type
+                        with st.expander("🔍 Error Details", expanded=True):
+                            if e.error_type == "old_format_error":
+                                st.markdown("""
+                                **Problem:** This checkpoint uses an outdated model format.
+
+                                **Details:** The model state dict has old-style keys (e.g., `model.linear1.weight` instead of `patched_model.linear1.original.weight`).
+
+                                **Solution:** This checkpoint needs to be regenerated with the current SPD code.
+                                """)
+                            elif e.error_type == "architecture_mismatch":
+                                st.markdown("""
+                                **Problem:** The checkpoint has a different architecture than the current model expects.
+
+                                **Details:** The saved model has different layers or layer sizes than what the current code expects.
+
+                                **Solution:** Ensure you're using compatible code and checkpoint versions.
+                                """)
+                            elif e.error_type == "tensor_shape_mismatch":
+                                st.markdown("""
+                                **Problem:** The checkpoint has incompatible tensor shapes.
+
+                                **Details:** This typically happens when architecture parameters (like gate dimensions) differ between the saved model and current configuration.
+
+                                **Solution:** The checkpoint cannot be loaded with current architecture settings.
+                                """)
+                            elif e.error_type == "config_load_error":
+                                st.markdown("""
+                                **Problem:** Cannot load the run configuration.
+
+                                **Details:** The config.json file may be missing or corrupted.
+
+                                **Solution:** Verify the run path is correct and the files are accessible.
+                                """)
+
+                            # Show technical details if available
+                            if e.details:
+                                st.markdown("**Technical Details:**")
+                                if "missing_keys" in e.details and e.details["missing_keys"]:
+                                    st.markdown(f"**Missing keys (first 5):** {', '.join(e.details['missing_keys'][:5])}")
+                                    if e.details.get("total_missing", 0) > 5:
+                                        st.markdown(f"*...and {e.details['total_missing'] - 5} more*")
+                                if "unexpected_keys" in e.details and e.details["unexpected_keys"]:
+                                    st.markdown(f"**Unexpected keys (first 5):** {', '.join(e.details['unexpected_keys'][:5])}")
+                                    if e.details.get("total_unexpected", 0) > 5:
+                                        st.markdown(f"*...and {e.details['total_unexpected'] - 5} more*")
+                                if "config" in e.details:
+                                    config_info = e.details["config"]
+                                    if any(v is not None for v in config_info.values()):
+                                        st.markdown("**Configuration:**")
+                                        for key, value in config_info.items():
+                                            if value is not None:
+                                                st.markdown(f"- {key}: {value}")
+                                if "checkpoint_path" in e.details:
+                                    st.markdown(f"**Checkpoint:** `{e.details['checkpoint_path']}`")
+
+                        # Stop execution here - no point continuing without a model
+                        return
                 
                 # Step 2: Run notebook clustering
                 with st.spinner("Running notebook clustering..."):
@@ -594,8 +657,71 @@ def main():
             try:
                 # Step 1: Load model
                 with st.spinner("Loading SPD model..."):
-                    model = load_spd_run(run_path, device)
-                    st.success(f"✅ Loaded model from {run_path}")
+                    try:
+                        model = load_spd_run(run_path, device)
+                        st.success(f"✅ Loaded model from {run_path}")
+                    except ModelLoadError as e:
+                        # Handle specific model loading errors with detailed UI
+                        st.error(f"❌ Cannot load model: {str(e)}")
+
+                        # Provide detailed error information based on error type
+                        with st.expander("🔍 Error Details", expanded=True):
+                            if e.error_type == "old_format_error":
+                                st.markdown("""
+                                **Problem:** This checkpoint uses an outdated model format.
+
+                                **Details:** The model state dict has old-style keys (e.g., `model.linear1.weight` instead of `patched_model.linear1.original.weight`).
+
+                                **Solution:** This checkpoint needs to be regenerated with the current SPD code.
+                                """)
+                            elif e.error_type == "architecture_mismatch":
+                                st.markdown("""
+                                **Problem:** The checkpoint has a different architecture than the current model expects.
+
+                                **Details:** The saved model has different layers or layer sizes than what the current code expects.
+
+                                **Solution:** Ensure you're using compatible code and checkpoint versions.
+                                """)
+                            elif e.error_type == "tensor_shape_mismatch":
+                                st.markdown("""
+                                **Problem:** The checkpoint has incompatible tensor shapes.
+
+                                **Details:** This typically happens when architecture parameters (like gate dimensions) differ between the saved model and current configuration.
+
+                                **Solution:** The checkpoint cannot be loaded with current architecture settings.
+                                """)
+                            elif e.error_type == "config_load_error":
+                                st.markdown("""
+                                **Problem:** Cannot load the run configuration.
+
+                                **Details:** The config.json file may be missing or corrupted.
+
+                                **Solution:** Verify the run path is correct and the files are accessible.
+                                """)
+
+                            # Show technical details if available
+                            if e.details:
+                                st.markdown("**Technical Details:**")
+                                if "missing_keys" in e.details and e.details["missing_keys"]:
+                                    st.markdown(f"**Missing keys (first 5):** {', '.join(e.details['missing_keys'][:5])}")
+                                    if e.details.get("total_missing", 0) > 5:
+                                        st.markdown(f"*...and {e.details['total_missing'] - 5} more*")
+                                if "unexpected_keys" in e.details and e.details["unexpected_keys"]:
+                                    st.markdown(f"**Unexpected keys (first 5):** {', '.join(e.details['unexpected_keys'][:5])}")
+                                    if e.details.get("total_unexpected", 0) > 5:
+                                        st.markdown(f"*...and {e.details['total_unexpected'] - 5} more*")
+                                if "config" in e.details:
+                                    config_info = e.details["config"]
+                                    if any(v is not None for v in config_info.values()):
+                                        st.markdown("**Configuration:**")
+                                        for key, value in config_info.items():
+                                            if value is not None:
+                                                st.markdown(f"- {key}: {value}")
+                                if "checkpoint_path" in e.details:
+                                    st.markdown(f"**Checkpoint:** `{e.details['checkpoint_path']}`")
+
+                        # Stop execution here - no point continuing without a model
+                        return
                 
                 # Step 2: Get activations
                 with st.spinner("Generating component activations..."):

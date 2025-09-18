@@ -11,16 +11,27 @@ from spd.models.component_model import ComponentModel, SPDRunInfo
 from spd.spd_types import ModelPath
 
 
+class ModelLoadError(Exception):
+    """Custom exception for model loading errors with detailed information."""
+    def __init__(self, message: str, error_type: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(message)
+        self.error_type = error_type
+        self.details = details or {}
+
+
 @st.cache_resource
 def load_spd_run(run_path: str, device: str = "cpu") -> ComponentModel:
     """Load an SPD run and return the ComponentModel.
-    
+
     Args:
         run_path: Path to SPD run (WandB path or local path)
         device: Device to load model on
-        
+
     Returns:
         ComponentModel loaded from the run
+
+    Raises:
+        ModelLoadError: If the model cannot be loaded with detailed error information
     """
     # If it's a local wandb cache path, ensure we point to the files directory
     if not run_path.startswith("wandb:") and "wandb" in run_path:
@@ -28,9 +39,103 @@ def load_spd_run(run_path: str, device: str = "cpu") -> ComponentModel:
         # If path doesn't end with 'files', add it
         if path.name != "files" and (path / "files").exists():
             run_path = str(path / "files")
-    
-    spd_run_info = SPDRunInfo.from_path(run_path)
-    component_model = ComponentModel.from_pretrained(spd_run_info.checkpoint_path)
+
+    # Try to load run info
+    try:
+        spd_run_info = SPDRunInfo.from_path(run_path)
+    except Exception as e:
+        raise ModelLoadError(
+            f"Failed to load run configuration from {run_path}",
+            error_type="config_load_error",
+            details={"path": run_path, "error": str(e)}
+        )
+
+    # Try to load the model
+    try:
+        component_model = ComponentModel.from_pretrained(spd_run_info.checkpoint_path)
+    except RuntimeError as e:
+        error_str = str(e)
+
+        # Check for state dict key mismatches
+        if "Missing key(s) in state_dict" in error_str and "Unexpected key(s)" in error_str:
+            # Extract missing and unexpected keys
+            missing_keys = []
+            unexpected_keys = []
+
+            if "Missing key(s)" in error_str:
+                missing_start = error_str.find('Missing key(s) in state_dict: "') + len('Missing key(s) in state_dict: "')
+                missing_end = error_str.find('"', missing_start)
+                if missing_end > missing_start:
+                    missing_keys = error_str[missing_start:missing_end].split('", "')
+
+            if "Unexpected key(s)" in error_str:
+                unexpected_start = error_str.find('Unexpected key(s) in state_dict: "') + len('Unexpected key(s) in state_dict: "')
+                unexpected_end = error_str.find('"', unexpected_start)
+                if unexpected_end > unexpected_start:
+                    unexpected_keys = error_str[unexpected_start:unexpected_end].split('", "')
+
+            # Determine if this is an architecture mismatch
+            is_old_format = any(k.startswith("model.") for k in unexpected_keys)
+            is_architecture_mismatch = len(missing_keys) > 5 or len(unexpected_keys) > 5
+
+            if is_old_format:
+                error_msg = "This checkpoint uses an older model format that is incompatible with the current code."
+                error_type = "old_format_error"
+            elif is_architecture_mismatch:
+                error_msg = "The checkpoint has a different model architecture than expected (different layer names or sizes)."
+                error_type = "architecture_mismatch"
+            else:
+                error_msg = "State dict keys don't match between checkpoint and model."
+                error_type = "state_dict_mismatch"
+
+            raise ModelLoadError(
+                error_msg,
+                error_type=error_type,
+                details={
+                    "missing_keys": missing_keys[:5],  # Show first 5
+                    "unexpected_keys": unexpected_keys[:5],  # Show first 5
+                    "total_missing": len(missing_keys),
+                    "total_unexpected": len(unexpected_keys),
+                    "checkpoint_path": str(spd_run_info.checkpoint_path)
+                }
+            )
+
+        # Check for tensor shape mismatches
+        elif "size mismatch" in error_str:
+            # Extract shape information
+            import re
+            shape_pattern = r"shape torch\.Size\((\[[^\]]+\])\)"
+            shapes = re.findall(shape_pattern, error_str)
+
+            raise ModelLoadError(
+                "The checkpoint has incompatible tensor shapes (likely due to different architecture parameters).",
+                error_type="tensor_shape_mismatch",
+                details={
+                    "error": error_str[:500],  # First 500 chars of error
+                    "checkpoint_path": str(spd_run_info.checkpoint_path),
+                    "config": {
+                        "gate_type": spd_run_info.config.gate_type if hasattr(spd_run_info.config, 'gate_type') else None,
+                        "gate_hidden_dims": spd_run_info.config.gate_hidden_dims if hasattr(spd_run_info.config, 'gate_hidden_dims') else None,
+                        "C": spd_run_info.config.C if hasattr(spd_run_info.config, 'C') else None
+                    }
+                }
+            )
+        else:
+            # Generic runtime error
+            raise ModelLoadError(
+                f"Failed to load model checkpoint: {str(e)[:200]}",
+                error_type="runtime_error",
+                details={"checkpoint_path": str(spd_run_info.checkpoint_path), "error": str(e)}
+            )
+
+    except Exception as e:
+        # Catch any other unexpected errors
+        raise ModelLoadError(
+            f"Unexpected error loading model: {str(e)[:200]}",
+            error_type="unexpected_error",
+            details={"checkpoint_path": str(spd_run_info.checkpoint_path), "error": str(e)}
+        )
+
     component_model.to(device)
     component_model.eval()
     return component_model
