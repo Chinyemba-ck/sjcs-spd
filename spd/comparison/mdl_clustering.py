@@ -128,12 +128,12 @@ def run_mdl_clustering(
         # Create ProcessedActivations object directly
         from spd.clustering.activations import ProcessedActivations
 
-        # Convert to numpy if it's a tensor
-        acts_numpy = filtered_acts.numpy() if hasattr(filtered_acts, 'numpy') else filtered_acts
+        # Keep as tensor (don't convert to numpy) since merge_iteration expects tensors
+        acts_tensor = filtered_acts
 
         processed_activations = ProcessedActivations(
             activations_raw={},  # No raw activations since we got pre-filtered data
-            activations=acts_numpy,
+            activations=acts_tensor,
             labels=labels,
             dead_components_lst=dead_labels
         )
