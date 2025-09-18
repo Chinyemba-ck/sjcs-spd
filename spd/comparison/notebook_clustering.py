@@ -307,9 +307,12 @@ def cross_layer_clustering(
     labels = clustering.fit_predict(np.clip(similarity_matrix, 0, 1))
 
     # Analysis
+    unique_labels, counts = np.unique(labels, return_counts=True)
+    cluster_sizes_dict = dict(zip(unique_labels, counts))
+
     analysis = {
         'n_clusters': n_clusters,
-        'cluster_sizes': dict(zip(*np.unique(labels, return_counts=True))),
+        'cluster_sizes': cluster_sizes_dict,
         'similarity_matrix': similarity_matrix
     }
 
