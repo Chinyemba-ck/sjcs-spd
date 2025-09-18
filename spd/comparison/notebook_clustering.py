@@ -4,6 +4,7 @@ This module contains the exact clustering code from the research notebooks,
 adapted for use in the comparison interface.
 """
 
+import json
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple, Any, Literal
 import warnings
@@ -41,6 +42,55 @@ class NotebookClusteringResults:
     def get_cluster_members(self, cluster_id: int) -> List[int]:
         """Get component indices for a specific cluster."""
         return [i for i, label in enumerate(self.labels) if label == cluster_id]
+
+    def to_json(self) -> dict:
+        """Export notebook clustering results to JSON-compatible dictionary.
+
+        Returns complete clustering data including:
+        - Cluster assignments for each component
+        - Cluster sizes
+        - Component information (layer, index)
+        - Similarity method used
+        - Total component count
+        """
+        # Build detailed cluster membership information
+        cluster_details = {}
+        for cluster_id in range(self.n_clusters):
+            members = self.get_cluster_members(cluster_id)
+            cluster_details[str(cluster_id)] = {
+                "member_indices": members,
+                "member_labels": [self.components[i].layer + f":{self.components[i].component_index}"
+                                  for i in members],
+                "size": len(members)
+            }
+
+        # Build component details
+        component_details = []
+        for i, comp in enumerate(self.components):
+            component_details.append({
+                "index": i,
+                "layer": comp.layer,
+                "component_index": comp.component_index,
+                "cluster_id": int(self.labels[i]),
+                # Optionally include causal importance if available
+                "causal_importance": float(comp.causal_importance) if comp.causal_importance is not None else None
+            })
+
+        # Convert numpy arrays to lists for JSON serialization
+        labels_list = self.labels.tolist() if hasattr(self.labels, 'tolist') else list(self.labels)
+
+        # Note: Not including similarity_matrix as it can be very large
+        # If needed, it can be added with: "similarity_matrix": self.similarity_matrix.tolist()
+
+        return {
+            "n_clusters": self.n_clusters,
+            "total_components": self.total_components,
+            "similarity_method": self.similarity_method,
+            "cluster_sizes": self.cluster_sizes,
+            "cluster_labels": labels_list,
+            "cluster_details": cluster_details,
+            "component_details": component_details
+        }
 
 
 def extract_spd_components(
