@@ -1,5 +1,6 @@
 """MDL clustering wrapper for clustering comparison interface."""
 
+import json
 import time
 import torch
 import streamlit as st
@@ -88,6 +89,59 @@ class MDLClusteringResults:
     def num_final_groups(self) -> int:
         """Get number of final groups."""
         return len(self.final_groups)
+
+    def to_json(self) -> dict:
+        """Export full MDL clustering results to JSON-compatible dictionary.
+
+        Returns complete clustering data for inspection including:
+        - Final component groups
+        - Configuration parameters
+        - Timing information
+        - Component statistics
+        - Full merge history details
+        """
+        # Convert numpy arrays and tensors to lists for JSON serialization
+        def convert_to_serializable(obj):
+            if hasattr(obj, 'tolist'):  # numpy arrays
+                return obj.tolist()
+            elif hasattr(obj, 'cpu'):  # torch tensors
+                return obj.cpu().numpy().tolist()
+            elif isinstance(obj, (int, float, str, bool, type(None))):
+                return obj
+            else:
+                return str(obj)
+
+        # Get selected pairs, handling tensor/numpy conversion
+        selected_pairs = []
+        if self.merge_history.selected_pairs is not None:
+            selected_pairs = convert_to_serializable(self.merge_history.selected_pairs)
+
+        # Get k_groups per iteration
+        k_groups_per_iter = []
+        if hasattr(self.merge_history.merges, 'k_groups'):
+            k_groups_per_iter = convert_to_serializable(self.merge_history.merges.k_groups)
+
+        return {
+            "final_groups": self.final_groups,
+            "num_groups": self.num_final_groups,
+            "config": {
+                "alpha": self.config.alpha,
+                "iters": self.config.iters,
+                "activation_threshold": self.config.activation_threshold,
+                "merge_sampling": self.config.merge_pair_sampling_method,
+                "merge_threshold": self.config.merge_pair_sampling_kwargs.get("threshold", None)
+            },
+            "timing": self.timing_info,
+            "component_stats": {
+                "original": self.processed_activations.n_components_original,
+                "alive": self.processed_activations.n_components_alive,
+                "dead": self.processed_activations.n_components_dead
+            },
+            "dead_components": self.processed_activations.dead_components_lst,
+            "selected_pairs": selected_pairs,
+            "iterations_completed": self.merge_history.n_iters_current,
+            "k_groups_per_iteration": k_groups_per_iter
+        }
 
 
 @st.cache_data
