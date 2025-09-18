@@ -702,7 +702,8 @@ def main():
                     st.metric("Method", mdl_summary["method"])
                     st.metric("Time", f"{mdl_summary['total_time']:.2f}s")
                     st.metric("Clusters", mdl_summary["final_groups"])
-                    st.metric("Final Cost", f"{mdl_summary['final_cost']:.4f}")
+                    if mdl_summary.get('final_cost') is not None:
+                        st.metric("Final Cost", f"{mdl_summary['final_cost']:.4f}")
         
         else:  # Only one method completed
             if "notebook" in results:
