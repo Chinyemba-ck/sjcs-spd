@@ -5,7 +5,9 @@ Compare clustering methods side-by-side on SPD runs.
 
 import streamlit as st
 import yaml
+import json
 import torch
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any, List, Tuple
 import os
@@ -275,10 +277,30 @@ def display_notebook_results(results: NotebookClusteringResults):
     cluster_sizes_data = []
     for cluster_id, size in results.cluster_sizes.items():
         cluster_sizes_data.append({"Cluster": f"Cluster {cluster_id}", "Size": size})
-    
+
     if cluster_sizes_data:
         st.bar_chart({item["Cluster"]: item["Size"] for item in cluster_sizes_data})
-    
+
+    # JSON Export section
+    st.subheader("Export Results")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("📥 Export Full JSON", key="notebook_export_json"):
+            json_data = results.to_json()
+            json_str = json.dumps(json_data, indent=2)
+
+            st.download_button(
+                label="💾 Download Notebook Clustering JSON",
+                data=json_str,
+                file_name=f"notebook_clustering_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                key="notebook_download_json"
+            )
+
+    with col2:
+        st.info("JSON includes full clustering data for inspection")
+
     # Detailed cluster information
     with st.expander("Cluster Details"):
         for cluster_id in sorted(results.cluster_sizes.keys()):
