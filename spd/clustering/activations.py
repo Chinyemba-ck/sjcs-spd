@@ -21,6 +21,7 @@ def component_activations(
     | None = None,
     batch: Int[Tensor, "batch_size n_ctx"] | None = None,
     sigmoid_type: SigmoidTypes = "normal",
+    sampling: Literal["continuous", "binomial"] = "continuous",
 ) -> dict[str, Float[Tensor, " n_steps C"]]:
     """Get the component activations over a **single** batch."""
     with torch.no_grad():
@@ -42,6 +43,7 @@ def component_activations(
             pre_weight_acts=pre_weight_acts,
             sigmoid_type=sigmoid_type,
             detach_inputs=False,
+            sampling=sampling,
         )
 
         return causal_importances

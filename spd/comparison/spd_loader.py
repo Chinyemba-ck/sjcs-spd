@@ -3,7 +3,7 @@
 import streamlit as st
 import torch
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Literal
 from jaxtyping import Float, Int
 from torch import Tensor
 
@@ -38,19 +38,21 @@ def load_spd_run(run_path: str, device: str = "cpu") -> ComponentModel:
 
 @st.cache_data
 def get_component_activations(
-    _component_model: ComponentModel, 
+    _component_model: ComponentModel,
     batch_size: int = 1024,
     seq_len: int = 128,
-    device: str = "cpu"
+    device: str = "cpu",
+    sampling: Literal["continuous", "binomial"] = "continuous"
 ) -> Dict[str, Float[Tensor, "n_steps C"]]:
     """Get component activations from a ComponentModel using sample data.
-    
+
     Args:
         _component_model: ComponentModel (underscore prefix for streamlit caching)
         batch_size: Size of batch to generate
         seq_len: Sequence length for generation (used for language models)
         device: Device to run on
-        
+        sampling: Sampling method for causal importance calculation ("continuous" or "binomial")
+
     Returns:
         Dictionary of component activations per module
     """
@@ -102,6 +104,7 @@ def get_component_activations(
             pre_weight_acts=pre_weight_acts,
             sigmoid_type="hard",  # Use hard sigmoid for binary activations
             detach_inputs=False,
+            sampling=sampling,
         )
         
         return causal_importances
