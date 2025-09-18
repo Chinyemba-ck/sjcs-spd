@@ -726,7 +726,34 @@ def main():
                     st.metric("Clusters", mdl_summary["final_groups"])
                     if mdl_summary.get('final_cost') is not None:
                         st.metric("Final Cost", f"{mdl_summary['final_cost']:.4f}")
-        
+
+            # Combined JSON Export
+            st.subheader("Export All Results")
+
+            if st.button("📥 Export Combined JSON", key="combined_export"):
+                combined_data = {
+                    "timestamp": datetime.now().isoformat(),
+                    "run_id": st.session_state.get('current_run_id', 'manual_input'),
+                    "notebook_clustering": results["notebook"]["results"].to_json(),
+                    "mdl_clustering": results["mdl"]["results"].to_json(),
+                    "comparison": {
+                        "notebook_clusters": results["notebook"]["summary"]["final_groups"],
+                        "mdl_clusters": results["mdl"]["summary"]["final_groups"],
+                        "notebook_time": results["notebook"]["summary"]["total_time"],
+                        "mdl_time": results["mdl"]["summary"]["total_time"]
+                    }
+                }
+
+                json_str = json.dumps(combined_data, indent=2)
+
+                st.download_button(
+                    label="💾 Download Complete Comparison JSON",
+                    data=json_str,
+                    file_name=f"clustering_comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                    mime="application/json",
+                    key="combined_download"
+                )
+
         else:  # Only one method completed
             if "notebook" in results:
                 summary = results["notebook"]["summary"]
