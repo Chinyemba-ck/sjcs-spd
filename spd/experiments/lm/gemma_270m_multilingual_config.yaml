@@ -39,7 +39,7 @@ output_loss_type: kl
 # --- Training ---
 batch_size: 32  # Smaller batch size for testing multilingual prompts
 eval_batch_size: 32
-steps: 25000  # Fewer steps for initial experiments
+steps: 100  # Very short test run to verify setup
 lr: 0.0005
 lr_schedule: cosine
 lr_warmup_pct: 0.01
@@ -120,8 +120,9 @@ task_config:
   task_name: lm
   max_seq_len: 256  # Shorter sequences for multilingual analysis
   buffer_size: 1000
-  # We'll use custom multilingual dataset - placeholder for now
-  dataset_name: "wikitext"  # Temporary - will be replaced with custom dataset
+  # Use wikitext-2 for SPD decomposition
+  dataset_name: "wikitext"
+  dataset_config: "wikitext-2-v1"  # Specify which wikitext config to use
   column_name: "text"
   train_data_split: "train"
   eval_data_split: "test"

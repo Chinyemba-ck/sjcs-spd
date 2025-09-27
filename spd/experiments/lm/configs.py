@@ -21,6 +21,10 @@ class LMTaskConfig(BaseModel):
         default="lennart-finke/SimpleStories",
         description="HuggingFace dataset identifier to use for the LM task",
     )
+    dataset_config: str | None = Field(
+        default=None,
+        description="Optional config name for datasets that require it (e.g., 'wikitext-2-v1' for wikitext)",
+    )
     column_name: str = Field(
         default="story",
         description="Dataset column that contains the text to train on",

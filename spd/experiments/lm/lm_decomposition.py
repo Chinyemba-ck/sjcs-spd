@@ -117,6 +117,7 @@ def main(
         logger.info("Loading dataset...")
     train_data_config = DatasetConfig(
         name=config.task_config.dataset_name,
+        dataset_config=getattr(config.task_config, 'dataset_config', None),
         hf_tokenizer_path=config.tokenizer_name,
         split=config.task_config.train_data_split,
         n_ctx=config.task_config.max_seq_len,
@@ -145,6 +146,7 @@ def main(
 
     eval_data_config = DatasetConfig(
         name=config.task_config.dataset_name,
+        dataset_config=getattr(config.task_config, 'dataset_config', None),
         hf_tokenizer_path=config.tokenizer_name,
         split=config.task_config.eval_data_split,
         n_ctx=config.task_config.max_seq_len,

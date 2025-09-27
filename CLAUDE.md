@@ -26,10 +26,14 @@ ResidualMLP:
 
 Language Models (loaded from HuggingFace):
 - `ss_llama` - Simple Stories Llama model
+- `ss_llama_single` - Simple Stories Llama model (single GPU configuration)
 - `ss_gpt2` - Simple Stories GPT-2 model
 - `gpt2` - GPT-2 model
 - `ss_gpt2_simple` - Simplified Simple Stories GPT-2 model
 - `ss_gpt2_simple_noln` - Simplified Simple Stories GPT-2 without layer normalization
+
+**Experimental** (not in registry, may have limited support):
+- `ih` - Induction head experiment (`spd/experiments/ih/`)
 
 ## Research Papers
 
@@ -151,6 +155,7 @@ Some experiments support training target models from scratch:
 - ResidualMLP: `uv run spd/experiments/resid_mlp/train_resid_mlp.py <config.yaml>`
 
 Language model experiments load pretrained models from HuggingFace and don't require training.
+Induction head experiment: `uv run spd/experiments/ih/train_ih.py <config.yaml>` (experimental)
 
 **Metrics and Figures:**
 
@@ -185,6 +190,7 @@ spd-run --experiments tms_5-2 --sweep custom.yaml --n-agents 2 # Use custom swee
 **Sweep parameters:**
 
 - Default sweep parameters are loaded from `spd/scripts/sweep_params.yaml`
+- See `spd/scripts/sweep_params.yaml.example` for parameter structure reference
 - You can specify a custom sweep parameters file by passing its path to `--sweep`
 - Sweep parameters support both experiment-specific and global configurations:
   ```yaml
@@ -230,6 +236,27 @@ spd-run --no-create_report                   # Skip W&B report creation
 - DO NOT use more than 8 GPUs at one time
 - This includes not setting off multiple sweeps/evals that total >8 GPUs
 - Monitor jobs with: `squeue --format="%.18i %.9P %.15j %.12u %.12T %.10M %.9l %.6D %b %R" --me`
+
+**Model Comparison:**
+
+Compare geometric similarities between two SPD models:
+
+```bash
+python spd/scripts/compare_models/compare_models.py spd/scripts/compare_models/compare_models_config.yaml
+
+# Or with command line arguments:
+python spd/scripts/compare_models/compare_models.py --current_model_path="wandb:..." --reference_model_path="wandb:..."
+```
+
+See `spd/scripts/compare_models/README.md` for detailed usage. Results are saved to `spd/scripts/compare_models/out/`.
+
+**Clustering Analysis:**
+
+CLI tool for clustering analysis on SPD runs:
+
+```bash
+spd-cluster <arguments>  # Run clustering analysis on SPD outputs
+```
 
 **Clustering Comparison Interface:**
 
