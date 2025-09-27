@@ -21,7 +21,6 @@ def component_activations(
     | None = None,
     batch: Int[Tensor, "batch_size n_ctx"] | None = None,
     sigmoid_type: SigmoidTypes = "normal",
-    sampling: Literal["continuous", "binomial"] = "continuous",
 ) -> dict[str, Float[Tensor, " n_steps C"]]:
     """Get the component activations over a **single** batch."""
     with torch.no_grad():
@@ -43,7 +42,7 @@ def component_activations(
             pre_weight_acts=pre_weight_acts,
             sigmoid_type=sigmoid_type,
             detach_inputs=False,
-            sampling=sampling,
+            sampling="continuous",
         )
 
         return causal_importances
@@ -210,12 +209,16 @@ class ProcessedActivations:
     @property
     def n_components_original(self) -> int:
         """Total number of components before filtering. equal to the sum of all components in `activations_raw`, or to `n_components_alive + n_components_dead`"""
+<<<<<<< HEAD
         # If we have raw activations, calculate from them
         if self.activations_raw:
             return sum(act.shape[1] for act in self.activations_raw.values())
         # Otherwise, for pre-filtered data, calculate from alive + dead counts
         else:
             return len(self.labels) + self.n_components_dead
+=======
+        return sum(act.shape[1] for act in self.activations_raw.values())
+>>>>>>> origin/feature/clustering-sjcs
 
     @property
     def n_components_alive(self) -> int:
