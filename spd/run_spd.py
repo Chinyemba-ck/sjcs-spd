@@ -271,13 +271,10 @@ def optimize(
                     wandb.log(microbatch_log_data, step=step)
 
         # --- Evaluation --- #
-        if step % config.eval_freq == 0:
+        # Skip evaluation at step 0 since no training has occurred yet
+        if step > 0 and step % config.eval_freq == 0:
             with torch.inference_mode():
-                run_slow: bool = (
-                    config.slow_eval_on_first_step
-                    if step == 0
-                    else step % config.slow_eval_freq == 0
-                )
+                run_slow: bool = step % config.slow_eval_freq == 0
 
                 metrics = evaluate(
                     model=component_model,  # No backward passes so DDP wrapped_model not needed
