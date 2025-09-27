@@ -301,9 +301,27 @@ def _fetch_latest_checkpoint_name(filenames: list[str], prefix: str | None = Non
     if len(filenames) == 1:
         latest_checkpoint_name = filenames[0]
     else:
-        latest_checkpoint_name = sorted(
-            filenames, key=lambda x: int(x.split(".pth")[0].split("_")[-1])
-        )[-1]
+        # Separate numbered checkpoints from non-numbered ones
+        numbered_checkpoints = []
+        non_numbered_checkpoints = []
+
+        for filename in filenames:
+            # Try to extract step number from filename
+            parts = filename.split(".pth")[0].split("_")
+            if len(parts) > 1 and parts[-1].isdigit():
+                # This is a numbered checkpoint like model_40000.pth
+                numbered_checkpoints.append((filename, int(parts[-1])))
+            else:
+                # This is a non-numbered checkpoint like tms.pth
+                non_numbered_checkpoints.append(filename)
+
+        # Prefer numbered checkpoints (they have explicit iteration info)
+        if numbered_checkpoints:
+            # Sort by step number and get the latest
+            latest_checkpoint_name = sorted(numbered_checkpoints, key=lambda x: x[1])[-1][0]
+        else:
+            # If no numbered checkpoints, just return the first non-numbered one
+            latest_checkpoint_name = non_numbered_checkpoints[0]
     return latest_checkpoint_name
 
 
