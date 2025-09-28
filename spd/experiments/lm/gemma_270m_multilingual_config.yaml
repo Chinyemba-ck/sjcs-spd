@@ -13,7 +13,7 @@ C: 20  # Number of components per layer (small for 270M model)
 n_mask_samples: 1
 gate_type: "vector_mlp"  # Use vector MLP gates for richer component interactions
 gate_hidden_dims: [8]  # Smaller hidden dim for 270M model
-sigmoid_type: "leaky_hard"
+sigmoid_type: "hard"  # Changed from leaky_hard to allow true zeros
 # Focus on MLP gate projections as requested
 target_module_patterns:
   - "model.layers.*.mlp.gate_proj"
@@ -29,7 +29,7 @@ ci_recon_coeff: null
 stochastic_recon_coeff: 2.0  # Increased since we're disabling layerwise
 ci_recon_layerwise_coeff: null
 stochastic_recon_layerwise_coeff: null  # Disabled - Gemma's 262k vocab x 18 layers needs 18GB alone
-importance_minimality_coeff: 0.01  # Strong sparsity for proper component death and interpretability
+importance_minimality_coeff: 0.0003  # Match other LLaMA models - reduced from 0.01 which was 33x too high
 pnorm: 1.5  # Between L1 and L2 for balanced sparsity
 p_anneal_start_frac: 0.0
 p_anneal_final_p: 0.3
@@ -39,7 +39,7 @@ output_loss_type: mse  # MSE doesn't require softmax, saves memory for Gemma's 2
 # --- Training ---
 batch_size: 4  # Reduced for Gemma's huge 262k vocab to fit in 24GB VRAM
 eval_batch_size: 4
-steps: 10000  # Extended training for proper convergence and component death
+steps: 30000  # Extended training (30k steps) for maximum natural convergence and component death
 lr: 0.0005
 lr_schedule: cosine
 lr_warmup_pct: 0.01
@@ -53,8 +53,8 @@ slow_eval_freq: 2500
 slow_eval_on_first_step: true
 n_eval_steps: 5
 save_freq: 5000
-ci_alive_threshold: 0.0
-n_examples_until_dead: 819200  # train_log_freq * batch_size * max_seq_len
+ci_alive_threshold: 0.001  # Components need >0.1% activation to stay alive
+n_examples_until_dead: 307200  # Die after 1% of training without firing (30k*4*256*0.01)
 
 # Evaluation metrics with focus on component activation patterns
 eval_metrics:
