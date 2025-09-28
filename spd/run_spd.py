@@ -271,7 +271,8 @@ def optimize(
                     wandb.log(microbatch_log_data, step=step)
 
         # --- Evaluation --- #
-        if step % config.eval_freq == 0:
+        # Skip evaluation at step 0 to prevent memory exhaustion before any training occurs
+        if step > 0 and step % config.eval_freq == 0:
             with torch.inference_mode():
                 run_slow: bool = (
                     config.slow_eval_on_first_step

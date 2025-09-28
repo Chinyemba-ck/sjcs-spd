@@ -3,7 +3,7 @@
 # Focus on MLP gate projections as requested by Jack
 
 # --- WandB ---
-wandb_project: spd
+wandb_project: gemma-spd
 wandb_run_name: null
 wandb_run_name_prefix: "gemma_270m_multilingual"
 
@@ -26,20 +26,20 @@ use_delta_component: true
 # --- Loss Coefficients ---
 faithfulness_coeff: null
 ci_recon_coeff: null
-stochastic_recon_coeff: 0.2
+stochastic_recon_coeff: 2.0  # Increased since we're disabling layerwise
 ci_recon_layerwise_coeff: null
-stochastic_recon_layerwise_coeff: 2.0
-importance_minimality_coeff: 0.0005  # Slightly higher for smaller model
+stochastic_recon_layerwise_coeff: null  # Disabled - Gemma's 262k vocab x 18 layers needs 18GB alone
+importance_minimality_coeff: 0.01  # Strong sparsity for proper component death and interpretability
 pnorm: 1.5  # Between L1 and L2 for balanced sparsity
 p_anneal_start_frac: 0.0
 p_anneal_final_p: 0.3
 p_anneal_end_frac: 1.0
-output_loss_type: kl
+output_loss_type: mse  # MSE doesn't require softmax, saves memory for Gemma's 262k vocab
 
 # --- Training ---
-batch_size: 32  # Smaller batch size for testing multilingual prompts
-eval_batch_size: 32
-steps: 100  # Very short test run to verify setup
+batch_size: 4  # Reduced for Gemma's huge 262k vocab to fit in 24GB VRAM
+eval_batch_size: 4
+steps: 10000  # Extended training for proper convergence and component death
 lr: 0.0005
 lr_schedule: cosine
 lr_warmup_pct: 0.01
