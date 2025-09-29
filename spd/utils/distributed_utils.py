@@ -4,7 +4,11 @@ import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from functools import wraps
-from typing import Literal, cast
+from typing import Literal, TypeVar, cast
+from typing_extensions import ParamSpec
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 import torch
 import torch.distributed as dist
@@ -115,7 +119,7 @@ def cleanup_distributed() -> None:
     _state = _init_default_state()
 
 
-def with_distributed_cleanup[**P, T](fn: Callable[P, T]) -> Callable[P, T]:
+def with_distributed_cleanup(fn: Callable[P, T]) -> Callable[P, T]:
     """Decorator to clean up distributed state after function execution."""
 
     @wraps(fn)
@@ -187,7 +191,7 @@ def all_reduce(
     return tensor
 
 
-def broadcast_obj[T](value: T) -> T:
+def broadcast_obj(value: T) -> T:
     """Broadcast an object from rank 0 to all ranks."""
     assert dist.is_initialized()
     payload: list[object] = [value if is_main_process() else None]
@@ -195,7 +199,7 @@ def broadcast_obj[T](value: T) -> T:
     return cast(T, payload[0])
 
 
-def call_on_rank0_then_broadcast[**P, T](
+def call_on_rank0_then_broadcast(
     fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs
 ) -> T:
     """Call `fn` only on rank 0 and broadcast the result to all ranks."""
@@ -206,7 +210,7 @@ def call_on_rank0_then_broadcast[**P, T](
     return fn(*args, **kwargs)
 
 
-def ensure_cached_and_call[**P, T](fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
+def ensure_cached_and_call(fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
     """Call `fn` on rank 0 to cache any download side effects, barrier, then call on all ranks."""
     if is_distributed():
         if is_main_process():

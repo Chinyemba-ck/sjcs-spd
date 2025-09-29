@@ -278,7 +278,7 @@ def create_data_loader(
     return loader, tokenizer
 
 
-def loop_dataloader[T](dl: DataLoader[T]):
+def loop_dataloader(dl: DataLoader):
     """Loop over a dataloader, resetting the iterator when it is exhausted.
 
     Ensures that each epoch gets different data, even when using a distributed sampler.

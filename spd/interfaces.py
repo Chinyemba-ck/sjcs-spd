@@ -9,11 +9,11 @@ from spd.spd_types import ModelPath
 
 
 @dataclass
-class RunInfo[T](ABC):
+class RunInfo(ABC):
     """Base class for run information from a training run of a target model or SPD."""
 
     checkpoint_path: Path
-    config: T
+    config: Any
 
     @classmethod
     @abstractmethod

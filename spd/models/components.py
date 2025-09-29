@@ -289,7 +289,8 @@ class Identity(nn.Module):
         super().__init__()
         self.d = d
 
-    @override
+    @
+from typing_extensions import override
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x
 

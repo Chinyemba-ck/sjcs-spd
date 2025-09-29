@@ -50,7 +50,7 @@ def generate_sweep_id() -> str:
     return f"sweep_id-{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
 
-def load_config[T: BaseModel](
+def load_config(
     config_path_or_obj: Path | str | dict[str, Any] | T, config_model: type[T]
 ) -> T:
     """Load the config of class `config_model`, from various sources.
@@ -282,7 +282,7 @@ def apply_nested_updates(base_dict: dict[str, Any], updates: dict[str, Any]) -> 
     return result
 
 
-def runtime_cast[T](type_: type[T], obj: Any) -> T:
+def runtime_cast(type_: type[T], obj: Any) -> T:
     """typecast with a runtime check"""
     if not isinstance(obj, type_):
         raise TypeError(f"Expected {type_}, got {type(obj)}")
