@@ -152,7 +152,7 @@ def create_data_loader(
     ddp_rank: int = 0,
     ddp_world_size: int = 1,
     to_lower: bool = True,
-) -> tuple[DataLoader[Any], PreTrainedTokenizer]:
+) -> tuple[DataLoader, PreTrainedTokenizer]:
     """Create a DataLoader for the given dataset.
 
     Uses PyTorch's DistributedSampler to ensure each rank gets the correct

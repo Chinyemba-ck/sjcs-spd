@@ -17,7 +17,7 @@ class RunInfo(ABC):
 
     @classmethod
     @abstractmethod
-    def from_path(cls, _path: ModelPath) -> "RunInfo[T]":
+    def from_path(cls, _path: ModelPath) -> "RunInfo":
         """Load run info from wandb or local path.
 
         Args:
@@ -42,6 +42,6 @@ class LoadableModule(nn.Module, ABC):
 
     @classmethod
     @abstractmethod
-    def from_run_info(cls, _run_info: RunInfo[Any]) -> "LoadableModule":
+    def from_run_info(cls, _run_info: RunInfo) -> "LoadableModule":
         """Load a pretrained model from a run info object."""
         raise NotImplementedError("Subclasses must implement from_run_info method.")

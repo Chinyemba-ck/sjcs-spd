@@ -1,4 +1,5 @@
-from typing import Literal, override
+from typing import Literal
+from typing_extensions import override
 
 import einops
 import torch

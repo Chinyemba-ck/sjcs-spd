@@ -1,5 +1,6 @@
 from collections.abc import Iterator
-from typing import Literal, override
+from typing import Literal
+from typing_extensions import override
 
 import torch
 from jaxtyping import Float
@@ -7,12 +8,12 @@ from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 
 
-class DatasetGeneratedDataLoader[Q](DataLoader[Q]):
+class DatasetGeneratedDataLoader(DataLoader):
     """DataLoader that generates batches by calling the dataset's `generate_batch` method."""
 
     def __init__(
         self,
-        dataset: Dataset[Q],
+        dataset: Dataset,
         batch_size: int = 1,
         shuffle: bool = False,
         num_workers: int = 0,
@@ -24,12 +25,12 @@ class DatasetGeneratedDataLoader[Q](DataLoader[Q]):
     @override
     def __iter__(  # pyright: ignore[reportIncompatibleMethodOverride]
         self,
-    ) -> Iterator[Q]:
+    ) -> Iterator:
         for _ in range(len(self)):
             yield self.dataset.generate_batch(self.batch_size)  # pyright: ignore[reportAttributeAccessIssue]
 
 
-class BatchedDataLoader[Q](DataLoader[Q]):
+class BatchedDataLoader(DataLoader):
     """DataLoader that unpacks the batch in __getitem__.
 
     This is used for datasets which generate a whole batch in one call to __getitem__.
@@ -37,7 +38,7 @@ class BatchedDataLoader[Q](DataLoader[Q]):
 
     def __init__(
         self,
-        dataset: Dataset[Q],
+        dataset: Dataset,
         num_workers: int = 0,
     ):
         super().__init__(dataset, num_workers=num_workers)

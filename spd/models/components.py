@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Literal, override
+from typing import Literal
+from typing_extensions import override
 
 import einops
 import torch
@@ -289,8 +290,7 @@ class Identity(nn.Module):
         super().__init__()
         self.d = d
 
-    @
-from typing_extensions import override
+    @override
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x
 
