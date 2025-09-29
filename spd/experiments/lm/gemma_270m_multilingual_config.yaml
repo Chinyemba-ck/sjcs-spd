@@ -9,10 +9,10 @@ wandb_run_name_prefix: "gemma_270m_multilingual"
 
 # --- General ---
 seed: 0
-C: 20  # Number of components per layer (small for 270M model)
+C: 1000  # Increased from 20 - language models need 1000+ components
 n_mask_samples: 1
 gate_type: "vector_mlp"  # Use vector MLP gates for richer component interactions
-gate_hidden_dims: [8]  # Smaller hidden dim for 270M model
+gate_hidden_dims: [12]  # Standard for language models (ss_llama, ss_gpt2 use 12)
 sigmoid_type: "hard"  # Changed from leaky_hard to allow true zeros
 # Focus on MLP gate projections as requested
 target_module_patterns:
@@ -26,31 +26,31 @@ use_delta_component: true
 # --- Loss Coefficients ---
 faithfulness_coeff: null
 ci_recon_coeff: null
-stochastic_recon_coeff: 2.0  # Increased since we're disabling layerwise
+stochastic_recon_coeff: 0.2  # Standard for LMs with layerwise enabled
 ci_recon_layerwise_coeff: null
-stochastic_recon_layerwise_coeff: null  # Disabled - Gemma's 262k vocab x 18 layers needs 18GB alone
+stochastic_recon_layerwise_coeff: 2.0  # Enabled - only needs 1GB extra (processes sequentially, not simultaneously)
 importance_minimality_coeff: 0.0003  # Match other LLaMA models - reduced from 0.01 which was 33x too high
-pnorm: 1.5  # Between L1 and L2 for balanced sparsity
+pnorm: 2.0  # L2 norm - standard for all language models
 p_anneal_start_frac: 0.0
 p_anneal_final_p: 0.3
 p_anneal_end_frac: 1.0
-output_loss_type: mse  # MSE doesn't require softmax, saves memory for Gemma's 262k vocab
+output_loss_type: kl  # KL divergence - standard for all language models
 
 # --- Training ---
-batch_size: 4  # Reduced for Gemma's huge 262k vocab to fit in 24GB VRAM
-eval_batch_size: 4
+batch_size: 2  # With accumulation=2, processes 1 sample at a time
+eval_batch_size: 2
 steps: 30000  # Extended training (30k steps) for maximum natural convergence and component death
 lr: 0.0005
 lr_schedule: cosine
 lr_warmup_pct: 0.01
 lr_exponential_halflife: null
-gradient_accumulation_steps: 1
+gradient_accumulation_steps: 2  # Maintains effective batch of 2
 
 # --- Logging & Saving ---
 train_log_freq: 100
 eval_freq: 500
 slow_eval_freq: 2500
-slow_eval_on_first_step: true
+slow_eval_on_first_step: false  # Skip initial eval to avoid OOM before training starts
 n_eval_steps: 5
 save_freq: 5000
 ci_alive_threshold: 0.001  # Components need >0.1% activation to stay alive
