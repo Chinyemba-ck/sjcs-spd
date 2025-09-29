@@ -37,14 +37,14 @@ p_anneal_end_frac: 1.0
 output_loss_type: kl  # KL divergence - standard for all language models
 
 # --- Training ---
-batch_size: 2  # With accumulation=2, processes 1 sample at a time
-eval_batch_size: 2
+batch_size: 3  # Changed from 2 to be divisible by 3 GPUs
+eval_batch_size: 3  # Changed from 2 to be divisible by 3 GPUs
 steps: 30000  # Extended training (30k steps) for maximum natural convergence and component death
 lr: 0.0005
 lr_schedule: cosine
 lr_warmup_pct: 0.01
 lr_exponential_halflife: null
-gradient_accumulation_steps: 2  # Maintains effective batch of 2
+gradient_accumulation_steps: 1  # Changed from 2 to maintain microbatch_size=3
 
 # --- Logging & Saving ---
 train_log_freq: 100
