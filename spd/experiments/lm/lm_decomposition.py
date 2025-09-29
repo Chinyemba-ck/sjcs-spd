@@ -5,7 +5,6 @@ from pathlib import Path
 
 import fire
 import wandb
-from simple_stories_train.run_info import RunInfo as SSRunInfo
 
 from spd.configs import Config
 from spd.data import DatasetConfig, create_data_loader
@@ -85,6 +84,7 @@ def main(
     if config.pretrained_model_class.startswith("simple_stories_train"):
         # Handle differently in case run has layernorm ablations (we'd need to collect ln_stds)
         # Avoid concurrent wandb API requests on each rank
+        from simple_stories_train.run_info import RunInfo as SSRunInfo
         run_info = call_on_rank0_then_broadcast(SSRunInfo.from_path, config.pretrained_model_name)
         if run_info.config_dict["enable_ln_ablation"]:
             ln_stds = run_info.ln_stds
