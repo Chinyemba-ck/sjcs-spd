@@ -97,7 +97,7 @@ if [ -d "sjcs-spd" ]; then
     check_success "Repository updated" "Failed to update repository"
 else
     log_info "Cloning repository..."
-    git clone https://github.com/seaneillpc/sjcs-spd.git
+    git clone https://github.com/Chinyemba-ck/sjcs-spd.git
     check_success "Repository cloned" "Failed to clone repository"
     cd sjcs-spd
     git checkout sean
