@@ -2,7 +2,8 @@ from typing import Literal
 
 import torch
 from jaxtyping import Float, Int
-from torch import Tensor
+from torch import Tensor, nn
+from torch.nn.parallel import DistributedDataParallel
 
 from spd.configs import Config
 from spd.models.component_model import ComponentModel
@@ -45,10 +46,15 @@ def calc_masked_recon_layerwise_loss(
     target_out: Float[Tensor, "... d_model_out"],
     loss_type: Literal["mse", "kl"],
     device: str,
-) -> Float[Tensor, ""]:
+    loss_coeff: float,
+    ddp_model: DistributedDataParallel | None = None,
+) -> float:
     """Calculate the recon loss when augmenting the model one (masked) component layer at a time.
 
     This function takes the mean loss over all masks in mask_infos_list.
+
+    NOTE: This function calls .backward() internally on each loss to reduce memory usage by
+    immediately freeing computation graphs. Gradients accumulate across all backward calls.
 
     Args:
         model: The component model
@@ -58,23 +64,64 @@ def calc_masked_recon_layerwise_loss(
         target_out: Target model output
         loss_type: Type of loss to calculate
         device: Device to run computations on
+        loss_coeff: Loss coefficient to scale gradients (e.g., stochastic_recon_layerwise_coeff)
+        ddp_model: DDP wrapper model for no_sync() context manager (None if not distributed)
 
     Returns:
-        The recon loss
+        The average loss value as a Python float (for logging purposes)
     """
     assert loss_type in ["mse", "kl"], f"Invalid loss type: {loss_type}"
-    total_loss = torch.tensor(0.0, device=device)
+
+    # Verify no_sync() method exists if DDP model provided
+    if ddp_model is not None:
+        assert hasattr(ddp_model, 'no_sync'), (
+            f"ddp_model of type {type(ddp_model).__name__} does not have no_sync() method. "
+            "Expected torch.nn.parallel.DistributedDataParallel. "
+            "This requires PyTorch >= 1.8.0."
+        )
+
+    # Calculate scaling factor for mathematical equivalence
+    # Original: (coeff * sum(losses) / N).backward()
+    # Equivalent: (coeff / N * loss_i).backward() for each loss_i
+    n_modified_components = len(mask_infos_list[0]) if mask_infos_list else 0
+    n_stochastic_sources = len(mask_infos_list)
+    total_iterations = n_modified_components * n_stochastic_sources
+
+    if total_iterations == 0:
+        return 0.0
+
+    scale_factor = loss_coeff / total_iterations
+
+    total_loss_value = 0.0
+
     for mask_infos in mask_infos_list:
         for module_name, mask_info in mask_infos.items():
+            # Forward pass (creates computation graph)
             modified_out = model(batch, mode="components", mask_infos={module_name: mask_info})
+
+            # Calculate loss
             if loss_type == "mse":
                 loss = ((modified_out - target_out) ** 2).mean()
             else:
                 loss = calc_kl_divergence_lm(pred=modified_out, target=target_out)
-            total_loss += loss
-    n_modified_components = len(mask_infos_list[0])
-    n_stochastic_sources = len(mask_infos_list)
-    return total_loss / (n_modified_components * n_stochastic_sources)
+
+            # Scale loss to maintain mathematical equivalence
+            scaled_loss = scale_factor * loss
+
+            # Backward pass with optional no_sync to prevent DDP gradient synchronization
+            # We always use no_sync here because there will be another backward() call
+            # in run_spd.py on the remaining losses (importance_minimality, etc.)
+            if ddp_model is not None:
+                with ddp_model.no_sync():
+                    scaled_loss.backward()
+            else:
+                scaled_loss.backward()
+
+            # Accumulate loss value for logging (detach from graph)
+            total_loss_value += loss.item()
+
+    # Return average loss value
+    return total_loss_value / total_iterations
 
 
 def calc_masked_recon_loss(
@@ -145,6 +192,7 @@ def calculate_losses(
     weight_deltas: dict[str, Float[Tensor, " d_out d_in"]],
     device: str,
     current_p: float | None = None,
+    ddp_model: DistributedDataParallel | None = None,
 ) -> tuple[Float[Tensor, ""], dict[str, float]]:
     """Calculate all losses and return total loss and individual loss terms.
 
@@ -214,9 +262,11 @@ def calculate_losses(
             target_out=target_out,
             loss_type=config.output_loss_type,
             device=device,
+            loss_coeff=config.ci_recon_layerwise_coeff,
+            ddp_model=ddp_model,
         )
-        total_loss += config.ci_recon_layerwise_coeff * ci_recon_layerwise_loss
-        loss_terms["ci_recon_layerwise"] = ci_recon_layerwise_loss.item()
+        # NOTE: Backward already called inside function, don't add to total_loss
+        loss_terms["ci_recon_layerwise"] = ci_recon_layerwise_loss
 
     # Stochastic reconstruction layerwise loss
     if config.stochastic_recon_layerwise_coeff is not None:
@@ -236,9 +286,11 @@ def calculate_losses(
             target_out=target_out,
             loss_type=config.output_loss_type,
             device=device,
+            loss_coeff=config.stochastic_recon_layerwise_coeff,
+            ddp_model=ddp_model,
         )
-        total_loss += config.stochastic_recon_layerwise_coeff * stochastic_recon_layerwise_loss
-        loss_terms["stochastic_recon_layerwise"] = stochastic_recon_layerwise_loss.item()
+        # NOTE: Backward already called inside function, don't add to total_loss
+        loss_terms["stochastic_recon_layerwise"] = stochastic_recon_layerwise_loss
 
     # CI subset reconstruction loss
     if config.ci_masked_recon_subset_coeff is not None:
