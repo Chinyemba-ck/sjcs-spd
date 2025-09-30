@@ -5,7 +5,9 @@ import random
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, TypeVar
+
+T = TypeVar("T")
 
 import einops
 import numpy as np
