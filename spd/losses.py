@@ -109,8 +109,8 @@ def calc_masked_recon_layerwise_loss(
             scaled_loss = scale_factor * loss
 
             # Backward pass with optional no_sync to prevent DDP gradient synchronization
-            # We always use no_sync here because there will be another backward() call
-            # in run_spd.py on the remaining losses (importance_minimality, etc.)
+            # We use no_sync here to avoid premature synchronization.
+            # The final backward call (importance_minimality) will trigger gradient sync.
             if ddp_model is not None:
                 with ddp_model.no_sync():
                     scaled_loss.backward()
@@ -193,6 +193,7 @@ def calculate_losses(
     device: str,
     current_p: float | None = None,
     ddp_model: DistributedDataParallel | None = None,
+    gradient_accumulation_steps: int = 1,
 ) -> tuple[Float[Tensor, ""], dict[str, float]]:
     """Calculate all losses and return total loss and individual loss terms.
 
@@ -228,7 +229,14 @@ def calculate_losses(
             loss_type=config.output_loss_type,
             device=device,
         )
-        total_loss += config.ci_recon_coeff * ci_recon_loss
+        # Apply immediate backward to prevent graph conflicts with layerwise losses
+        scaled_loss = (config.ci_recon_coeff / gradient_accumulation_steps) * ci_recon_loss
+        if ddp_model is not None:
+            with ddp_model.no_sync():
+                scaled_loss.backward()
+        else:
+            scaled_loss.backward()
+        # NOTE: Backward already called, don't add to total_loss
         loss_terms["ci_recon"] = ci_recon_loss.item()
 
     # Stochastic reconstruction loss
@@ -250,7 +258,16 @@ def calculate_losses(
             loss_type=config.output_loss_type,
             device=device,
         )
-        total_loss += config.stochastic_recon_coeff * stochastic_recon_loss
+        # Apply immediate backward to prevent graph conflicts with layerwise losses
+        # Both stochastic_recon and layerwise losses depend on causal_importances,
+        # so we must backward this before layerwise backwards free the shared graph
+        scaled_loss = (config.stochastic_recon_coeff / gradient_accumulation_steps) * stochastic_recon_loss
+        if ddp_model is not None:
+            with ddp_model.no_sync():
+                scaled_loss.backward()
+        else:
+            scaled_loss.backward()
+        # NOTE: Backward already called, don't add to total_loss
         loss_terms["stochastic_recon"] = stochastic_recon_loss.item()
 
     # CI reconstruction layerwise loss
@@ -312,7 +329,14 @@ def calculate_losses(
             loss_type=config.output_loss_type,
             device=device,
         )
-        total_loss += config.ci_masked_recon_subset_coeff * ci_recon_subset_loss
+        # Apply immediate backward to prevent graph conflicts with layerwise losses
+        scaled_loss = (config.ci_masked_recon_subset_coeff / gradient_accumulation_steps) * ci_recon_subset_loss
+        if ddp_model is not None:
+            with ddp_model.no_sync():
+                scaled_loss.backward()
+        else:
+            scaled_loss.backward()
+        # NOTE: Backward already called, don't add to total_loss
         loss_terms["ci_recon_subset"] = ci_recon_subset_loss.item()
 
     # Stochastic reconstruction subset loss
@@ -334,7 +358,14 @@ def calculate_losses(
             loss_type=config.output_loss_type,
             device=device,
         )
-        total_loss += config.stochastic_recon_subset_coeff * stochastic_recon_subset_loss
+        # Apply immediate backward to prevent graph conflicts with layerwise losses
+        scaled_loss = (config.stochastic_recon_subset_coeff / gradient_accumulation_steps) * stochastic_recon_subset_loss
+        if ddp_model is not None:
+            with ddp_model.no_sync():
+                scaled_loss.backward()
+        else:
+            scaled_loss.backward()
+        # NOTE: Backward already called, don't add to total_loss
         loss_terms["stochastic_recon_subset"] = stochastic_recon_subset_loss.item()
 
     # Importance minimality loss
@@ -342,9 +373,24 @@ def calculate_losses(
     importance_minimality_loss = calc_importance_minimality_loss(
         ci_upper_leaky=causal_importances_upper_leaky, pnorm=pnorm_value
     )
-    total_loss += config.importance_minimality_coeff * importance_minimality_loss
+    # Apply immediate backward to prevent graph conflicts with layerwise losses
+    # causal_importances_upper_leaky shares computation graph with causal_importances
+    scaled_loss = (config.importance_minimality_coeff / gradient_accumulation_steps) * importance_minimality_loss
+    # IMPORTANT: This is the LAST backward call per microbatch
+    # Do NOT use no_sync() - we MUST trigger DDP gradient synchronization here
+    if ddp_model is not None:
+        scaled_loss.backward()  # No no_sync() wrapper - triggers DDP sync
+    else:
+        scaled_loss.backward()
+    # NOTE: Backward already called, don't add to total_loss
     loss_terms["importance_minimality"] = importance_minimality_loss.item()
 
+    # total_loss only contains faithfulness (if enabled), otherwise 0.0
     loss_terms["total"] = total_loss.item()
+    # Compute actual sum of all losses for complete logging
+    loss_terms["sum_all_losses"] = sum(
+        v for k, v in loss_terms.items()
+        if k not in ["total", "sum_all_losses"] and isinstance(v, (int, float))
+    )
 
     return total_loss, loss_terms
