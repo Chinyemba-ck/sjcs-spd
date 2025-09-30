@@ -227,6 +227,7 @@ def optimize(
                 weight_deltas=weight_deltas,
                 device=device,
                 current_p=current_p,
+                ddp_model=wrapped_model if world_size > 1 else None,
             )
             microbatch_total_loss.div_(config.gradient_accumulation_steps).backward()
 

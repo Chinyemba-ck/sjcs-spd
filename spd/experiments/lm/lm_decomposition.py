@@ -1,6 +1,7 @@
 """Language Model decomposition script."""
 
 import json
+import os
 from pathlib import Path
 
 import fire
@@ -39,6 +40,9 @@ def main(
     config = load_config(config_path_or_obj, config_model=Config)
 
     dist_state = init_distributed(backend=config.dist_backend)
+
+    # Get HuggingFace token from environment (will be passed directly to from_pretrained)
+    hf_token = os.getenv('HF_TOKEN')
 
     sweep_params = (
         None if sweep_params_json is None else json.loads(sweep_params_json.removeprefix("json:"))
@@ -97,6 +101,7 @@ def main(
         target_model = ensure_cached_and_call(
             pretrained_model_class.from_pretrained,  # pyright: ignore[reportAttributeAccessIssue]
             config.pretrained_model_name,
+            token=hf_token,
         )
     target_model.eval()
 
