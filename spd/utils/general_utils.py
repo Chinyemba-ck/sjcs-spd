@@ -281,12 +281,22 @@ def calc_kl_divergence_lm(
         kl = F.kl_div(log_q, p, reduction="none")
         return kl.sum(dim=-1).mean()
 
-    # Chunked processing: compute full softmax denominators once
+    # Chunked processing: compute softmax denominators in chunks to avoid OOM
     pred_max = pred.max(dim=-1, keepdim=True).values
     target_max = target.max(dim=-1, keepdim=True).values
 
-    pred_exp_sum = torch.exp(pred - pred_max).sum(dim=-1, keepdim=True)
-    target_exp_sum = torch.exp(target - target_max).sum(dim=-1, keepdim=True)
+    # Initialize accumulators for denominators
+    pred_exp_sum = torch.zeros(pred.shape[:-1] + (1,), device=pred.device, dtype=pred.dtype)
+    target_exp_sum = torch.zeros(target.shape[:-1] + (1,), device=target.device, dtype=target.dtype)
+
+    # Compute denominators chunk-by-chunk
+    for start_idx in range(0, vocab_size, chunk_size):
+        end_idx = min(start_idx + chunk_size, vocab_size)
+        pred_chunk = pred[..., start_idx:end_idx]
+        target_chunk = target[..., start_idx:end_idx]
+
+        pred_exp_sum += torch.exp(pred_chunk - pred_max).sum(dim=-1, keepdim=True)
+        target_exp_sum += torch.exp(target_chunk - target_max).sum(dim=-1, keepdim=True)
 
     kl_sum = torch.zeros(pred.shape[:-1], device=pred.device, dtype=pred.dtype)
 
