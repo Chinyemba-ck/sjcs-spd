@@ -63,8 +63,13 @@ def init_distributed(backend: Literal["nccl", "gloo"] | None = None) -> Distribu
     """
     assert not is_distributed(), "Already in a distributed process group"
     backend = backend if backend is not None else _infer_default_backend()
+    # Check if running under torchrun/torch.distributed.launch
+    if "RANK" in os.environ and "WORLD_SIZE" in os.environ:
+        world_size = int(os.environ["WORLD_SIZE"])
+        rank = int(os.environ["RANK"])
+        local_rank = int(os.environ.get("LOCAL_RANK", rank))
     # Check if running under MPI (OpenMPI)
-    if "OMPI_COMM_WORLD_SIZE" in os.environ:
+    elif "OMPI_COMM_WORLD_SIZE" in os.environ:
         world_size = int(os.environ["OMPI_COMM_WORLD_SIZE"])
         rank = int(os.environ["OMPI_COMM_WORLD_RANK"])
         local_rank = int(os.environ["OMPI_COMM_WORLD_LOCAL_RANK"])
