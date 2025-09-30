@@ -6,7 +6,7 @@ set -euo pipefail
 
 # Pod connection details
 POD_HOST="69.30.85.20"
-POD_PORT="22018"
+POD_PORT="22060"
 POD_USER="root"
 POD_NAME="aware_fuchsia_guanaco"
 

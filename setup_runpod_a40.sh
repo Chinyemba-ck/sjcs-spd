@@ -61,10 +61,12 @@ echo "Available disk space: $(df -h / | tail -1 | awk '{print $4}')"
 log_info "Step 3: Setting environment variables..."
 # Load secrets from .env if it exists
 if [ -f .env ]; then
-    export $(cat .env | grep -v '^#' | xargs)
+    set -a
+    source .env
+    set +a
 fi
-# Verify required secrets are set
-if [ -z "$WANDB_API_KEY" ] || [ -z "$HF_TOKEN" ]; then
+# Verify required secrets are set (use :- for set -u compatibility)
+if [ -z "${WANDB_API_KEY:-}" ] || [ -z "${HF_TOKEN:-}" ]; then
     echo "ERROR: WANDB_API_KEY and HF_TOKEN must be set in .env file or environment"
     echo "Please create a .env file with:"
     echo "  WANDB_API_KEY=your_wandb_key"
