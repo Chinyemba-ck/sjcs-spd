@@ -153,7 +153,7 @@ def optimize(
 
     assert len(component_params) > 0, "No parameters found in components to optimize"
 
-    optimizer = optim.AdamW(component_params + gate_params, lr=config.lr, weight_decay=0)
+    optimizer = optim.AdamW(component_params + gate_params, lr=config.lr, weight_decay=0, foreach=False)
 
     lr_schedule_fn = get_lr_schedule_fn(config.lr_schedule, config.lr_exponential_halflife)
     logger.info(f"Base LR scheduler created: {config.lr_schedule}")
@@ -251,7 +251,7 @@ def optimize(
         #                causal_importances (332 MB) + causal_importances_upper_leaky (332 MB) +
         #                batch (10 MB) + weight_deltas (50 MB)
         # This prevents OOM at optimizer.step() which needs 30 MB when only 10.31 MB was free
-        del target_out, pre_weight_acts, batch, weight_deltas, causal_importances, causal_importances_upper_leaky
+        del target_out, pre_weight_acts, batch, weight_deltas, causal_importances, causal_importances_upper_leaky, microbatch_total_loss, microbatch_loss_terms
         torch.cuda.empty_cache()
 
         # --- Train Logging --- #
