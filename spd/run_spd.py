@@ -230,7 +230,9 @@ def optimize(
                 ddp_model=wrapped_model if world_size > 1 else None,
                 gradient_accumulation_steps=config.gradient_accumulation_steps,
             )
-            microbatch_total_loss.div_(config.gradient_accumulation_steps).backward()
+            # Only backward if total_loss has gradients (e.g., faithfulness_loss enabled)
+            if microbatch_total_loss.requires_grad:
+                microbatch_total_loss.div_(config.gradient_accumulation_steps).backward()
 
             for loss_name, loss_value in microbatch_loss_terms.items():
                 microbatch_log_data[f"train/loss/{loss_name}"] += (
