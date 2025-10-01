@@ -37,14 +37,14 @@ p_anneal_end_frac: 1.0
 output_loss_type: kl  # KL divergence - standard for all language models
 
 # --- Training ---
-batch_size: 9  # 3 per microbatch × 3 grad_accum steps = 9 effective batch
-eval_batch_size: 9  # Match training batch size for consistent memory usage
+batch_size: 8  # 4 samples per GPU × 2 GPUs = 8 microbatch_size
+eval_batch_size: 8  # Match training batch size for consistent memory usage
 steps: 30000  # Extended training (30k steps) for maximum natural convergence and component death
 lr: 0.0005
 lr_schedule: cosine
 lr_warmup_pct: 0.01
 lr_exponential_halflife: null
-gradient_accumulation_steps: 3  # microbatch=3 → 1 sample per GPU per forward pass, saves memory
+gradient_accumulation_steps: 3  # Effective batch = 8 × 3 = 24 samples/optimizer step
 
 # --- Logging & Saving ---
 train_log_freq: 100
