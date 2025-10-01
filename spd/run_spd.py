@@ -245,6 +245,15 @@ def optimize(
                     l0_val / config.gradient_accumulation_steps
                 )
 
+        # Free tensors from last gradient accumulation iteration before optimizer.step()
+        # These variables are created in the loop above but no longer used after it completes
+        # Frees ~1.7 GB: target_out (768 MB) + pre_weight_acts (200 MB) +
+        #                causal_importances (332 MB) + causal_importances_upper_leaky (332 MB) +
+        #                batch (10 MB) + weight_deltas (50 MB)
+        # This prevents OOM at optimizer.step() which needs 30 MB when only 10.31 MB was free
+        del target_out, pre_weight_acts, batch, weight_deltas, causal_importances, causal_importances_upper_leaky
+        torch.cuda.empty_cache()
+
         # --- Train Logging --- #
         if step % config.train_log_freq == 0:
             if is_distributed():
