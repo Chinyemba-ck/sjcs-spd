@@ -184,7 +184,7 @@ def optimize(
         microbatch_log_data: defaultdict[str, float] = defaultdict(float)
         current_p = config.pnorm  # Initialize with default value
 
-        for _ in range(config.gradient_accumulation_steps):
+        for i_microbatch in range(config.gradient_accumulation_steps):
             weight_deltas = component_model.calc_weight_deltas()
             batch = extract_batch_data(next(train_iterator)).to(device)
 
