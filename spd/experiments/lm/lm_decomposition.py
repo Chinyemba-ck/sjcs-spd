@@ -2,6 +2,8 @@
 
 import json
 import os
+import sys
+import time
 from pathlib import Path
 
 import fire
@@ -37,9 +39,20 @@ def main(
     sweep_id: str | None = None,
     sweep_params_json: str | None = None,
 ) -> None:
-    config = load_config(config_path_or_obj, config_model=Config)
+    print(f"[MAIN] [{time.time():.2f}] Script starting...", flush=True)
+    sys.stdout.flush()
 
+    print(f"[MAIN] [{time.time():.2f}] Loading config...", flush=True)
+    sys.stdout.flush()
+    config = load_config(config_path_or_obj, config_model=Config)
+    print(f"[MAIN] [{time.time():.2f}] Config loaded", flush=True)
+    sys.stdout.flush()
+
+    print(f"[MAIN] [{time.time():.2f}] Initializing distributed...", flush=True)
+    sys.stdout.flush()
     dist_state = init_distributed(backend=config.dist_backend)
+    print(f"[MAIN] [{time.time():.2f}] Distributed initialized: rank={dist_state.rank}, world_size={dist_state.world_size}", flush=True)
+    sys.stdout.flush()
 
     # Get HuggingFace token from environment (will be passed directly to from_pretrained)
     hf_token = os.getenv('HF_TOKEN')
@@ -98,12 +111,18 @@ def main(
         target_model = pretrained_model_class.from_run_info(run_info)  # pyright: ignore[reportAttributeAccessIssue]
     else:
         # Avoid concurrent wandb API requests by first calling from_pretrained on rank 0 only
+        print(f"[RANK {dist_state.rank}] [{time.time():.2f}] About to call ensure_cached_and_call for model loading", flush=True)
+        sys.stdout.flush()
         target_model = ensure_cached_and_call(
             pretrained_model_class.from_pretrained,  # pyright: ignore[reportAttributeAccessIssue]
             config.pretrained_model_name,
             token=hf_token,
         )
+        print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Model loaded successfully", flush=True)
+        sys.stdout.flush()
     target_model.eval()
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Model set to eval mode", flush=True)
+    sys.stdout.flush()
 
     if is_main_process():
         assert out_dir is not None
@@ -118,6 +137,8 @@ def main(
         )
 
     # --- Load Data --- #
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Starting dataset loading", flush=True)
+    sys.stdout.flush()
     if is_main_process():
         logger.info("Loading dataset...")
     train_data_config = DatasetConfig(
@@ -140,6 +161,8 @@ def main(
     )
     train_rank_microbatch_size = config.microbatch_size // dist_state.world_size
 
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Creating train dataloader", flush=True)
+    sys.stdout.flush()
     train_loader, _tokenizer = create_data_loader(
         dataset_config=train_data_config,
         batch_size=train_rank_microbatch_size,
@@ -148,6 +171,8 @@ def main(
         ddp_rank=dist_state.rank,
         ddp_world_size=dist_state.world_size,
     )
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Train dataloader created", flush=True)
+    sys.stdout.flush()
 
     eval_data_config = DatasetConfig(
         name=config.task_config.dataset_name,
@@ -167,6 +192,8 @@ def main(
     )
     eval_rank_batch_size = config.eval_batch_size // dist_state.world_size
 
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Creating eval dataloader", flush=True)
+    sys.stdout.flush()
     eval_loader, _ = create_data_loader(
         dataset_config=eval_data_config,
         batch_size=eval_rank_batch_size,
@@ -175,9 +202,13 @@ def main(
         ddp_rank=dist_state.rank,
         ddp_world_size=dist_state.world_size,
     )
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Eval dataloader created", flush=True)
+    sys.stdout.flush()
 
     if is_main_process():
         logger.info("Starting optimization...")
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] About to call optimize()", flush=True)
+    sys.stdout.flush()
 
     optimize(
         target_model=target_model,

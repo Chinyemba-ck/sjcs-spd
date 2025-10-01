@@ -176,7 +176,14 @@ def get_device() -> str:
 def sync_across_processes() -> None:
     """Synchronize all processes."""
     if dist.is_initialized():
+        import sys
+        import time
+        rank = get_rank()
+        print(f"[RANK {rank}] [{time.time():.2f}] Entering dist.barrier()...", flush=True)
+        sys.stdout.flush()
         dist.barrier()
+        print(f"[RANK {rank}] [{time.time():.2f}] Exited dist.barrier() successfully", flush=True)
+        sys.stdout.flush()
 
 
 def all_reduce(
@@ -217,11 +224,28 @@ def call_on_rank0_then_broadcast(
 
 def ensure_cached_and_call(fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
     """Call `fn` on rank 0 to cache any download side effects, barrier, then call on all ranks."""
+    import sys
+    import time
     if is_distributed():
+        rank = get_rank()
+        print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: START", flush=True)
+        sys.stdout.flush()
         if is_main_process():
+            print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: Rank 0 calling fn() to cache...", flush=True)
+            sys.stdout.flush()
             _ = fn(*args, **kwargs)
+            print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: Rank 0 finished fn(), ready for barrier", flush=True)
+            sys.stdout.flush()
+        else:
+            print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: Non-main rank waiting for barrier", flush=True)
+            sys.stdout.flush()
         sync_across_processes()
-        return fn(*args, **kwargs)
+        print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: All ranks passed barrier, calling fn()", flush=True)
+        sys.stdout.flush()
+        result = fn(*args, **kwargs)
+        print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: fn() completed", flush=True)
+        sys.stdout.flush()
+        return result
     return fn(*args, **kwargs)
 
 
