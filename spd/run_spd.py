@@ -217,6 +217,10 @@ def optimize(
                 p_anneal_end_frac=config.p_anneal_end_frac,
             )
 
+            # Memory logging: before calculate_losses
+            mem_before_losses = torch.cuda.memory_allocated(device) / (1024**3)
+            print(f"[MEMORY] Step {step}, microbatch {i_microbatch}: Before calculate_losses: {mem_before_losses:.3f} GB allocated")
+
             microbatch_total_loss, microbatch_loss_terms = calculate_losses(
                 model=component_model,
                 batch=batch,
@@ -230,9 +234,18 @@ def optimize(
                 ddp_model=wrapped_model if world_size > 1 else None,
                 gradient_accumulation_steps=config.gradient_accumulation_steps,
             )
+
+            # Memory logging: after calculate_losses
+            mem_after_losses = torch.cuda.memory_allocated(device) / (1024**3)
+            print(f"[MEMORY] Step {step}, microbatch {i_microbatch}: After calculate_losses: {mem_after_losses:.3f} GB (+{mem_after_losses - mem_before_losses:.3f} GB)")
+
             # Only backward if total_loss has gradients (e.g., faithfulness_loss enabled)
             if microbatch_total_loss.requires_grad:
                 microbatch_total_loss.div_(config.gradient_accumulation_steps).backward()
+
+                # Memory logging: after backward
+                mem_after_backward = torch.cuda.memory_allocated(device) / (1024**3)
+                print(f"[MEMORY] Step {step}, microbatch {i_microbatch}: After backward: {mem_after_backward:.3f} GB (+{mem_after_backward - mem_after_losses:.3f} GB)")
 
             for loss_name, loss_value in microbatch_loss_terms.items():
                 microbatch_log_data[f"train/loss/{loss_name}"] += (
@@ -251,8 +264,11 @@ def optimize(
         #                causal_importances (332 MB) + causal_importances_upper_leaky (332 MB) +
         #                batch (10 MB) + weight_deltas (50 MB)
         # This prevents OOM at optimizer.step() which needs 30 MB when only 10.31 MB was free
+        mem_before_cleanup = torch.cuda.memory_allocated(device) / (1024**3)
         del target_out, pre_weight_acts, batch, weight_deltas, causal_importances, causal_importances_upper_leaky, microbatch_total_loss, microbatch_loss_terms
         torch.cuda.empty_cache()
+        mem_after_cleanup = torch.cuda.memory_allocated(device) / (1024**3)
+        print(f"[MEMORY] Step {step}: After cleanup: {mem_after_cleanup:.3f} GB (freed {mem_before_cleanup - mem_after_cleanup:.3f} GB)")
 
         # --- Train Logging --- #
         if step % config.train_log_freq == 0:

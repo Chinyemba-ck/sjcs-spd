@@ -221,6 +221,10 @@ def calculate_losses(
     Returns:
         Tuple of (total_loss, loss_terms_dict)
     """
+    # Memory logging: at start of calculate_losses
+    mem_start = torch.cuda.memory_allocated(device) / (1024**3)
+    print(f"[MEMORY-LOSSES] Start of calculate_losses: {mem_start:.3f} GB")
+
     total_loss = torch.tensor(0.0, device=device)
     loss_terms: dict[str, float] = {}
 
@@ -250,6 +254,10 @@ def calculate_losses(
         # NOTE: Backward already called, don't add to total_loss
         loss_terms["ci_recon"] = ci_recon_loss.item()
 
+        # Memory logging: after CI recon
+        mem_after_ci_recon = torch.cuda.memory_allocated(device) / (1024**3)
+        print(f"[MEMORY-LOSSES] After CI recon backward: {mem_after_ci_recon:.3f} GB (+{mem_after_ci_recon - mem_start:.3f} GB)")
+
     # Stochastic reconstruction loss
     if config.stochastic_recon_coeff is not None:
         stoch_mask_infos_list = [
@@ -261,6 +269,11 @@ def calculate_losses(
             )
             for _ in range(config.n_mask_samples)
         ]
+
+        # Memory logging: after creating mask_infos
+        mem_after_mask_infos = torch.cuda.memory_allocated(device) / (1024**3)
+        print(f"[MEMORY-LOSSES] After creating stoch_mask_infos_list: {mem_after_mask_infos:.3f} GB (+{mem_after_mask_infos - mem_start:.3f} GB)")
+
         stochastic_recon_loss = calc_masked_recon_loss(
             model=model,
             batch=batch,
@@ -269,6 +282,11 @@ def calculate_losses(
             loss_type=config.output_loss_type,
             device=device,
         )
+
+        # Memory logging: after calc_masked_recon_loss
+        mem_after_stoch_loss_calc = torch.cuda.memory_allocated(device) / (1024**3)
+        print(f"[MEMORY-LOSSES] After calc stochastic_recon_loss: {mem_after_stoch_loss_calc:.3f} GB (+{mem_after_stoch_loss_calc - mem_start:.3f} GB)")
+
         # Apply immediate backward to prevent graph conflicts with layerwise losses
         # Both stochastic_recon and layerwise losses depend on causal_importances,
         # so we must backward this before layerwise backwards free the shared graph
@@ -278,6 +296,11 @@ def calculate_losses(
                 scaled_loss.backward(retain_graph=True)
         else:
             scaled_loss.backward(retain_graph=True)
+
+        # Memory logging: after stochastic recon backward (OOM location)
+        mem_after_stoch_backward = torch.cuda.memory_allocated(device) / (1024**3)
+        print(f"[MEMORY-LOSSES] After stochastic_recon backward: {mem_after_stoch_backward:.3f} GB (+{mem_after_stoch_backward - mem_start:.3f} GB)")
+
         # NOTE: Backward already called, don't add to total_loss
         loss_terms["stochastic_recon"] = stochastic_recon_loss.item()
 
@@ -397,6 +420,10 @@ def calculate_losses(
         scaled_loss.backward()
     # NOTE: Backward already called, don't add to total_loss
     loss_terms["importance_minimality"] = importance_minimality_loss.item()
+
+    # Memory logging: at end of calculate_losses (before return)
+    mem_end = torch.cuda.memory_allocated(device) / (1024**3)
+    print(f"[MEMORY-LOSSES] End of calculate_losses: {mem_end:.3f} GB (total added: +{mem_end - mem_start:.3f} GB)")
 
     # total_loss only contains faithfulness (if enabled), otherwise 0.0
     loss_terms["total"] = total_loss.item()
