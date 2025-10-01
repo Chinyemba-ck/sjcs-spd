@@ -48,6 +48,7 @@ def calc_masked_recon_layerwise_loss(
     device: str,
     loss_coeff: float,
     ddp_model: DistributedDataParallel | None = None,
+    retain_graph: bool = False,
 ) -> float:
     """Calculate the recon loss when augmenting the model one (masked) component layer at a time.
 
@@ -66,6 +67,9 @@ def calc_masked_recon_layerwise_loss(
         device: Device to run computations on
         loss_coeff: Loss coefficient to scale gradients (e.g., stochastic_recon_layerwise_coeff)
         ddp_model: DDP wrapper model for no_sync() context manager (None if not distributed)
+        retain_graph: If True, retain computation graph after each backward pass. Set to True
+            when other losses will use the same computation graph after this function returns.
+            Default False.
 
     Returns:
         The average loss value as a Python float (for logging purposes)
@@ -94,8 +98,8 @@ def calc_masked_recon_layerwise_loss(
 
     total_loss_value = 0.0
 
-    for mask_infos in mask_infos_list:
-        for module_name, mask_info in mask_infos.items():
+    for i, mask_infos in enumerate(mask_infos_list):
+        for j, (module_name, mask_info) in enumerate(mask_infos.items()):
             # Forward pass (creates computation graph)
             modified_out = model(batch, mode="components", mask_infos={module_name: mask_info})
 
@@ -108,14 +112,21 @@ def calc_masked_recon_layerwise_loss(
             # Scale loss to maintain mathematical equivalence
             scaled_loss = scale_factor * loss
 
+            # Determine if we need to retain the graph
+            # Retain if: (1) not the last iteration in loop, OR (2) caller requests retain
+            is_last_mask_infos = (i == len(mask_infos_list) - 1)
+            is_last_module = (j == len(mask_infos) - 1)
+            is_last_iteration = is_last_mask_infos and is_last_module
+            should_retain = retain_graph or (not is_last_iteration)
+
             # Backward pass with optional no_sync to prevent DDP gradient synchronization
             # We use no_sync here to avoid premature synchronization.
             # The final backward call (importance_minimality) will trigger gradient sync.
             if ddp_model is not None:
                 with ddp_model.no_sync():
-                    scaled_loss.backward()
+                    scaled_loss.backward(retain_graph=should_retain)
             else:
-                scaled_loss.backward()
+                scaled_loss.backward(retain_graph=should_retain)
 
             # Accumulate loss value for logging (detach from graph)
             total_loss_value += loss.item()
@@ -233,9 +244,9 @@ def calculate_losses(
         scaled_loss = (config.ci_recon_coeff / gradient_accumulation_steps) * ci_recon_loss
         if ddp_model is not None:
             with ddp_model.no_sync():
-                scaled_loss.backward()
+                scaled_loss.backward(retain_graph=True)
         else:
-            scaled_loss.backward()
+            scaled_loss.backward(retain_graph=True)
         # NOTE: Backward already called, don't add to total_loss
         loss_terms["ci_recon"] = ci_recon_loss.item()
 
@@ -264,9 +275,9 @@ def calculate_losses(
         scaled_loss = (config.stochastic_recon_coeff / gradient_accumulation_steps) * stochastic_recon_loss
         if ddp_model is not None:
             with ddp_model.no_sync():
-                scaled_loss.backward()
+                scaled_loss.backward(retain_graph=True)
         else:
-            scaled_loss.backward()
+            scaled_loss.backward(retain_graph=True)
         # NOTE: Backward already called, don't add to total_loss
         loss_terms["stochastic_recon"] = stochastic_recon_loss.item()
 
@@ -281,6 +292,7 @@ def calculate_losses(
             device=device,
             loss_coeff=config.ci_recon_layerwise_coeff,
             ddp_model=ddp_model,
+            retain_graph=True,
         )
         # NOTE: Backward already called inside function, don't add to total_loss
         loss_terms["ci_recon_layerwise"] = ci_recon_layerwise_loss
@@ -305,6 +317,7 @@ def calculate_losses(
             device=device,
             loss_coeff=config.stochastic_recon_layerwise_coeff,
             ddp_model=ddp_model,
+            retain_graph=True,
         )
         # NOTE: Backward already called inside function, don't add to total_loss
         loss_terms["stochastic_recon_layerwise"] = stochastic_recon_layerwise_loss
@@ -333,9 +346,9 @@ def calculate_losses(
         scaled_loss = (config.ci_masked_recon_subset_coeff / gradient_accumulation_steps) * ci_recon_subset_loss
         if ddp_model is not None:
             with ddp_model.no_sync():
-                scaled_loss.backward()
+                scaled_loss.backward(retain_graph=True)
         else:
-            scaled_loss.backward()
+            scaled_loss.backward(retain_graph=True)
         # NOTE: Backward already called, don't add to total_loss
         loss_terms["ci_recon_subset"] = ci_recon_subset_loss.item()
 
@@ -362,9 +375,9 @@ def calculate_losses(
         scaled_loss = (config.stochastic_recon_subset_coeff / gradient_accumulation_steps) * stochastic_recon_subset_loss
         if ddp_model is not None:
             with ddp_model.no_sync():
-                scaled_loss.backward()
+                scaled_loss.backward(retain_graph=True)
         else:
-            scaled_loss.backward()
+            scaled_loss.backward(retain_graph=True)
         # NOTE: Backward already called, don't add to total_loss
         loss_terms["stochastic_recon_subset"] = stochastic_recon_subset_loss.item()
 
