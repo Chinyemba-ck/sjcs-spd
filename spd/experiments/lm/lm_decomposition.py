@@ -1,10 +1,24 @@
 """Language Model decomposition script."""
 
-import json
 import os
+os.environ["WANDB_START_METHOD"] = "thread"  # Fix for multi-process wandb deadlock
+
+import json
 import sys
 import time
 from pathlib import Path
+
+# CRITICAL: Check CUDA availability BEFORE any torch imports
+import torch
+_rank = os.environ.get('RANK', '?')
+print(f"[RANK {_rank}] [IMPORT] PyTorch version: {torch.__version__}", flush=True)
+print(f"[RANK {_rank}] [IMPORT] CUDA available: {torch.cuda.is_available()}", flush=True)
+if torch.cuda.is_available():
+    print(f"[RANK {_rank}] [IMPORT] CUDA device count: {torch.cuda.device_count()}", flush=True)
+    print(f"[RANK {_rank}] [IMPORT] CUDA version: {torch.version.cuda}", flush=True)
+else:
+    print(f"[RANK {_rank}] [IMPORT] WARNING: CUDA NOT AVAILABLE!", flush=True)
+sys.stdout.flush()
 
 import fire
 import wandb
@@ -52,6 +66,8 @@ def main(
     sys.stdout.flush()
     dist_state = init_distributed(backend=config.dist_backend)
     print(f"[MAIN] [{time.time():.2f}] Distributed initialized: rank={dist_state.rank}, world_size={dist_state.world_size}", flush=True)
+    print(f"[RANK {dist_state.rank}] [POST-INIT] CUDA still available: {torch.cuda.is_available()}", flush=True)
+    print(f"[RANK {dist_state.rank}] [POST-INIT] Current device: {torch.cuda.current_device() if torch.cuda.is_available() else 'N/A'}", flush=True)
     sys.stdout.flush()
 
     # Get HuggingFace token from environment (will be passed directly to from_pretrained)
@@ -89,6 +105,9 @@ def main(
         out_dir = None
 
     device = get_device()
+    print(f"[RANK {dist_state.rank}] [DEVICE] get_device() returned: {device}", flush=True)
+    print(f"[RANK {dist_state.rank}] [DEVICE] torch.cuda.is_available(): {torch.cuda.is_available()}", flush=True)
+    sys.stdout.flush()
     assert isinstance(config.task_config, LMTaskConfig), "task_config not LMTaskConfig"
 
     pretrained_model_class = resolve_class(config.pretrained_model_class)
@@ -119,6 +138,8 @@ def main(
             token=hf_token,
         )
         print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Model loaded successfully", flush=True)
+        print(f"[RANK {dist_state.rank}] [POST-MODEL] CUDA available: {torch.cuda.is_available()}", flush=True)
+        print(f"[RANK {dist_state.rank}] [POST-MODEL] Model device: {next(target_model.parameters()).device}", flush=True)
         sys.stdout.flush()
     target_model.eval()
     print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Model set to eval mode", flush=True)
