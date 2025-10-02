@@ -24,7 +24,7 @@ class DistributedState:
     world_size: int
     local_rank: int
     backend: Literal["nccl", "gloo"]
-    nccl_group: dist.ProcessGroup | None = None  # NCCL group for GPU collectives
+    gloo_group: dist.ProcessGroup | None = None  # Gloo group for CPU barriers
 
 
 def _infer_default_backend() -> Literal["nccl", "gloo"]:
@@ -96,34 +96,45 @@ def init_distributed(backend: Literal["nccl", "gloo"] | None = None) -> Distribu
         torch.cuda.set_device(local_rank)
         print(f"[RANK {rank}] torch.cuda.set_device({local_rank}) completed", flush=True)
 
-    # Initialize PyTorch distributed with dual backend approach:
-    # - Gloo primary backend for CPU barriers and object broadcasting
-    # - NCCL secondary group for GPU collectives (DDP, all_reduce)
-    nccl_group: dist.ProcessGroup | None = None
+    # Initialize PyTorch distributed with FLIPPED dual backend approach:
+    # - NCCL primary backend for GPU collectives (DDP uses default process group)
+    # - Gloo secondary group for CPU barriers (explicit group parameter needed)
+    gloo_group: dist.ProcessGroup | None = None
 
     if not dist.is_initialized():
-        # Always initialize primary backend as Gloo for reliable barriers
-        print(f"[RANK {rank}] Initializing Gloo primary backend for barriers...", flush=True)
-        dist.init_process_group(
-            backend="gloo",
-            init_method="env://",
-            world_size=world_size,
-            rank=rank,
-        )
-        print(f"[RANK {rank}] Gloo backend initialized successfully", flush=True)
-
-        # Create NCCL secondary group for GPU collectives if CUDA available
+        # Initialize primary backend based on CUDA availability
         if torch.cuda.is_available():
-            print(f"[RANK {rank}] Creating NCCL secondary group for GPU collectives...", flush=True)
-            nccl_group = dist.new_group(backend="nccl")
-            print(f"[RANK {rank}] NCCL group created: {nccl_group}, type: {type(nccl_group)}", flush=True)
+            # NCCL as primary for GPU-based training
+            print(f"[RANK {rank}] Initializing NCCL primary backend for GPU collectives...", flush=True)
+            dist.init_process_group(
+                backend="nccl",
+                init_method="env://",
+                world_size=world_size,
+                rank=rank,
+            )
+            print(f"[RANK {rank}] NCCL backend initialized successfully", flush=True)
+
+            # Create Gloo secondary group for CPU barriers
+            print(f"[RANK {rank}] Creating Gloo secondary group for CPU barriers...", flush=True)
+            gloo_group = dist.new_group(backend="gloo")
+            print(f"[RANK {rank}] Gloo group created: {gloo_group}, type: {type(gloo_group)}", flush=True)
+        else:
+            # Gloo as primary for CPU-only training
+            print(f"[RANK {rank}] Initializing Gloo backend for CPU-only training...", flush=True)
+            dist.init_process_group(
+                backend="gloo",
+                init_method="env://",
+                world_size=world_size,
+                rank=rank,
+            )
+            print(f"[RANK {rank}] Gloo backend initialized successfully", flush=True)
 
     _state = DistributedState(
         rank=rank,
         world_size=world_size,
         local_rank=local_rank,
-        backend="gloo",  # Primary backend for barriers
-        nccl_group=nccl_group,  # Secondary group for GPU collectives
+        backend=backend,  # "nccl" for GPU, "gloo" for CPU
+        gloo_group=gloo_group,  # Secondary group for CPU barriers (GPU training only)
     )
     return _state
 
@@ -185,24 +196,32 @@ def get_device() -> str:
     return "cpu"
 
 
-def get_nccl_group() -> dist.ProcessGroup | None:
-    """Get the NCCL process group for GPU collectives (DDP, all_reduce).
+def get_gloo_group() -> dist.ProcessGroup | None:
+    """Get the Gloo process group for CPU barriers.
 
-    Returns None if not in distributed mode or if CUDA is not available.
-    Use this group when wrapping models in DDP to ensure GPU collectives use NCCL.
+    Returns None if not in distributed GPU mode (CPU-only training uses default Gloo).
+    Use this group for sync_across_processes() to ensure barriers use Gloo, not NCCL.
     """
-    return get_distributed_state().nccl_group
+    return get_distributed_state().gloo_group
 
 
 def sync_across_processes() -> None:
-    """Synchronize all processes using Gloo backend for reliable barriers."""
+    """Synchronize all processes using Gloo group for reliable CPU barriers."""
     if dist.is_initialized():
         import sys
         import time
         rank = get_rank()
+        gloo_group = get_gloo_group()
+
         print(f"[RANK {rank}] [{time.time():.2f}] Entering dist.barrier()...", flush=True)
         sys.stdout.flush()
-        dist.barrier()
+
+        # Use Gloo group if available (GPU training), otherwise use default (CPU training)
+        if gloo_group is not None:
+            dist.barrier(group=gloo_group)
+        else:
+            dist.barrier()
+
         print(f"[RANK {rank}] [{time.time():.2f}] Exited dist.barrier() successfully", flush=True)
         sys.stdout.flush()
 

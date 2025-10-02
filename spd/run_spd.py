@@ -34,7 +34,6 @@ from spd.utils.component_utils import calc_ci_l_zero
 from spd.utils.distributed_utils import (
     avg_eval_metrics_across_ranks,
     avg_metrics_across_ranks,
-    get_nccl_group,
     get_world_size,
     is_distributed,
     is_main_process,
@@ -130,26 +129,22 @@ def optimize(
     world_size = get_world_size()
     wrapped_model: nn.Module = model
     if world_size > 1:
-        # Get NCCL process group for GPU collectives (uses Gloo for CPU barriers)
         from spd.utils.distributed_utils import get_rank
         rank = get_rank()
-        nccl_group = get_nccl_group()
-        print(f"[RANK {rank}] [DDP] nccl_group = {nccl_group}", flush=True)
-        print(f"[RANK {rank}] [DDP] nccl_group type = {type(nccl_group)}", flush=True)
 
         if device.startswith("cuda"):
             # Parse device string to get device id for GPU
             device_id = int(device.split(":")[1]) if ":" in device else 0
-            print(f"[RANK {rank}] [DDP] Wrapping model with device_ids=[{device_id}], process_group={nccl_group}", flush=True)
+            print(f"[RANK {rank}] [DDP] Wrapping model with DDP on device {device_id}...", flush=True)
+            # DDP will use the default NCCL process group for GPU gradient synchronization
             wrapped_model = torch.nn.parallel.DistributedDataParallel(
                 model,
                 device_ids=[device_id],
                 output_device=device_id,
-                process_group=nccl_group,  # Use NCCL for GPU gradient synchronization
             )
             print(f"[RANK {rank}] [DDP] Model wrapped successfully", flush=True)
         else:
-            # For CPU, don't pass device_ids, output_device, or process_group
+            # For CPU, don't pass device_ids or output_device
             wrapped_model = torch.nn.parallel.DistributedDataParallel(model)
         # Access the underlying module for component operations
         component_model = wrapped_model.module  # type: ignore[attr-defined]
