@@ -5,7 +5,7 @@ import json
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Union, cast
 
 import torch
 import torch.nn as nn
@@ -51,7 +51,7 @@ from spd.utils.run_utils import save_file
 
 
 def local_log(
-    data: Mapping[str, float | Image.Image | "wandb.plot.CustomChart"], step: int, out_dir: Path
+    data: Mapping[str, Union[float, Image.Image, "wandb.plot.CustomChart"]], step: int, out_dir: Path
 ) -> None:
     # Lazy import - only called from is_main_process() blocks
     import wandb
