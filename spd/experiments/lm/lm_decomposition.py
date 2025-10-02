@@ -24,9 +24,18 @@ print(f"[RANK {_rank}] [IMPORT] Importing fire...", flush=True)
 import fire
 print(f"[RANK {_rank}] [IMPORT] fire imported", flush=True)
 
-print(f"[RANK {_rank}] [IMPORT] Importing wandb...", flush=True)
-import wandb
-print(f"[RANK {_rank}] [IMPORT] wandb imported", flush=True)
+# CRITICAL: Only import wandb on rank 0 to avoid multi-process file locking deadlock
+# wandb creates lock files during import, causing deadlock when 3 processes import simultaneously
+# wandb is only used in is_main_process() blocks anyway
+if _rank == '0' or _rank == '?':  # '?' means single-process mode
+    print(f"[RANK {_rank}] [IMPORT] Importing wandb (rank 0 only)...", flush=True)
+    import wandb
+    from spd.utils.wandb_utils import init_wandb
+    print(f"[RANK {_rank}] [IMPORT] wandb imported", flush=True)
+else:
+    print(f"[RANK {_rank}] [IMPORT] Skipping wandb import (non-main rank)", flush=True)
+    wandb = None  # type: ignore[assignment]
+    init_wandb = None  # type: ignore[assignment]
 
 print(f"[RANK {_rank}] [IMPORT] Importing SPD modules...", flush=True)
 from spd.configs import Config
@@ -49,7 +58,6 @@ from spd.utils.general_utils import (
     set_seed,
 )
 from spd.utils.run_utils import get_output_dir
-from spd.utils.wandb_utils import init_wandb
 print(f"[RANK {_rank}] [IMPORT] All imports complete!", flush=True)
 sys.stdout.flush()
 
