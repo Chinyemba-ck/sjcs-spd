@@ -130,11 +130,28 @@ def optimize(
     wrapped_model: nn.Module = model
     if world_size > 1:
         from spd.utils.distributed_utils import get_rank
+        import torch.distributed as dist
         rank = get_rank()
 
         if device.startswith("cuda"):
             # Parse device string to get device id for GPU
             device_id = int(device.split(":")[1]) if ":" in device else 0
+
+            # TEST: Verify NCCL communication works BEFORE DDP wrapping
+            print(f"[RANK {rank}] [NCCL TEST] Testing NCCL communication before DDP...", flush=True)
+            test_tensor = torch.tensor([rank + 1], dtype=torch.float32, device=device)
+            print(f"[RANK {rank}] [NCCL TEST] Local tensor value: {test_tensor.item()}", flush=True)
+
+            print(f"[RANK {rank}] [NCCL TEST] Calling dist.all_reduce()...", flush=True)
+            dist.all_reduce(test_tensor, op=dist.ReduceOp.SUM)
+            print(f"[RANK {rank}] [NCCL TEST] After all_reduce: {test_tensor.item()}", flush=True)
+
+            expected_sum = sum(range(1, world_size + 1))  # 1+2+3 = 6 for 3 ranks
+            if abs(test_tensor.item() - expected_sum) < 0.001:
+                print(f"[RANK {rank}] [NCCL TEST] ✓ NCCL communication WORKS! Got {test_tensor.item()}, expected {expected_sum}", flush=True)
+            else:
+                print(f"[RANK {rank}] [NCCL TEST] ✗ NCCL communication FAILED! Got {test_tensor.item()}, expected {expected_sum}", flush=True)
+
             print(f"[RANK {rank}] [DDP] Wrapping model with DDP on device {device_id}...", flush=True)
             # DDP will use the default NCCL process group for GPU gradient synchronization
             wrapped_model = torch.nn.parallel.DistributedDataParallel(
