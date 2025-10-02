@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader, DistributedSampler
 from transformers import AutoTokenizer, PreTrainedTokenizer
 
 from spd.log import logger
+from spd.utils.distributed_utils import ensure_cached_and_call
 
 
 class DatasetConfig(BaseModel):
@@ -226,7 +227,9 @@ def create_data_loader(
         assert isinstance(dataset, Dataset)
         dataset = dataset.shuffle(seed=seed)
 
-    tokenizer = AutoTokenizer.from_pretrained(dataset_config.hf_tokenizer_path)
+    tokenizer = ensure_cached_and_call(
+        AutoTokenizer.from_pretrained, dataset_config.hf_tokenizer_path
+    )
 
     torch_dataset: Dataset | IterableDataset
     if dataset_config.is_tokenized:
