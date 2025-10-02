@@ -131,17 +131,23 @@ def optimize(
     wrapped_model: nn.Module = model
     if world_size > 1:
         # Get NCCL process group for GPU collectives (uses Gloo for CPU barriers)
+        from spd.utils.distributed_utils import get_rank
+        rank = get_rank()
         nccl_group = get_nccl_group()
+        print(f"[RANK {rank}] [DDP] nccl_group = {nccl_group}", flush=True)
+        print(f"[RANK {rank}] [DDP] nccl_group type = {type(nccl_group)}", flush=True)
 
         if device.startswith("cuda"):
             # Parse device string to get device id for GPU
             device_id = int(device.split(":")[1]) if ":" in device else 0
+            print(f"[RANK {rank}] [DDP] Wrapping model with device_ids=[{device_id}], process_group={nccl_group}", flush=True)
             wrapped_model = torch.nn.parallel.DistributedDataParallel(
                 model,
                 device_ids=[device_id],
                 output_device=device_id,
                 process_group=nccl_group,  # Use NCCL for GPU gradient synchronization
             )
+            print(f"[RANK {rank}] [DDP] Model wrapped successfully", flush=True)
         else:
             # For CPU, don't pass device_ids, output_device, or process_group
             wrapped_model = torch.nn.parallel.DistributedDataParallel(model)

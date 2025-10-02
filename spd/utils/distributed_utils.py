@@ -116,7 +116,7 @@ def init_distributed(backend: Literal["nccl", "gloo"] | None = None) -> Distribu
         if torch.cuda.is_available():
             print(f"[RANK {rank}] Creating NCCL secondary group for GPU collectives...", flush=True)
             nccl_group = dist.new_group(backend="nccl")
-            print(f"[RANK {rank}] NCCL group created successfully", flush=True)
+            print(f"[RANK {rank}] NCCL group created: {nccl_group}, type: {type(nccl_group)}", flush=True)
 
     _state = DistributedState(
         rank=rank,
