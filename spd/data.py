@@ -277,6 +277,9 @@ def create_data_loader(
         ),
         drop_last=True,
         generator=generator,
+        num_workers=4,
+        pin_memory=True,
+        persistent_workers=True,
     )
     return loader, tokenizer
 
