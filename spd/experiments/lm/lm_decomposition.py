@@ -131,16 +131,16 @@ def main(
     else:
         # Avoid concurrent wandb API requests by first calling from_pretrained on rank 0 only
         print(f"[RANK {dist_state.rank}] [{time.time():.2f}] About to call ensure_cached_and_call for model loading", flush=True)
-        print(f"[RANK {dist_state.rank}] [PRE-LOAD] Loading model to device: {device}", flush=True)
         sys.stdout.flush()
         target_model = ensure_cached_and_call(
             pretrained_model_class.from_pretrained,  # pyright: ignore[reportAttributeAccessIssue]
             config.pretrained_model_name,
             token=hf_token,
-            device_map={"": device},  # Load directly to GPU
         )
-        print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Model loaded successfully", flush=True)
-        print(f"[RANK {dist_state.rank}] [POST-MODEL] CUDA available: {torch.cuda.is_available()}", flush=True)
+        print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Model loaded to CPU, moving to device: {device}", flush=True)
+        sys.stdout.flush()
+        target_model = target_model.to(device)
+        print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Model moved to GPU successfully", flush=True)
         print(f"[RANK {dist_state.rank}] [POST-MODEL] Model device: {next(target_model.parameters()).device}", flush=True)
         sys.stdout.flush()
     target_model.eval()
