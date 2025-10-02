@@ -20,9 +20,15 @@ else:
     print(f"[RANK {_rank}] [IMPORT] WARNING: CUDA NOT AVAILABLE!", flush=True)
 sys.stdout.flush()
 
+print(f"[RANK {_rank}] [IMPORT] Importing fire...", flush=True)
 import fire
-import wandb
+print(f"[RANK {_rank}] [IMPORT] fire imported", flush=True)
 
+print(f"[RANK {_rank}] [IMPORT] Importing wandb...", flush=True)
+import wandb
+print(f"[RANK {_rank}] [IMPORT] wandb imported", flush=True)
+
+print(f"[RANK {_rank}] [IMPORT] Importing SPD modules...", flush=True)
 from spd.configs import Config
 from spd.data import DatasetConfig, create_data_loader
 from spd.experiments.lm.configs import LMTaskConfig
@@ -44,6 +50,8 @@ from spd.utils.general_utils import (
 )
 from spd.utils.run_utils import get_output_dir
 from spd.utils.wandb_utils import init_wandb
+print(f"[RANK {_rank}] [IMPORT] All imports complete!", flush=True)
+sys.stdout.flush()
 
 
 @with_distributed_cleanup
