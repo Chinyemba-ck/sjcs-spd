@@ -5,7 +5,7 @@ import random
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 T = TypeVar("T")
 
@@ -14,12 +14,15 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import wandb
 import yaml
 from jaxtyping import Float
 from pydantic import BaseModel, PositiveFloat
 from pydantic.v1.utils import deep_update
 from torch import Tensor
+
+# Lazy import: wandb only used in functions called from is_main_process() blocks
+if TYPE_CHECKING:
+    import wandb
 
 from spd.log import logger
 from spd.utils.run_utils import save_file
@@ -405,6 +408,8 @@ def save_pre_run_info(
     task_name: str | None,
 ) -> None:
     """Save run information locally and optionally to wandb."""
+    # Lazy import - only called from is_main_process() blocks
+    import wandb
 
     files_to_save = {
         "final_config.yaml": spd_config.model_dump(mode="json"),

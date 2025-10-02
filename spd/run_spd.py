@@ -5,18 +5,22 @@ import json
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import torch
 import torch.nn as nn
 import torch.nn.parallel
 import torch.optim as optim
-import wandb
 from jaxtyping import Float, Int
 from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+
+# Lazy import: wandb is only used in is_main_process() blocks
+# Import at runtime inside functions to avoid multi-process file locking deadlock
+if TYPE_CHECKING:
+    import wandb
 
 from spd.configs import Config
 from spd.data import loop_dataloader
@@ -47,8 +51,11 @@ from spd.utils.run_utils import save_file
 
 
 def local_log(
-    data: Mapping[str, float | Image.Image | wandb.plot.CustomChart], step: int, out_dir: Path
+    data: Mapping[str, float | Image.Image | "wandb.plot.CustomChart"], step: int, out_dir: Path
 ) -> None:
+    # Lazy import - only called from is_main_process() blocks
+    import wandb
+
     metrics_file = out_dir / "metrics.jsonl"
     metrics_file.touch(exist_ok=True)
 
@@ -300,6 +307,9 @@ def optimize(
             microbatch_log_data["train/misc/current_p"] = current_p
 
             if is_main_process():
+                # Lazy import - only rank 0 reaches here
+                import wandb
+
                 tqdm.write(f"--- Step {step} ---")
                 tqdm.write(f"LR: {step_lr:.6f}")
                 for name, value in microbatch_log_data.items():

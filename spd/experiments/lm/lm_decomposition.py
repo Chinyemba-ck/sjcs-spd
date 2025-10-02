@@ -112,7 +112,9 @@ def main(
             out_dir = config.out_dir
             out_dir.mkdir(parents=True, exist_ok=True)
         else:
-            out_dir = get_output_dir(use_wandb_id=config.wandb_project is not None)
+            # Only rank 0 uses wandb ID; ranks 1-2 use local ID (they don't save files anyway)
+            use_wandb_id = config.wandb_project is not None and is_main_process()
+            out_dir = get_output_dir(use_wandb_id=use_wandb_id)
         logger.info(f"Output directory: {out_dir}")
         logger.info(config)
         if dist_state.world_size > 1:
