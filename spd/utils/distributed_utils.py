@@ -93,6 +93,7 @@ def init_distributed(backend: Literal["nccl", "gloo"] | None = None) -> Distribu
     # Set the CUDA device BEFORE init_process_group to avoid NCCL GPU mapping issues
     if torch.cuda.is_available():
         torch.cuda.set_device(local_rank)
+        print(f"[RANK {rank}] torch.cuda.set_device({local_rank}) completed", flush=True)
 
     # Initialize PyTorch distributed
     if not dist.is_initialized():
@@ -102,6 +103,7 @@ def init_distributed(backend: Literal["nccl", "gloo"] | None = None) -> Distribu
         else:
             local_device = None
 
+        print(f"[RANK {rank}] About to call dist.init_process_group(backend={backend})", flush=True)
         dist.init_process_group(
             backend=backend,
             init_method="env://",
@@ -109,6 +111,7 @@ def init_distributed(backend: Literal["nccl", "gloo"] | None = None) -> Distribu
             rank=rank,
             device_id=local_device,
         )
+        print(f"[RANK {rank}] dist.init_process_group completed successfully", flush=True)
 
     _state = DistributedState(
         rank=rank, world_size=world_size, local_rank=local_rank, backend=backend
