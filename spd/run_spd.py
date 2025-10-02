@@ -30,6 +30,7 @@ from spd.utils.component_utils import calc_ci_l_zero
 from spd.utils.distributed_utils import (
     avg_eval_metrics_across_ranks,
     avg_metrics_across_ranks,
+    get_nccl_group,
     get_world_size,
     is_distributed,
     is_main_process,
@@ -122,6 +123,9 @@ def optimize(
     world_size = get_world_size()
     wrapped_model: nn.Module = model
     if world_size > 1:
+        # Get NCCL process group for GPU collectives (uses Gloo for CPU barriers)
+        nccl_group = get_nccl_group()
+
         if device.startswith("cuda"):
             # Parse device string to get device id for GPU
             device_id = int(device.split(":")[1]) if ":" in device else 0
@@ -129,9 +133,10 @@ def optimize(
                 model,
                 device_ids=[device_id],
                 output_device=device_id,
+                process_group=nccl_group,  # Use NCCL for GPU gradient synchronization
             )
         else:
-            # For CPU, don't pass device_ids or output_device
+            # For CPU, don't pass device_ids, output_device, or process_group
             wrapped_model = torch.nn.parallel.DistributedDataParallel(model)
         # Access the underlying module for component operations
         component_model = wrapped_model.module  # type: ignore[attr-defined]
