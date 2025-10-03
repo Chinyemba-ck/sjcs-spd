@@ -31,6 +31,8 @@ Language Models (loaded from HuggingFace):
 - `gpt2` - GPT-2 model
 - `ss_gpt2_simple` - Simplified Simple Stories GPT-2 model
 - `ss_gpt2_simple_noln` - Simplified Simple Stories GPT-2 without layer normalization
+- `smollm2_135m_3layer` - SmolLM2-135M-Instruct (3-layer decomposition, layers 14-16)
+- `smollm2_135m_5layer` - SmolLM2-135M-Instruct (5-layer decomposition, layers 13-17)
 
 **Experimental** (not in registry, may have limited support):
 - `ih` - Induction head experiment (`spd/experiments/ih/`)
