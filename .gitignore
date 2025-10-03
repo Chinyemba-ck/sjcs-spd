@@ -181,3 +181,22 @@ notebooks
 test_*.py
 CLAUDECHATHISTORY
 context
+
+# RunPod deployment scripts (contain pod IDs and secrets)
+deploy_runpod*.py
+get_ssh_runpod.py
+check_runpod*.py
+manage_runpod.py
+runpod_remote_setup.py
+runpod_execute.ps1
+runpod_setup.sh
+setup_runpod.bat
+*.runpod.yaml
+
+# Large archive files
+*.tar.gz
+sjcs-spd*.tar.gz
+
+# RunPod executables
+runpodctl.exe
+runpodctl

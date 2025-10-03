@@ -5,18 +5,22 @@ import json
 from collections import defaultdict
 from collections.abc import Mapping
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, Union, cast
 
 import torch
 import torch.nn as nn
 import torch.nn.parallel
 import torch.optim as optim
-import wandb
 from jaxtyping import Float, Int
 from PIL import Image
 from torch import Tensor
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+
+# Lazy import: wandb is only used in is_main_process() blocks
+# Import at runtime inside functions to avoid multi-process file locking deadlock
+if TYPE_CHECKING:
+    import wandb
 
 from spd.configs import Config
 from spd.data import loop_dataloader
@@ -46,8 +50,11 @@ from spd.utils.run_utils import save_file
 
 
 def local_log(
-    data: Mapping[str, float | Image.Image | wandb.plot.CustomChart], step: int, out_dir: Path
+    data: Mapping[str, Union[float, Image.Image, "wandb.plot.CustomChart"]], step: int, out_dir: Path
 ) -> None:
+    # Lazy import - only called from is_main_process() blocks
+    import wandb
+
     metrics_file = out_dir / "metrics.jsonl"
     metrics_file.touch(exist_ok=True)
 
@@ -99,6 +106,11 @@ def optimize(
 
     target_model.requires_grad_(False)
 
+    # Enable CUDA optimizations for faster training
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+
     model = ComponentModel(
         target_model=target_model,
         target_module_patterns=config.all_module_patterns,
@@ -117,14 +129,37 @@ def optimize(
     world_size = get_world_size()
     wrapped_model: nn.Module = model
     if world_size > 1:
+        from spd.utils.distributed_utils import get_rank
+        import torch.distributed as dist
+        rank = get_rank()
+
         if device.startswith("cuda"):
             # Parse device string to get device id for GPU
             device_id = int(device.split(":")[1]) if ":" in device else 0
+
+            # TEST: Verify NCCL communication works BEFORE DDP wrapping
+            print(f"[RANK {rank}] [NCCL TEST] Testing NCCL communication before DDP...", flush=True)
+            test_tensor = torch.tensor([rank + 1], dtype=torch.float32, device=device)
+            print(f"[RANK {rank}] [NCCL TEST] Local tensor value: {test_tensor.item()}", flush=True)
+
+            print(f"[RANK {rank}] [NCCL TEST] Calling dist.all_reduce()...", flush=True)
+            dist.all_reduce(test_tensor, op=dist.ReduceOp.SUM)
+            print(f"[RANK {rank}] [NCCL TEST] After all_reduce: {test_tensor.item()}", flush=True)
+
+            expected_sum = sum(range(1, world_size + 1))  # 1+2+3 = 6 for 3 ranks
+            if abs(test_tensor.item() - expected_sum) < 0.001:
+                print(f"[RANK {rank}] [NCCL TEST] ✓ NCCL communication WORKS! Got {test_tensor.item()}, expected {expected_sum}", flush=True)
+            else:
+                print(f"[RANK {rank}] [NCCL TEST] ✗ NCCL communication FAILED! Got {test_tensor.item()}, expected {expected_sum}", flush=True)
+
+            print(f"[RANK {rank}] [DDP] Wrapping model with DDP on device {device_id}...", flush=True)
+            # DDP will use the default NCCL process group for GPU gradient synchronization
             wrapped_model = torch.nn.parallel.DistributedDataParallel(
                 model,
                 device_ids=[device_id],
                 output_device=device_id,
             )
+            print(f"[RANK {rank}] [DDP] Model wrapped successfully", flush=True)
         else:
             # For CPU, don't pass device_ids or output_device
             wrapped_model = torch.nn.parallel.DistributedDataParallel(model)
@@ -153,7 +188,7 @@ def optimize(
 
     assert len(component_params) > 0, "No parameters found in components to optimize"
 
-    optimizer = optim.AdamW(component_params + gate_params, lr=config.lr, weight_decay=0)
+    optimizer = optim.AdamW(component_params + gate_params, lr=config.lr, weight_decay=0, foreach=True)
 
     lr_schedule_fn = get_lr_schedule_fn(config.lr_schedule, config.lr_exponential_halflife)
     logger.info(f"Base LR scheduler created: {config.lr_schedule}")
@@ -184,7 +219,7 @@ def optimize(
         microbatch_log_data: defaultdict[str, float] = defaultdict(float)
         current_p = config.pnorm  # Initialize with default value
 
-        for _ in range(config.gradient_accumulation_steps):
+        for i_microbatch in range(config.gradient_accumulation_steps):
             weight_deltas = component_model.calc_weight_deltas()
             batch = extract_batch_data(next(train_iterator)).to(device)
 
@@ -217,6 +252,10 @@ def optimize(
                 p_anneal_end_frac=config.p_anneal_end_frac,
             )
 
+            # Memory logging: before calculate_losses
+            mem_before_losses = torch.cuda.memory_allocated(device) / (1024**3)
+            print(f"[MEMORY] Step {step}, microbatch {i_microbatch}: Before calculate_losses: {mem_before_losses:.3f} GB allocated")
+
             microbatch_total_loss, microbatch_loss_terms = calculate_losses(
                 model=component_model,
                 batch=batch,
@@ -227,8 +266,21 @@ def optimize(
                 weight_deltas=weight_deltas,
                 device=device,
                 current_p=current_p,
+                ddp_model=wrapped_model if world_size > 1 else None,
+                gradient_accumulation_steps=config.gradient_accumulation_steps,
             )
-            microbatch_total_loss.div_(config.gradient_accumulation_steps).backward()
+
+            # Memory logging: after calculate_losses
+            mem_after_losses = torch.cuda.memory_allocated(device) / (1024**3)
+            print(f"[MEMORY] Step {step}, microbatch {i_microbatch}: After calculate_losses: {mem_after_losses:.3f} GB (+{mem_after_losses - mem_before_losses:.3f} GB)")
+
+            # Only backward if total_loss has gradients (e.g., faithfulness_loss enabled)
+            if microbatch_total_loss.requires_grad:
+                microbatch_total_loss.div_(config.gradient_accumulation_steps).backward()
+
+                # Memory logging: after backward
+                mem_after_backward = torch.cuda.memory_allocated(device) / (1024**3)
+                print(f"[MEMORY] Step {step}, microbatch {i_microbatch}: After backward: {mem_after_backward:.3f} GB (+{mem_after_backward - mem_after_losses:.3f} GB)")
 
             for loss_name, loss_value in microbatch_loss_terms.items():
                 microbatch_log_data[f"train/loss/{loss_name}"] += (
@@ -240,6 +292,18 @@ def optimize(
                 microbatch_log_data[f"train/{layer_name}/l0"] += (
                     l0_val / config.gradient_accumulation_steps
                 )
+
+        # Free tensors from last gradient accumulation iteration before optimizer.step()
+        # These variables are created in the loop above but no longer used after it completes
+        # Frees ~1.7 GB: target_out (768 MB) + pre_weight_acts (200 MB) +
+        #                causal_importances (332 MB) + causal_importances_upper_leaky (332 MB) +
+        #                batch (10 MB) + weight_deltas (50 MB)
+        # This prevents OOM at optimizer.step() which needs 30 MB when only 10.31 MB was free
+        mem_before_cleanup = torch.cuda.memory_allocated(device) / (1024**3)
+        del target_out, pre_weight_acts, batch, weight_deltas, causal_importances, causal_importances_upper_leaky, microbatch_total_loss, microbatch_loss_terms
+        torch.cuda.empty_cache()
+        mem_after_cleanup = torch.cuda.memory_allocated(device) / (1024**3)
+        print(f"[MEMORY] Step {step}: After cleanup: {mem_after_cleanup:.3f} GB (freed {mem_before_cleanup - mem_after_cleanup:.3f} GB)")
 
         # --- Train Logging --- #
         if step % config.train_log_freq == 0:
@@ -261,6 +325,9 @@ def optimize(
             microbatch_log_data["train/misc/current_p"] = current_p
 
             if is_main_process():
+                # Lazy import - only rank 0 reaches here
+                import wandb
+
                 tqdm.write(f"--- Step {step} ---")
                 tqdm.write(f"LR: {step_lr:.6f}")
                 for name, value in microbatch_log_data.items():
@@ -271,10 +338,14 @@ def optimize(
                     wandb.log(microbatch_log_data, step=step)
 
         # --- Evaluation --- #
-        # Skip evaluation at step 0 since no training has occurred yet
+        # Skip evaluation at step 0 to prevent memory exhaustion before any training occurs
         if step > 0 and step % config.eval_freq == 0:
             with torch.inference_mode():
-                run_slow: bool = step % config.slow_eval_freq == 0
+                run_slow: bool = (
+                    config.slow_eval_on_first_step
+                    if step == 0
+                    else step % config.slow_eval_freq == 0
+                )
 
                 metrics = evaluate(
                     model=component_model,  # No backward passes so DDP wrapped_model not needed

@@ -3,7 +3,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
-from typing import Any, Literal, override, get_args, get_origin
+from typing import Any, Literal, get_args, get_origin
+from typing_extensions import override
 
 import torch
 import wandb
@@ -159,7 +160,7 @@ def _get_default_for_field(field_name: str, field_info, config_data: dict) -> An
 
 
 @dataclass
-class SPDRunInfo(RunInfo[Config]):
+class SPDRunInfo(RunInfo):
     """Run info from training a ComponentModel (i.e. from an SPD run)."""
 
     @override
@@ -703,7 +704,7 @@ class ComponentModel(LoadableModule):
         return new_state_dict
 
     @classmethod
-    def from_run_info(cls, run_info: RunInfo[Config]) -> "ComponentModel":
+    def from_run_info(cls, run_info: RunInfo) -> "ComponentModel":
         """Load a trained ComponentModel checkpoint from a run info object."""
         config = run_info.config
 

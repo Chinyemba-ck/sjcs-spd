@@ -1,11 +1,19 @@
 # SPD Configuration for Gemma-3-270M-IT Multilingual Analysis
-# This config is optimized for analyzing cross-language feature correspondence
-# Focus on MLP gate projections as requested by Jack
+# 3-LAYER MIDDLE DECOMPOSITION STRATEGY (Layers 8-10)
+#
+# This config decomposes only 3 adjacent middle layers instead of all 18 layers.
+# Rationale:
+#   - Achieves 6× cost reduction ($220 → ~$37-55) while preserving cross-layer analysis
+#   - Middle layers (8-10) capture semantic processing where multilingual features emerge
+#   - Enables studying distributed mechanisms that span 2-3 layers (SPD paper validated)
+#   - Balances budget constraints with scientific validity for publication
+#
+# Based on mentor Pablo's suggestion and agent consensus analysis.
 
 # --- WandB ---
 wandb_project: gemma-spd
 wandb_run_name: null
-wandb_run_name_prefix: "gemma_270m_multilingual"
+wandb_run_name_prefix: "gemma_270m_multilingual_3layer"
 
 # --- General ---
 seed: 0
@@ -14,11 +22,20 @@ n_mask_samples: 1
 gate_type: "vector_mlp"  # Use vector MLP gates for richer component interactions
 gate_hidden_dims: [12]  # Standard for language models (ss_llama, ss_gpt2 use 12)
 sigmoid_type: "hard"  # Changed from leaky_hard to allow true zeros
-# Focus on MLP gate projections as requested
+
+# MODIFIED: Target only layers 8, 9, 10 (3 adjacent middle layers)
+# This reduces modules from 54 to 9 (6× fewer layerwise forwards)
 target_module_patterns:
-  - "model.layers.*.mlp.gate_proj"
-  - "model.layers.*.mlp.up_proj"
-  - "model.layers.*.mlp.down_proj"
+  - "model.layers.8.mlp.gate_proj"
+  - "model.layers.8.mlp.up_proj"
+  - "model.layers.8.mlp.down_proj"
+  - "model.layers.9.mlp.gate_proj"
+  - "model.layers.9.mlp.up_proj"
+  - "model.layers.9.mlp.down_proj"
+  - "model.layers.10.mlp.gate_proj"
+  - "model.layers.10.mlp.up_proj"
+  - "model.layers.10.mlp.down_proj"
+
 identity_module_patterns: null
 sampling: "continuous"
 use_delta_component: true
@@ -37,8 +54,8 @@ p_anneal_end_frac: 1.0
 output_loss_type: kl  # KL divergence - standard for all language models
 
 # --- Training ---
-batch_size: 8  # 4 samples per GPU × 2 GPUs = 8 microbatch_size
-eval_batch_size: 8  # Match training batch size for consistent memory usage
+batch_size: 12  # 4 samples per GPU × 3 GPUs = 12 microbatch_size (odd_amaranth_canid)
+eval_batch_size: 12  # Match training batch size for consistent memory usage
 steps: 30000  # Extended training (30k steps) for maximum natural convergence and component death
 lr: 0.0005
 lr_schedule: cosine
@@ -57,6 +74,7 @@ ci_alive_threshold: 0.001  # Components need >0.1% activation to stay alive
 n_examples_until_dead: 307200  # Die after 1% of training without firing (30k*4*256*0.01)
 
 # Evaluation metrics with focus on component activation patterns
+# MODIFIED: Only track layers 8-10 since those are the only decomposed layers
 eval_metrics:
   - classname: "CIHistograms"
     extra_init_kwargs:
@@ -66,26 +84,14 @@ eval_metrics:
   - classname: "CI_L0"
     extra_init_kwargs:
       groups:
-        total: ["*"]  # Total L0 across all layers
-        # Track each of 18 layers individually
-        layer_0: ["model.layers.0.*"]
-        layer_1: ["model.layers.1.*"]
-        layer_2: ["model.layers.2.*"]
-        layer_3: ["model.layers.3.*"]
-        layer_4: ["model.layers.4.*"]
-        layer_5: ["model.layers.5.*"]
-        layer_6: ["model.layers.6.*"]
-        layer_7: ["model.layers.7.*"]
+        total: ["*"]  # Total L0 across decomposed layers
         layer_8: ["model.layers.8.*"]
         layer_9: ["model.layers.9.*"]
         layer_10: ["model.layers.10.*"]
-        layer_11: ["model.layers.11.*"]
-        layer_12: ["model.layers.12.*"]
-        layer_13: ["model.layers.13.*"]
-        layer_14: ["model.layers.14.*"]
-        layer_15: ["model.layers.15.*"]
-        layer_16: ["model.layers.16.*"]
-        layer_17: ["model.layers.17.*"]
+        # Track by MLP component type
+        gate_proj: ["*.mlp.gate_proj"]
+        up_proj: ["*.mlp.up_proj"]
+        down_proj: ["*.mlp.down_proj"]
   - classname: "CEandKLLosses"
     extra_init_kwargs:
       rounding_threshold: 0.0
@@ -94,18 +100,20 @@ eval_metrics:
     extra_init_kwargs:
       n_mask_samples: 1
       include_patterns:
-        # Track early, middle, and late layers
-        early_layers: ["model.layers.[0-5].*"]
-        middle_layers: ["model.layers.[6-11].*"]
-        late_layers: ["model.layers.[12-17].*"]
-        # Focus on different MLP components
+        # Track cross-layer patterns within our 3-layer window
+        layer_8_only: ["model.layers.8.*"]
+        layer_9_only: ["model.layers.9.*"]
+        layer_10_only: ["model.layers.10.*"]
+        layers_8_9: ["model.layers.[8-9].*"]
+        layers_9_10: ["model.layers.[9-10].*"]
+        # Track by MLP component type
         gate_only: ["*.mlp.gate_proj"]
         up_only: ["*.mlp.up_proj"]
         down_only: ["*.mlp.down_proj"]
       exclude_patterns:
-        all_but_early: ["model.layers.[0-5].*"]
-        all_but_middle: ["model.layers.[6-11].*"]
-        all_but_late: ["model.layers.[12-17].*"]
+        all_but_layer_8: ["model.layers.8.*"]
+        all_but_layer_9: ["model.layers.9.*"]
+        all_but_layer_10: ["model.layers.10.*"]
   - classname: "FaithfulnessLoss"
 
 # --- Pretrained model info ---
@@ -132,9 +140,14 @@ task_config:
 
 # Model details from verification:
 # - 268M parameters
-# - 18 hidden layers
+# - 18 hidden layers (decomposing only layers 8-10)
 # - Hidden size: 640
 # - Intermediate size: 2048
 # - 4 attention heads, 1 KV head
 # - Uses sliding_attention and full_attention patterns
 # - Vocab size: 262144
+
+# COST ESTIMATES (3-layer vs full-model):
+# Full model: 54 modules → 216 layerwise forwards/step → $220 for 30k steps
+# 3-layer:     9 modules →  36 layerwise forwards/step → $37-55 for 30k steps
+# Reduction: 6× fewer forwards, ~80% cost savings

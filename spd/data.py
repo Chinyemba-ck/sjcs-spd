@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader, DistributedSampler
 from transformers import AutoTokenizer, PreTrainedTokenizer
 
 from spd.log import logger
+from spd.utils.distributed_utils import ensure_cached_and_call
 
 
 class DatasetConfig(BaseModel):
@@ -152,7 +153,7 @@ def create_data_loader(
     ddp_rank: int = 0,
     ddp_world_size: int = 1,
     to_lower: bool = True,
-) -> tuple[DataLoader[Any], PreTrainedTokenizer]:
+) -> tuple[DataLoader, PreTrainedTokenizer]:
     """Create a DataLoader for the given dataset.
 
     Uses PyTorch's DistributedSampler to ensure each rank gets the correct
@@ -226,7 +227,9 @@ def create_data_loader(
         assert isinstance(dataset, Dataset)
         dataset = dataset.shuffle(seed=seed)
 
-    tokenizer = AutoTokenizer.from_pretrained(dataset_config.hf_tokenizer_path)
+    tokenizer = ensure_cached_and_call(
+        AutoTokenizer.from_pretrained, dataset_config.hf_tokenizer_path
+    )
 
     torch_dataset: Dataset | IterableDataset
     if dataset_config.is_tokenized:
@@ -274,11 +277,14 @@ def create_data_loader(
         ),
         drop_last=True,
         generator=generator,
+        num_workers=4,
+        pin_memory=True,
+        persistent_workers=True,
     )
     return loader, tokenizer
 
 
-def loop_dataloader[T](dl: DataLoader[T]):
+def loop_dataloader(dl: DataLoader):
     """Loop over a dataloader, resetting the iterator when it is exhausted.
 
     Ensures that each epoch gets different data, even when using a distributed sampler.

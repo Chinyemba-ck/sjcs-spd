@@ -1,12 +1,43 @@
 """Language Model decomposition script."""
 
+import os
+os.environ["WANDB_START_METHOD"] = "thread"  # Fix for multi-process wandb deadlock
+
 import json
+import sys
+import time
 from pathlib import Path
 
-import fire
-import wandb
-from simple_stories_train.run_info import RunInfo as SSRunInfo
+# CRITICAL: Check CUDA availability BEFORE any torch imports
+import torch
+_rank = os.environ.get('RANK', '?')
+print(f"[RANK {_rank}] [IMPORT] PyTorch version: {torch.__version__}", flush=True)
+print(f"[RANK {_rank}] [IMPORT] CUDA available: {torch.cuda.is_available()}", flush=True)
+if torch.cuda.is_available():
+    print(f"[RANK {_rank}] [IMPORT] CUDA device count: {torch.cuda.device_count()}", flush=True)
+    print(f"[RANK {_rank}] [IMPORT] CUDA version: {torch.version.cuda}", flush=True)
+else:
+    print(f"[RANK {_rank}] [IMPORT] WARNING: CUDA NOT AVAILABLE!", flush=True)
+sys.stdout.flush()
 
+print(f"[RANK {_rank}] [IMPORT] Importing fire...", flush=True)
+import fire
+print(f"[RANK {_rank}] [IMPORT] fire imported", flush=True)
+
+# CRITICAL: Only import wandb on rank 0 to avoid multi-process file locking deadlock
+# wandb creates lock files during import, causing deadlock when 3 processes import simultaneously
+# wandb is only used in is_main_process() blocks anyway
+if _rank == '0' or _rank == '?':  # '?' means single-process mode
+    print(f"[RANK {_rank}] [IMPORT] Importing wandb (rank 0 only)...", flush=True)
+    import wandb
+    from spd.utils.wandb_utils import init_wandb
+    print(f"[RANK {_rank}] [IMPORT] wandb imported", flush=True)
+else:
+    print(f"[RANK {_rank}] [IMPORT] Skipping wandb import (non-main rank)", flush=True)
+    wandb = None  # type: ignore[assignment]
+    init_wandb = None  # type: ignore[assignment]
+
+print(f"[RANK {_rank}] [IMPORT] Importing SPD modules...", flush=True)
 from spd.configs import Config
 from spd.data import DatasetConfig, create_data_loader
 from spd.experiments.lm.configs import LMTaskConfig
@@ -27,7 +58,8 @@ from spd.utils.general_utils import (
     set_seed,
 )
 from spd.utils.run_utils import get_output_dir
-from spd.utils.wandb_utils import init_wandb
+print(f"[RANK {_rank}] [IMPORT] All imports complete!", flush=True)
+sys.stdout.flush()
 
 
 @with_distributed_cleanup
@@ -37,9 +69,25 @@ def main(
     sweep_id: str | None = None,
     sweep_params_json: str | None = None,
 ) -> None:
-    config = load_config(config_path_or_obj, config_model=Config)
+    print(f"[MAIN] [{time.time():.2f}] Script starting...", flush=True)
+    sys.stdout.flush()
 
+    print(f"[MAIN] [{time.time():.2f}] Loading config...", flush=True)
+    sys.stdout.flush()
+    config = load_config(config_path_or_obj, config_model=Config)
+    print(f"[MAIN] [{time.time():.2f}] Config loaded", flush=True)
+    sys.stdout.flush()
+
+    print(f"[MAIN] [{time.time():.2f}] Initializing distributed...", flush=True)
+    sys.stdout.flush()
     dist_state = init_distributed(backend=config.dist_backend)
+    print(f"[MAIN] [{time.time():.2f}] Distributed initialized: rank={dist_state.rank}, world_size={dist_state.world_size}", flush=True)
+    print(f"[RANK {dist_state.rank}] [POST-INIT] CUDA still available: {torch.cuda.is_available()}", flush=True)
+    print(f"[RANK {dist_state.rank}] [POST-INIT] Current device: {torch.cuda.current_device() if torch.cuda.is_available() else 'N/A'}", flush=True)
+    sys.stdout.flush()
+
+    # Get HuggingFace token from environment (will be passed directly to from_pretrained)
+    hf_token = os.getenv('HF_TOKEN')
 
     sweep_params = (
         None if sweep_params_json is None else json.loads(sweep_params_json.removeprefix("json:"))
@@ -64,7 +112,9 @@ def main(
             out_dir = config.out_dir
             out_dir.mkdir(parents=True, exist_ok=True)
         else:
-            out_dir = get_output_dir(use_wandb_id=config.wandb_project is not None)
+            # Only rank 0 uses wandb ID; ranks 1-2 use local ID (they don't save files anyway)
+            use_wandb_id = config.wandb_project is not None and is_main_process()
+            out_dir = get_output_dir(use_wandb_id=use_wandb_id)
         logger.info(f"Output directory: {out_dir}")
         logger.info(config)
         if dist_state.world_size > 1:
@@ -73,6 +123,9 @@ def main(
         out_dir = None
 
     device = get_device()
+    print(f"[RANK {dist_state.rank}] [DEVICE] get_device() returned: {device}", flush=True)
+    print(f"[RANK {dist_state.rank}] [DEVICE] torch.cuda.is_available(): {torch.cuda.is_available()}", flush=True)
+    sys.stdout.flush()
     assert isinstance(config.task_config, LMTaskConfig), "task_config not LMTaskConfig"
 
     pretrained_model_class = resolve_class(config.pretrained_model_class)
@@ -85,6 +138,7 @@ def main(
     if config.pretrained_model_class.startswith("simple_stories_train"):
         # Handle differently in case run has layernorm ablations (we'd need to collect ln_stds)
         # Avoid concurrent wandb API requests on each rank
+        from simple_stories_train.run_info import RunInfo as SSRunInfo
         run_info = call_on_rank0_then_broadcast(SSRunInfo.from_path, config.pretrained_model_name)
         if run_info.config_dict["enable_ln_ablation"]:
             ln_stds = run_info.ln_stds
@@ -94,11 +148,22 @@ def main(
         target_model = pretrained_model_class.from_run_info(run_info)  # pyright: ignore[reportAttributeAccessIssue]
     else:
         # Avoid concurrent wandb API requests by first calling from_pretrained on rank 0 only
+        print(f"[RANK {dist_state.rank}] [{time.time():.2f}] About to call ensure_cached_and_call for model loading", flush=True)
+        sys.stdout.flush()
         target_model = ensure_cached_and_call(
             pretrained_model_class.from_pretrained,  # pyright: ignore[reportAttributeAccessIssue]
             config.pretrained_model_name,
+            token=hf_token,
         )
+        print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Model loaded to CPU, moving to device: {device}", flush=True)
+        sys.stdout.flush()
+        target_model = target_model.to(device)
+        print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Model moved to GPU successfully", flush=True)
+        print(f"[RANK {dist_state.rank}] [POST-MODEL] Model device: {next(target_model.parameters()).device}", flush=True)
+        sys.stdout.flush()
     target_model.eval()
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Model set to eval mode", flush=True)
+    sys.stdout.flush()
 
     if is_main_process():
         assert out_dir is not None
@@ -113,6 +178,8 @@ def main(
         )
 
     # --- Load Data --- #
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Starting dataset loading", flush=True)
+    sys.stdout.flush()
     if is_main_process():
         logger.info("Loading dataset...")
     train_data_config = DatasetConfig(
@@ -135,6 +202,8 @@ def main(
     )
     train_rank_microbatch_size = config.microbatch_size // dist_state.world_size
 
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Creating train dataloader", flush=True)
+    sys.stdout.flush()
     train_loader, _tokenizer = create_data_loader(
         dataset_config=train_data_config,
         batch_size=train_rank_microbatch_size,
@@ -143,6 +212,8 @@ def main(
         ddp_rank=dist_state.rank,
         ddp_world_size=dist_state.world_size,
     )
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Train dataloader created", flush=True)
+    sys.stdout.flush()
 
     eval_data_config = DatasetConfig(
         name=config.task_config.dataset_name,
@@ -162,6 +233,8 @@ def main(
     )
     eval_rank_batch_size = config.eval_batch_size // dist_state.world_size
 
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Creating eval dataloader", flush=True)
+    sys.stdout.flush()
     eval_loader, _ = create_data_loader(
         dataset_config=eval_data_config,
         batch_size=eval_rank_batch_size,
@@ -170,9 +243,13 @@ def main(
         ddp_rank=dist_state.rank,
         ddp_world_size=dist_state.world_size,
     )
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] Eval dataloader created", flush=True)
+    sys.stdout.flush()
 
     if is_main_process():
         logger.info("Starting optimization...")
+    print(f"[RANK {dist_state.rank}] [{time.time():.2f}] About to call optimize()", flush=True)
+    sys.stdout.flush()
 
     optimize(
         target_model=target_model,
