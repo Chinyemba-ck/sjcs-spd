@@ -70,7 +70,7 @@ eval_freq: 500
 slow_eval_freq: 2500
 slow_eval_on_first_step: false  # Skip initial eval to avoid OOM before training starts
 n_eval_steps: 5
-save_freq: 5000
+save_freq: 500  # Frequent checkpoints for crash recovery (every ~20 min)
 ci_alive_threshold: 0.001  # Components need >0.1% activation to stay alive
 n_examples_until_dead: 307200  # Die after 1% of training without firing
 
