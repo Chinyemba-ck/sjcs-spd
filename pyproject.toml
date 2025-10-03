@@ -8,7 +8,7 @@ license = { text = "MIT" }
 readme = "README.md"
 dependencies = [
     "typing-extensions",
-    "torch>=2.6",
+    "torch>=2.2.0",  # Relaxed from 2.6 - no 2.6+ features used, only scaled_dot_product_attention (2.0+)
     "torchvision",
     "pydantic",
     "wandb>=0.20.1", # Avoid wandb.sdk.wandb_manager.ManagerConnectionRefusedError
