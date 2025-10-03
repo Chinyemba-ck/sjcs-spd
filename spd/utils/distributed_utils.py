@@ -206,8 +206,12 @@ def get_gloo_group() -> dist.ProcessGroup | None:
 
 
 def sync_across_processes() -> None:
-    """Synchronize all processes using Gloo group for reliable CPU barriers."""
-    if dist.is_initialized():
+    """Synchronize all processes using Gloo group for reliable CPU barriers.
+
+    Skips barrier when world_size=1 to avoid NCCL/Gloo deadlocks in single-GPU scenarios.
+    With a single process, synchronization is a no-op.
+    """
+    if dist.is_initialized() and get_world_size() > 1:
         import sys
         import time
         rank = get_rank()
@@ -237,15 +241,23 @@ def all_reduce(
 
     Returns:
         Reduced tensor
+
+    Note:
+        Skips all_reduce when world_size=1 to avoid NCCL deadlocks in single-GPU scenarios.
+        With a single process, all_reduce is mathematically a no-op (SUM([x]) = x).
     """
-    if is_distributed():
+    if is_distributed() and get_world_size() > 1:
         dist.all_reduce(tensor, op=op)
     return tensor
 
 
 def broadcast_obj(value: T) -> T:
-    """Broadcast an object from rank 0 to all ranks."""
-    assert dist.is_initialized()
+    """Broadcast an object from rank 0 to all ranks.
+
+    Skips broadcast when world_size=1 to avoid NCCL deadlocks.
+    """
+    if not dist.is_initialized() or get_world_size() == 1:
+        return value
     payload: list[object] = [value if is_main_process() else None]
     dist.broadcast_object_list(payload, src=0)
     return cast(T, payload[0])
