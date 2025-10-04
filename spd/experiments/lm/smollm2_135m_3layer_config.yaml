@@ -55,14 +55,14 @@ p_anneal_end_frac: 1.0
 output_loss_type: kl  # KL divergence - standard for all language models
 
 # --- Training ---
-batch_size: 16  # 4 samples per GPU × 4 GPUs = 16
-eval_batch_size: 16  # Match training batch size for consistent memory usage
+batch_size: 64  # Optimized for single H200 GPU (4× increase, conservative for memory)
+eval_batch_size: 64  # Match training batch size for consistent memory usage
 steps: 30000  # Extended training for maximum natural convergence and component death
 lr: 0.0005
 lr_schedule: cosine
 lr_warmup_pct: 0.01
 lr_exponential_halflife: null
-gradient_accumulation_steps: 4  # Effective batch = 16 × 4 = 64 samples/optimizer step
+gradient_accumulation_steps: 1  # Effective batch = 128 (was 64 with grad_accum=4)
 
 # --- Logging & Saving ---
 train_log_freq: 100
