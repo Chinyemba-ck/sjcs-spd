@@ -11,7 +11,8 @@ match expected target solutions in toy models:
 
 import fnmatch
 from abc import ABC, abstractmethod
-from typing import Literal, override
+from typing import Literal
+from typing_extensions import override
 
 import torch
 from jaxtyping import Float, Int

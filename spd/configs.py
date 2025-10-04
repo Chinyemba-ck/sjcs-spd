@@ -3,7 +3,9 @@
 import importlib
 import inspect
 from pathlib import Path
-from typing import Any, ClassVar, Literal, Self
+from typing import Any, ClassVar, Literal
+
+from typing_extensions import Self
 
 from pydantic import (
     BaseModel,

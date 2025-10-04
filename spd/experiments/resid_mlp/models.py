@@ -2,7 +2,7 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import override
+from typing_extensions import override
 
 import einops
 import torch
@@ -31,7 +31,7 @@ from spd.utils.wandb_utils import (
 
 
 @dataclass
-class ResidMLPTargetRunInfo(RunInfo[ResidMLPTrainConfig]):
+class ResidMLPTargetRunInfo(RunInfo):
     """Run info from training a ResidualMLPModel."""
 
     label_coeffs: Float[Tensor, " n_features"]
@@ -169,7 +169,7 @@ class ResidMLP(LoadableModule):
 
     @classmethod
     @override
-    def from_run_info(cls, run_info: RunInfo[ResidMLPTrainConfig]) -> "ResidMLP":
+    def from_run_info(cls, run_info: RunInfo) -> "ResidMLP":
         """Load a pretrained model from a run info object."""
         resid_mlp_model = cls(config=run_info.config.resid_mlp_model_config)
         resid_mlp_model.load_state_dict(
