@@ -129,6 +129,12 @@ EXPERIMENT_REGISTRY: dict[str, ExperimentConfig] = {
         config_path=Path("spd/experiments/lm/smollm2_135m_5layer_config.yaml"),
         expected_runtime=1250,  # ~20.8 hours on 4× A100-SXM4
     ),
+    "smollm2_135m_3layer_attn": ExperimentConfig(
+        task_name="lm",
+        decomp_script=Path("spd/experiments/lm/lm_decomposition.py"),
+        config_path=Path("spd/experiments/lm/smollm2_135m_3layer_attn_config.yaml"),
+        expected_runtime=1050,  # ~17.5 hours on 4× A100-SXM4 (~11.8 hours on 2×H200)
+    ),
     # "ss_emb": ExperimentConfig(
     #     task_name="lm",
     #     decomp_script=Path("spd/experiments/lm/lm_decomposition.py"),
