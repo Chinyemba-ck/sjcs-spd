@@ -1,12 +1,15 @@
 import fnmatch
 import math
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 
 import torch
 import torch.nn as nn
-from simple_stories_train.models.gpt2_simple import LayerNorm as SSLayerNorm
 from torch import Tensor
 from torch.nn.init import calculate_gain
+
+# Optional import for Simple Stories models only
+if TYPE_CHECKING:
+    from simple_stories_train.models.gpt2_simple import LayerNorm as SSLayerNorm
 
 # This is equivalent to `torch.nn.init._NonlinearityType`, but for some reason this is not always
 # importable. see https://github.com/goodfire-ai/spd/actions/runs/16927877557/job/47967138342
@@ -51,6 +54,15 @@ def init_param_(
 def replace_std_values_in_layernorm(
     component_model: nn.Module, std_values: dict[str, float]
 ) -> None:
+    # Lazy import - only load simple_stories_train when this function is actually called
+    try:
+        from simple_stories_train.models.gpt2_simple import LayerNorm as SSLayerNorm
+    except ImportError as e:
+        raise ImportError(
+            "simple_stories_train is required for replace_std_values_in_layernorm. "
+            "Install it with: pip install git+https://github.com/goodfire-ai/simple_stories_train.git@dev"
+        ) from e
+
     for name, std in std_values.items():
         module = component_model.get_submodule("patched_model." + name)
         assert isinstance(module, SSLayerNorm), (

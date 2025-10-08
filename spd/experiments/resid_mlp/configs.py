@@ -1,4 +1,6 @@
-from typing import ClassVar, Literal, Self
+from typing import ClassVar, Literal
+
+from typing_extensions import Self
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, PositiveInt, model_validator
 

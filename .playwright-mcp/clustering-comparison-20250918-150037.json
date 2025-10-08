@@ -1,0 +1,6119 @@
+{
+  "timestamp": "2025-09-18T15:00:37.028606",
+  "run_id": "manual_input",
+  "notebook_clustering": {
+    "n_clusters": 10,
+    "total_components": 200,
+    "similarity_method": "fused",
+    "cluster_sizes": {
+      "0": 53,
+      "1": 8,
+      "2": 17,
+      "3": 16,
+      "4": 16,
+      "5": 17,
+      "6": 19,
+      "7": 13,
+      "8": 5,
+      "9": 36
+    },
+    "cluster_labels": [
+      2,
+      2,
+      4,
+      3,
+      6,
+      1,
+      7,
+      6,
+      8,
+      1,
+      6,
+      6,
+      3,
+      4,
+      3,
+      9,
+      4,
+      5,
+      2,
+      3,
+      3,
+      6,
+      2,
+      6,
+      4,
+      9,
+      1,
+      2,
+      1,
+      2,
+      6,
+      4,
+      2,
+      6,
+      5,
+      5,
+      5,
+      7,
+      2,
+      7,
+      0,
+      5,
+      5,
+      6,
+      4,
+      5,
+      6,
+      4,
+      5,
+      8,
+      2,
+      5,
+      7,
+      3,
+      3,
+      7,
+      2,
+      7,
+      1,
+      4,
+      6,
+      6,
+      4,
+      5,
+      7,
+      4,
+      3,
+      5,
+      7,
+      7,
+      3,
+      3,
+      2,
+      7,
+      5,
+      7,
+      8,
+      0,
+      8,
+      4,
+      1,
+      2,
+      1,
+      3,
+      5,
+      8,
+      5,
+      9,
+      0,
+      6,
+      6,
+      2,
+      1,
+      4,
+      7,
+      3,
+      4,
+      3,
+      7,
+      4,
+      9,
+      3,
+      9,
+      0,
+      0,
+      0,
+      0,
+      0,
+      9,
+      9,
+      0,
+      0,
+      2,
+      0,
+      6,
+      0,
+      5,
+      0,
+      0,
+      9,
+      9,
+      0,
+      9,
+      0,
+      4,
+      0,
+      9,
+      9,
+      9,
+      9,
+      9,
+      0,
+      9,
+      9,
+      9,
+      6,
+      2,
+      0,
+      2,
+      0,
+      0,
+      9,
+      9,
+      0,
+      9,
+      2,
+      0,
+      0,
+      9,
+      9,
+      9,
+      5,
+      0,
+      0,
+      9,
+      0,
+      0,
+      0,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      6,
+      0,
+      9,
+      0,
+      9,
+      0,
+      0,
+      6,
+      0,
+      0,
+      9,
+      0,
+      9,
+      9,
+      9,
+      5,
+      0,
+      0,
+      0,
+      4,
+      0,
+      3,
+      9,
+      0,
+      0,
+      9,
+      6,
+      9,
+      9,
+      9,
+      0
+    ],
+    "cluster_details": {
+      "0": {
+        "member_indices": [
+          40,
+          77,
+          88,
+          103,
+          104,
+          105,
+          106,
+          107,
+          110,
+          111,
+          113,
+          115,
+          117,
+          118,
+          121,
+          123,
+          125,
+          131,
+          137,
+          139,
+          140,
+          143,
+          146,
+          147,
+          152,
+          153,
+          155,
+          156,
+          157,
+          159,
+          160,
+          161,
+          162,
+          163,
+          164,
+          165,
+          166,
+          167,
+          168,
+          170,
+          172,
+          174,
+          175,
+          177,
+          178,
+          180,
+          185,
+          186,
+          187,
+          189,
+          192,
+          193,
+          199
+        ],
+        "member_labels": [
+          "layers.0.mlp_in:40",
+          "layers.0.mlp_in:77",
+          "layers.0.mlp_in:88",
+          "layers.0.mlp_out:3",
+          "layers.0.mlp_out:4",
+          "layers.0.mlp_out:5",
+          "layers.0.mlp_out:6",
+          "layers.0.mlp_out:7",
+          "layers.0.mlp_out:10",
+          "layers.0.mlp_out:11",
+          "layers.0.mlp_out:13",
+          "layers.0.mlp_out:15",
+          "layers.0.mlp_out:17",
+          "layers.0.mlp_out:18",
+          "layers.0.mlp_out:21",
+          "layers.0.mlp_out:23",
+          "layers.0.mlp_out:25",
+          "layers.0.mlp_out:31",
+          "layers.0.mlp_out:37",
+          "layers.0.mlp_out:39",
+          "layers.0.mlp_out:40",
+          "layers.0.mlp_out:43",
+          "layers.0.mlp_out:46",
+          "layers.0.mlp_out:47",
+          "layers.0.mlp_out:52",
+          "layers.0.mlp_out:53",
+          "layers.0.mlp_out:55",
+          "layers.0.mlp_out:56",
+          "layers.0.mlp_out:57",
+          "layers.0.mlp_out:59",
+          "layers.0.mlp_out:60",
+          "layers.0.mlp_out:61",
+          "layers.0.mlp_out:62",
+          "layers.0.mlp_out:63",
+          "layers.0.mlp_out:64",
+          "layers.0.mlp_out:65",
+          "layers.0.mlp_out:66",
+          "layers.0.mlp_out:67",
+          "layers.0.mlp_out:68",
+          "layers.0.mlp_out:70",
+          "layers.0.mlp_out:72",
+          "layers.0.mlp_out:74",
+          "layers.0.mlp_out:75",
+          "layers.0.mlp_out:77",
+          "layers.0.mlp_out:78",
+          "layers.0.mlp_out:80",
+          "layers.0.mlp_out:85",
+          "layers.0.mlp_out:86",
+          "layers.0.mlp_out:87",
+          "layers.0.mlp_out:89",
+          "layers.0.mlp_out:92",
+          "layers.0.mlp_out:93",
+          "layers.0.mlp_out:99"
+        ],
+        "size": 53
+      },
+      "1": {
+        "member_indices": [
+          5,
+          9,
+          26,
+          28,
+          58,
+          80,
+          82,
+          92
+        ],
+        "member_labels": [
+          "layers.0.mlp_in:5",
+          "layers.0.mlp_in:9",
+          "layers.0.mlp_in:26",
+          "layers.0.mlp_in:28",
+          "layers.0.mlp_in:58",
+          "layers.0.mlp_in:80",
+          "layers.0.mlp_in:82",
+          "layers.0.mlp_in:92"
+        ],
+        "size": 8
+      },
+      "2": {
+        "member_indices": [
+          0,
+          1,
+          18,
+          22,
+          27,
+          29,
+          32,
+          38,
+          50,
+          56,
+          72,
+          81,
+          91,
+          112,
+          136,
+          138,
+          145
+        ],
+        "member_labels": [
+          "layers.0.mlp_in:0",
+          "layers.0.mlp_in:1",
+          "layers.0.mlp_in:18",
+          "layers.0.mlp_in:22",
+          "layers.0.mlp_in:27",
+          "layers.0.mlp_in:29",
+          "layers.0.mlp_in:32",
+          "layers.0.mlp_in:38",
+          "layers.0.mlp_in:50",
+          "layers.0.mlp_in:56",
+          "layers.0.mlp_in:72",
+          "layers.0.mlp_in:81",
+          "layers.0.mlp_in:91",
+          "layers.0.mlp_out:12",
+          "layers.0.mlp_out:36",
+          "layers.0.mlp_out:38",
+          "layers.0.mlp_out:45"
+        ],
+        "size": 17
+      },
+      "3": {
+        "member_indices": [
+          3,
+          12,
+          14,
+          19,
+          20,
+          53,
+          54,
+          66,
+          70,
+          71,
+          83,
+          95,
+          97,
+          101,
+          158,
+          190
+        ],
+        "member_labels": [
+          "layers.0.mlp_in:3",
+          "layers.0.mlp_in:12",
+          "layers.0.mlp_in:14",
+          "layers.0.mlp_in:19",
+          "layers.0.mlp_in:20",
+          "layers.0.mlp_in:53",
+          "layers.0.mlp_in:54",
+          "layers.0.mlp_in:66",
+          "layers.0.mlp_in:70",
+          "layers.0.mlp_in:71",
+          "layers.0.mlp_in:83",
+          "layers.0.mlp_in:95",
+          "layers.0.mlp_in:97",
+          "layers.0.mlp_out:1",
+          "layers.0.mlp_out:58",
+          "layers.0.mlp_out:90"
+        ],
+        "size": 16
+      },
+      "4": {
+        "member_indices": [
+          2,
+          13,
+          16,
+          24,
+          31,
+          44,
+          47,
+          59,
+          62,
+          65,
+          79,
+          93,
+          96,
+          99,
+          124,
+          188
+        ],
+        "member_labels": [
+          "layers.0.mlp_in:2",
+          "layers.0.mlp_in:13",
+          "layers.0.mlp_in:16",
+          "layers.0.mlp_in:24",
+          "layers.0.mlp_in:31",
+          "layers.0.mlp_in:44",
+          "layers.0.mlp_in:47",
+          "layers.0.mlp_in:59",
+          "layers.0.mlp_in:62",
+          "layers.0.mlp_in:65",
+          "layers.0.mlp_in:79",
+          "layers.0.mlp_in:93",
+          "layers.0.mlp_in:96",
+          "layers.0.mlp_in:99",
+          "layers.0.mlp_out:24",
+          "layers.0.mlp_out:88"
+        ],
+        "size": 16
+      },
+      "5": {
+        "member_indices": [
+          17,
+          34,
+          35,
+          36,
+          41,
+          42,
+          45,
+          48,
+          51,
+          63,
+          67,
+          74,
+          84,
+          86,
+          116,
+          151,
+          184
+        ],
+        "member_labels": [
+          "layers.0.mlp_in:17",
+          "layers.0.mlp_in:34",
+          "layers.0.mlp_in:35",
+          "layers.0.mlp_in:36",
+          "layers.0.mlp_in:41",
+          "layers.0.mlp_in:42",
+          "layers.0.mlp_in:45",
+          "layers.0.mlp_in:48",
+          "layers.0.mlp_in:51",
+          "layers.0.mlp_in:63",
+          "layers.0.mlp_in:67",
+          "layers.0.mlp_in:74",
+          "layers.0.mlp_in:84",
+          "layers.0.mlp_in:86",
+          "layers.0.mlp_out:16",
+          "layers.0.mlp_out:51",
+          "layers.0.mlp_out:84"
+        ],
+        "size": 17
+      },
+      "6": {
+        "member_indices": [
+          4,
+          7,
+          10,
+          11,
+          21,
+          23,
+          30,
+          33,
+          43,
+          46,
+          60,
+          61,
+          89,
+          90,
+          114,
+          135,
+          169,
+          176,
+          195
+        ],
+        "member_labels": [
+          "layers.0.mlp_in:4",
+          "layers.0.mlp_in:7",
+          "layers.0.mlp_in:10",
+          "layers.0.mlp_in:11",
+          "layers.0.mlp_in:21",
+          "layers.0.mlp_in:23",
+          "layers.0.mlp_in:30",
+          "layers.0.mlp_in:33",
+          "layers.0.mlp_in:43",
+          "layers.0.mlp_in:46",
+          "layers.0.mlp_in:60",
+          "layers.0.mlp_in:61",
+          "layers.0.mlp_in:89",
+          "layers.0.mlp_in:90",
+          "layers.0.mlp_out:14",
+          "layers.0.mlp_out:35",
+          "layers.0.mlp_out:69",
+          "layers.0.mlp_out:76",
+          "layers.0.mlp_out:95"
+        ],
+        "size": 19
+      },
+      "7": {
+        "member_indices": [
+          6,
+          37,
+          39,
+          52,
+          55,
+          57,
+          64,
+          68,
+          69,
+          73,
+          75,
+          94,
+          98
+        ],
+        "member_labels": [
+          "layers.0.mlp_in:6",
+          "layers.0.mlp_in:37",
+          "layers.0.mlp_in:39",
+          "layers.0.mlp_in:52",
+          "layers.0.mlp_in:55",
+          "layers.0.mlp_in:57",
+          "layers.0.mlp_in:64",
+          "layers.0.mlp_in:68",
+          "layers.0.mlp_in:69",
+          "layers.0.mlp_in:73",
+          "layers.0.mlp_in:75",
+          "layers.0.mlp_in:94",
+          "layers.0.mlp_in:98"
+        ],
+        "size": 13
+      },
+      "8": {
+        "member_indices": [
+          8,
+          49,
+          76,
+          78,
+          85
+        ],
+        "member_labels": [
+          "layers.0.mlp_in:8",
+          "layers.0.mlp_in:49",
+          "layers.0.mlp_in:76",
+          "layers.0.mlp_in:78",
+          "layers.0.mlp_in:85"
+        ],
+        "size": 5
+      },
+      "9": {
+        "member_indices": [
+          15,
+          25,
+          87,
+          100,
+          102,
+          108,
+          109,
+          119,
+          120,
+          122,
+          126,
+          127,
+          128,
+          129,
+          130,
+          132,
+          133,
+          134,
+          141,
+          142,
+          144,
+          148,
+          149,
+          150,
+          154,
+          171,
+          173,
+          179,
+          181,
+          182,
+          183,
+          191,
+          194,
+          196,
+          197,
+          198
+        ],
+        "member_labels": [
+          "layers.0.mlp_in:15",
+          "layers.0.mlp_in:25",
+          "layers.0.mlp_in:87",
+          "layers.0.mlp_out:0",
+          "layers.0.mlp_out:2",
+          "layers.0.mlp_out:8",
+          "layers.0.mlp_out:9",
+          "layers.0.mlp_out:19",
+          "layers.0.mlp_out:20",
+          "layers.0.mlp_out:22",
+          "layers.0.mlp_out:26",
+          "layers.0.mlp_out:27",
+          "layers.0.mlp_out:28",
+          "layers.0.mlp_out:29",
+          "layers.0.mlp_out:30",
+          "layers.0.mlp_out:32",
+          "layers.0.mlp_out:33",
+          "layers.0.mlp_out:34",
+          "layers.0.mlp_out:41",
+          "layers.0.mlp_out:42",
+          "layers.0.mlp_out:44",
+          "layers.0.mlp_out:48",
+          "layers.0.mlp_out:49",
+          "layers.0.mlp_out:50",
+          "layers.0.mlp_out:54",
+          "layers.0.mlp_out:71",
+          "layers.0.mlp_out:73",
+          "layers.0.mlp_out:79",
+          "layers.0.mlp_out:81",
+          "layers.0.mlp_out:82",
+          "layers.0.mlp_out:83",
+          "layers.0.mlp_out:91",
+          "layers.0.mlp_out:94",
+          "layers.0.mlp_out:96",
+          "layers.0.mlp_out:97",
+          "layers.0.mlp_out:98"
+        ],
+        "size": 36
+      }
+    },
+    "component_details": [
+      {
+        "index": 0,
+        "layer": "layers.0.mlp_in",
+        "component_index": 0,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 1,
+        "layer": "layers.0.mlp_in",
+        "component_index": 1,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 2,
+        "layer": "layers.0.mlp_in",
+        "component_index": 2,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 3,
+        "layer": "layers.0.mlp_in",
+        "component_index": 3,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 4,
+        "layer": "layers.0.mlp_in",
+        "component_index": 4,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 5,
+        "layer": "layers.0.mlp_in",
+        "component_index": 5,
+        "cluster_id": 1,
+        "causal_importance": null
+      },
+      {
+        "index": 6,
+        "layer": "layers.0.mlp_in",
+        "component_index": 6,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 7,
+        "layer": "layers.0.mlp_in",
+        "component_index": 7,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 8,
+        "layer": "layers.0.mlp_in",
+        "component_index": 8,
+        "cluster_id": 8,
+        "causal_importance": null
+      },
+      {
+        "index": 9,
+        "layer": "layers.0.mlp_in",
+        "component_index": 9,
+        "cluster_id": 1,
+        "causal_importance": null
+      },
+      {
+        "index": 10,
+        "layer": "layers.0.mlp_in",
+        "component_index": 10,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 11,
+        "layer": "layers.0.mlp_in",
+        "component_index": 11,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 12,
+        "layer": "layers.0.mlp_in",
+        "component_index": 12,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 13,
+        "layer": "layers.0.mlp_in",
+        "component_index": 13,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 14,
+        "layer": "layers.0.mlp_in",
+        "component_index": 14,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 15,
+        "layer": "layers.0.mlp_in",
+        "component_index": 15,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 16,
+        "layer": "layers.0.mlp_in",
+        "component_index": 16,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 17,
+        "layer": "layers.0.mlp_in",
+        "component_index": 17,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 18,
+        "layer": "layers.0.mlp_in",
+        "component_index": 18,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 19,
+        "layer": "layers.0.mlp_in",
+        "component_index": 19,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 20,
+        "layer": "layers.0.mlp_in",
+        "component_index": 20,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 21,
+        "layer": "layers.0.mlp_in",
+        "component_index": 21,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 22,
+        "layer": "layers.0.mlp_in",
+        "component_index": 22,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 23,
+        "layer": "layers.0.mlp_in",
+        "component_index": 23,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 24,
+        "layer": "layers.0.mlp_in",
+        "component_index": 24,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 25,
+        "layer": "layers.0.mlp_in",
+        "component_index": 25,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 26,
+        "layer": "layers.0.mlp_in",
+        "component_index": 26,
+        "cluster_id": 1,
+        "causal_importance": null
+      },
+      {
+        "index": 27,
+        "layer": "layers.0.mlp_in",
+        "component_index": 27,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 28,
+        "layer": "layers.0.mlp_in",
+        "component_index": 28,
+        "cluster_id": 1,
+        "causal_importance": null
+      },
+      {
+        "index": 29,
+        "layer": "layers.0.mlp_in",
+        "component_index": 29,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 30,
+        "layer": "layers.0.mlp_in",
+        "component_index": 30,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 31,
+        "layer": "layers.0.mlp_in",
+        "component_index": 31,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 32,
+        "layer": "layers.0.mlp_in",
+        "component_index": 32,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 33,
+        "layer": "layers.0.mlp_in",
+        "component_index": 33,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 34,
+        "layer": "layers.0.mlp_in",
+        "component_index": 34,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 35,
+        "layer": "layers.0.mlp_in",
+        "component_index": 35,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 36,
+        "layer": "layers.0.mlp_in",
+        "component_index": 36,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 37,
+        "layer": "layers.0.mlp_in",
+        "component_index": 37,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 38,
+        "layer": "layers.0.mlp_in",
+        "component_index": 38,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 39,
+        "layer": "layers.0.mlp_in",
+        "component_index": 39,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 40,
+        "layer": "layers.0.mlp_in",
+        "component_index": 40,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 41,
+        "layer": "layers.0.mlp_in",
+        "component_index": 41,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 42,
+        "layer": "layers.0.mlp_in",
+        "component_index": 42,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 43,
+        "layer": "layers.0.mlp_in",
+        "component_index": 43,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 44,
+        "layer": "layers.0.mlp_in",
+        "component_index": 44,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 45,
+        "layer": "layers.0.mlp_in",
+        "component_index": 45,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 46,
+        "layer": "layers.0.mlp_in",
+        "component_index": 46,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 47,
+        "layer": "layers.0.mlp_in",
+        "component_index": 47,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 48,
+        "layer": "layers.0.mlp_in",
+        "component_index": 48,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 49,
+        "layer": "layers.0.mlp_in",
+        "component_index": 49,
+        "cluster_id": 8,
+        "causal_importance": null
+      },
+      {
+        "index": 50,
+        "layer": "layers.0.mlp_in",
+        "component_index": 50,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 51,
+        "layer": "layers.0.mlp_in",
+        "component_index": 51,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 52,
+        "layer": "layers.0.mlp_in",
+        "component_index": 52,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 53,
+        "layer": "layers.0.mlp_in",
+        "component_index": 53,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 54,
+        "layer": "layers.0.mlp_in",
+        "component_index": 54,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 55,
+        "layer": "layers.0.mlp_in",
+        "component_index": 55,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 56,
+        "layer": "layers.0.mlp_in",
+        "component_index": 56,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 57,
+        "layer": "layers.0.mlp_in",
+        "component_index": 57,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 58,
+        "layer": "layers.0.mlp_in",
+        "component_index": 58,
+        "cluster_id": 1,
+        "causal_importance": null
+      },
+      {
+        "index": 59,
+        "layer": "layers.0.mlp_in",
+        "component_index": 59,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 60,
+        "layer": "layers.0.mlp_in",
+        "component_index": 60,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 61,
+        "layer": "layers.0.mlp_in",
+        "component_index": 61,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 62,
+        "layer": "layers.0.mlp_in",
+        "component_index": 62,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 63,
+        "layer": "layers.0.mlp_in",
+        "component_index": 63,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 64,
+        "layer": "layers.0.mlp_in",
+        "component_index": 64,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 65,
+        "layer": "layers.0.mlp_in",
+        "component_index": 65,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 66,
+        "layer": "layers.0.mlp_in",
+        "component_index": 66,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 67,
+        "layer": "layers.0.mlp_in",
+        "component_index": 67,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 68,
+        "layer": "layers.0.mlp_in",
+        "component_index": 68,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 69,
+        "layer": "layers.0.mlp_in",
+        "component_index": 69,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 70,
+        "layer": "layers.0.mlp_in",
+        "component_index": 70,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 71,
+        "layer": "layers.0.mlp_in",
+        "component_index": 71,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 72,
+        "layer": "layers.0.mlp_in",
+        "component_index": 72,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 73,
+        "layer": "layers.0.mlp_in",
+        "component_index": 73,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 74,
+        "layer": "layers.0.mlp_in",
+        "component_index": 74,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 75,
+        "layer": "layers.0.mlp_in",
+        "component_index": 75,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 76,
+        "layer": "layers.0.mlp_in",
+        "component_index": 76,
+        "cluster_id": 8,
+        "causal_importance": null
+      },
+      {
+        "index": 77,
+        "layer": "layers.0.mlp_in",
+        "component_index": 77,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 78,
+        "layer": "layers.0.mlp_in",
+        "component_index": 78,
+        "cluster_id": 8,
+        "causal_importance": null
+      },
+      {
+        "index": 79,
+        "layer": "layers.0.mlp_in",
+        "component_index": 79,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 80,
+        "layer": "layers.0.mlp_in",
+        "component_index": 80,
+        "cluster_id": 1,
+        "causal_importance": null
+      },
+      {
+        "index": 81,
+        "layer": "layers.0.mlp_in",
+        "component_index": 81,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 82,
+        "layer": "layers.0.mlp_in",
+        "component_index": 82,
+        "cluster_id": 1,
+        "causal_importance": null
+      },
+      {
+        "index": 83,
+        "layer": "layers.0.mlp_in",
+        "component_index": 83,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 84,
+        "layer": "layers.0.mlp_in",
+        "component_index": 84,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 85,
+        "layer": "layers.0.mlp_in",
+        "component_index": 85,
+        "cluster_id": 8,
+        "causal_importance": null
+      },
+      {
+        "index": 86,
+        "layer": "layers.0.mlp_in",
+        "component_index": 86,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 87,
+        "layer": "layers.0.mlp_in",
+        "component_index": 87,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 88,
+        "layer": "layers.0.mlp_in",
+        "component_index": 88,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 89,
+        "layer": "layers.0.mlp_in",
+        "component_index": 89,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 90,
+        "layer": "layers.0.mlp_in",
+        "component_index": 90,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 91,
+        "layer": "layers.0.mlp_in",
+        "component_index": 91,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 92,
+        "layer": "layers.0.mlp_in",
+        "component_index": 92,
+        "cluster_id": 1,
+        "causal_importance": null
+      },
+      {
+        "index": 93,
+        "layer": "layers.0.mlp_in",
+        "component_index": 93,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 94,
+        "layer": "layers.0.mlp_in",
+        "component_index": 94,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 95,
+        "layer": "layers.0.mlp_in",
+        "component_index": 95,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 96,
+        "layer": "layers.0.mlp_in",
+        "component_index": 96,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 97,
+        "layer": "layers.0.mlp_in",
+        "component_index": 97,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 98,
+        "layer": "layers.0.mlp_in",
+        "component_index": 98,
+        "cluster_id": 7,
+        "causal_importance": null
+      },
+      {
+        "index": 99,
+        "layer": "layers.0.mlp_in",
+        "component_index": 99,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 100,
+        "layer": "layers.0.mlp_out",
+        "component_index": 0,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 101,
+        "layer": "layers.0.mlp_out",
+        "component_index": 1,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 102,
+        "layer": "layers.0.mlp_out",
+        "component_index": 2,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 103,
+        "layer": "layers.0.mlp_out",
+        "component_index": 3,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 104,
+        "layer": "layers.0.mlp_out",
+        "component_index": 4,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 105,
+        "layer": "layers.0.mlp_out",
+        "component_index": 5,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 106,
+        "layer": "layers.0.mlp_out",
+        "component_index": 6,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 107,
+        "layer": "layers.0.mlp_out",
+        "component_index": 7,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 108,
+        "layer": "layers.0.mlp_out",
+        "component_index": 8,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 109,
+        "layer": "layers.0.mlp_out",
+        "component_index": 9,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 110,
+        "layer": "layers.0.mlp_out",
+        "component_index": 10,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 111,
+        "layer": "layers.0.mlp_out",
+        "component_index": 11,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 112,
+        "layer": "layers.0.mlp_out",
+        "component_index": 12,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 113,
+        "layer": "layers.0.mlp_out",
+        "component_index": 13,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 114,
+        "layer": "layers.0.mlp_out",
+        "component_index": 14,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 115,
+        "layer": "layers.0.mlp_out",
+        "component_index": 15,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 116,
+        "layer": "layers.0.mlp_out",
+        "component_index": 16,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 117,
+        "layer": "layers.0.mlp_out",
+        "component_index": 17,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 118,
+        "layer": "layers.0.mlp_out",
+        "component_index": 18,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 119,
+        "layer": "layers.0.mlp_out",
+        "component_index": 19,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 120,
+        "layer": "layers.0.mlp_out",
+        "component_index": 20,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 121,
+        "layer": "layers.0.mlp_out",
+        "component_index": 21,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 122,
+        "layer": "layers.0.mlp_out",
+        "component_index": 22,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 123,
+        "layer": "layers.0.mlp_out",
+        "component_index": 23,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 124,
+        "layer": "layers.0.mlp_out",
+        "component_index": 24,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 125,
+        "layer": "layers.0.mlp_out",
+        "component_index": 25,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 126,
+        "layer": "layers.0.mlp_out",
+        "component_index": 26,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 127,
+        "layer": "layers.0.mlp_out",
+        "component_index": 27,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 128,
+        "layer": "layers.0.mlp_out",
+        "component_index": 28,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 129,
+        "layer": "layers.0.mlp_out",
+        "component_index": 29,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 130,
+        "layer": "layers.0.mlp_out",
+        "component_index": 30,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 131,
+        "layer": "layers.0.mlp_out",
+        "component_index": 31,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 132,
+        "layer": "layers.0.mlp_out",
+        "component_index": 32,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 133,
+        "layer": "layers.0.mlp_out",
+        "component_index": 33,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 134,
+        "layer": "layers.0.mlp_out",
+        "component_index": 34,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 135,
+        "layer": "layers.0.mlp_out",
+        "component_index": 35,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 136,
+        "layer": "layers.0.mlp_out",
+        "component_index": 36,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 137,
+        "layer": "layers.0.mlp_out",
+        "component_index": 37,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 138,
+        "layer": "layers.0.mlp_out",
+        "component_index": 38,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 139,
+        "layer": "layers.0.mlp_out",
+        "component_index": 39,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 140,
+        "layer": "layers.0.mlp_out",
+        "component_index": 40,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 141,
+        "layer": "layers.0.mlp_out",
+        "component_index": 41,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 142,
+        "layer": "layers.0.mlp_out",
+        "component_index": 42,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 143,
+        "layer": "layers.0.mlp_out",
+        "component_index": 43,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 144,
+        "layer": "layers.0.mlp_out",
+        "component_index": 44,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 145,
+        "layer": "layers.0.mlp_out",
+        "component_index": 45,
+        "cluster_id": 2,
+        "causal_importance": null
+      },
+      {
+        "index": 146,
+        "layer": "layers.0.mlp_out",
+        "component_index": 46,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 147,
+        "layer": "layers.0.mlp_out",
+        "component_index": 47,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 148,
+        "layer": "layers.0.mlp_out",
+        "component_index": 48,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 149,
+        "layer": "layers.0.mlp_out",
+        "component_index": 49,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 150,
+        "layer": "layers.0.mlp_out",
+        "component_index": 50,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 151,
+        "layer": "layers.0.mlp_out",
+        "component_index": 51,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 152,
+        "layer": "layers.0.mlp_out",
+        "component_index": 52,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 153,
+        "layer": "layers.0.mlp_out",
+        "component_index": 53,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 154,
+        "layer": "layers.0.mlp_out",
+        "component_index": 54,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 155,
+        "layer": "layers.0.mlp_out",
+        "component_index": 55,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 156,
+        "layer": "layers.0.mlp_out",
+        "component_index": 56,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 157,
+        "layer": "layers.0.mlp_out",
+        "component_index": 57,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 158,
+        "layer": "layers.0.mlp_out",
+        "component_index": 58,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 159,
+        "layer": "layers.0.mlp_out",
+        "component_index": 59,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 160,
+        "layer": "layers.0.mlp_out",
+        "component_index": 60,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 161,
+        "layer": "layers.0.mlp_out",
+        "component_index": 61,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 162,
+        "layer": "layers.0.mlp_out",
+        "component_index": 62,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 163,
+        "layer": "layers.0.mlp_out",
+        "component_index": 63,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 164,
+        "layer": "layers.0.mlp_out",
+        "component_index": 64,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 165,
+        "layer": "layers.0.mlp_out",
+        "component_index": 65,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 166,
+        "layer": "layers.0.mlp_out",
+        "component_index": 66,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 167,
+        "layer": "layers.0.mlp_out",
+        "component_index": 67,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 168,
+        "layer": "layers.0.mlp_out",
+        "component_index": 68,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 169,
+        "layer": "layers.0.mlp_out",
+        "component_index": 69,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 170,
+        "layer": "layers.0.mlp_out",
+        "component_index": 70,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 171,
+        "layer": "layers.0.mlp_out",
+        "component_index": 71,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 172,
+        "layer": "layers.0.mlp_out",
+        "component_index": 72,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 173,
+        "layer": "layers.0.mlp_out",
+        "component_index": 73,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 174,
+        "layer": "layers.0.mlp_out",
+        "component_index": 74,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 175,
+        "layer": "layers.0.mlp_out",
+        "component_index": 75,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 176,
+        "layer": "layers.0.mlp_out",
+        "component_index": 76,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 177,
+        "layer": "layers.0.mlp_out",
+        "component_index": 77,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 178,
+        "layer": "layers.0.mlp_out",
+        "component_index": 78,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 179,
+        "layer": "layers.0.mlp_out",
+        "component_index": 79,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 180,
+        "layer": "layers.0.mlp_out",
+        "component_index": 80,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 181,
+        "layer": "layers.0.mlp_out",
+        "component_index": 81,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 182,
+        "layer": "layers.0.mlp_out",
+        "component_index": 82,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 183,
+        "layer": "layers.0.mlp_out",
+        "component_index": 83,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 184,
+        "layer": "layers.0.mlp_out",
+        "component_index": 84,
+        "cluster_id": 5,
+        "causal_importance": null
+      },
+      {
+        "index": 185,
+        "layer": "layers.0.mlp_out",
+        "component_index": 85,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 186,
+        "layer": "layers.0.mlp_out",
+        "component_index": 86,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 187,
+        "layer": "layers.0.mlp_out",
+        "component_index": 87,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 188,
+        "layer": "layers.0.mlp_out",
+        "component_index": 88,
+        "cluster_id": 4,
+        "causal_importance": null
+      },
+      {
+        "index": 189,
+        "layer": "layers.0.mlp_out",
+        "component_index": 89,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 190,
+        "layer": "layers.0.mlp_out",
+        "component_index": 90,
+        "cluster_id": 3,
+        "causal_importance": null
+      },
+      {
+        "index": 191,
+        "layer": "layers.0.mlp_out",
+        "component_index": 91,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 192,
+        "layer": "layers.0.mlp_out",
+        "component_index": 92,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 193,
+        "layer": "layers.0.mlp_out",
+        "component_index": 93,
+        "cluster_id": 0,
+        "causal_importance": null
+      },
+      {
+        "index": 194,
+        "layer": "layers.0.mlp_out",
+        "component_index": 94,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 195,
+        "layer": "layers.0.mlp_out",
+        "component_index": 95,
+        "cluster_id": 6,
+        "causal_importance": null
+      },
+      {
+        "index": 196,
+        "layer": "layers.0.mlp_out",
+        "component_index": 96,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 197,
+        "layer": "layers.0.mlp_out",
+        "component_index": 97,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 198,
+        "layer": "layers.0.mlp_out",
+        "component_index": 98,
+        "cluster_id": 9,
+        "causal_importance": null
+      },
+      {
+        "index": 199,
+        "layer": "layers.0.mlp_out",
+        "component_index": 99,
+        "cluster_id": 0,
+        "causal_importance": null
+      }
+    ]
+  },
+  "mdl_clustering": {
+    "final_groups": {
+      "0": [
+        "layers.0.mlp_in:0"
+      ],
+      "1": [
+        "layers.0.mlp_in:1"
+      ],
+      "2": [
+        "layers.0.mlp_in:2",
+        "layers.0.mlp_in:19",
+        "layers.0.mlp_in:95",
+        "layers.0.mlp_in:240",
+        "layers.0.mlp_in:249",
+        "layers.0.mlp_in:305",
+        "layers.1.mlp_in:52",
+        "layers.1.mlp_in:176",
+        "layers.1.mlp_in:209"
+      ],
+      "3": [
+        "layers.0.mlp_in:3",
+        "layers.0.mlp_in:104",
+        "layers.0.mlp_in:120",
+        "layers.0.mlp_in:133",
+        "layers.0.mlp_in:178",
+        "layers.0.mlp_in:228",
+        "layers.0.mlp_in:256",
+        "layers.0.mlp_in:343",
+        "layers.0.mlp_in:387",
+        "layers.1.mlp_in:19",
+        "layers.1.mlp_in:124",
+        "layers.1.mlp_in:129",
+        "layers.1.mlp_in:216",
+        "layers.1.mlp_in:225",
+        "layers.1.mlp_in:282",
+        "layers.1.mlp_in:321",
+        "layers.1.mlp_in:372",
+        "layers.1.mlp_in:397"
+      ],
+      "4": [
+        "layers.0.mlp_in:4"
+      ],
+      "5": [
+        "layers.0.mlp_in:5"
+      ],
+      "6": [
+        "layers.0.mlp_in:6",
+        "layers.0.mlp_in:7",
+        "layers.0.mlp_in:218",
+        "layers.0.mlp_in:297",
+        "layers.0.mlp_in:384",
+        "layers.1.mlp_in:43",
+        "layers.1.mlp_in:97",
+        "layers.1.mlp_in:111",
+        "layers.1.mlp_in:160",
+        "layers.1.mlp_in:163",
+        "layers.1.mlp_in:215",
+        "layers.1.mlp_in:369"
+      ],
+      "7": [
+        "layers.0.mlp_in:8"
+      ],
+      "8": [
+        "layers.0.mlp_in:9"
+      ],
+      "9": [
+        "layers.0.mlp_in:10",
+        "layers.0.mlp_in:62",
+        "layers.0.mlp_in:172",
+        "layers.0.mlp_in:213",
+        "layers.0.mlp_in:356",
+        "layers.1.mlp_in:63"
+      ],
+      "10": [
+        "layers.0.mlp_in:11"
+      ],
+      "11": [
+        "layers.0.mlp_in:12"
+      ],
+      "12": [
+        "layers.0.mlp_in:13"
+      ],
+      "13": [
+        "layers.0.mlp_in:14"
+      ],
+      "14": [
+        "layers.0.mlp_in:15"
+      ],
+      "15": [
+        "layers.0.mlp_in:16"
+      ],
+      "16": [
+        "layers.0.mlp_in:17"
+      ],
+      "17": [
+        "layers.0.mlp_in:18"
+      ],
+      "18": [
+        "layers.0.mlp_in:20"
+      ],
+      "19": [
+        "layers.0.mlp_in:21"
+      ],
+      "20": [
+        "layers.0.mlp_in:22"
+      ],
+      "21": [
+        "layers.0.mlp_in:23"
+      ],
+      "22": [
+        "layers.0.mlp_in:24",
+        "layers.0.mlp_in:29",
+        "layers.0.mlp_in:100",
+        "layers.0.mlp_in:143",
+        "layers.0.mlp_in:265",
+        "layers.0.mlp_in:301",
+        "layers.1.mlp_in:50",
+        "layers.1.mlp_in:78",
+        "layers.1.mlp_in:85",
+        "layers.1.mlp_in:106",
+        "layers.1.mlp_in:139",
+        "layers.1.mlp_in:211",
+        "layers.1.mlp_in:250",
+        "layers.1.mlp_in:314",
+        "layers.1.mlp_in:390"
+      ],
+      "23": [
+        "layers.0.mlp_in:25"
+      ],
+      "24": [
+        "layers.0.mlp_in:26"
+      ],
+      "25": [
+        "layers.0.mlp_in:27"
+      ],
+      "26": [
+        "layers.0.mlp_in:28"
+      ],
+      "27": [
+        "layers.0.mlp_in:30"
+      ],
+      "28": [
+        "layers.0.mlp_in:31"
+      ],
+      "29": [
+        "layers.0.mlp_in:32"
+      ],
+      "30": [
+        "layers.0.mlp_in:33"
+      ],
+      "31": [
+        "layers.0.mlp_in:34"
+      ],
+      "32": [
+        "layers.0.mlp_in:35"
+      ],
+      "33": [
+        "layers.0.mlp_in:36"
+      ],
+      "34": [
+        "layers.0.mlp_in:37",
+        "layers.0.mlp_in:149",
+        "layers.0.mlp_in:188",
+        "layers.0.mlp_in:382",
+        "layers.1.mlp_in:88",
+        "layers.1.mlp_in:177",
+        "layers.1.mlp_in:252",
+        "layers.1.mlp_in:286"
+      ],
+      "35": [
+        "layers.0.mlp_in:38"
+      ],
+      "36": [
+        "layers.0.mlp_in:39"
+      ],
+      "37": [
+        "layers.0.mlp_in:40",
+        "layers.0.mlp_in:286",
+        "layers.0.mlp_in:293",
+        "layers.0.mlp_in:347",
+        "layers.1.mlp_in:65"
+      ],
+      "38": [
+        "layers.0.mlp_in:41"
+      ],
+      "39": [
+        "layers.0.mlp_in:42"
+      ],
+      "40": [
+        "layers.0.mlp_in:43"
+      ],
+      "41": [
+        "layers.0.mlp_in:44"
+      ],
+      "42": [
+        "layers.0.mlp_in:45"
+      ],
+      "43": [
+        "layers.0.mlp_in:46"
+      ],
+      "44": [
+        "layers.0.mlp_in:47",
+        "layers.0.mlp_in:371",
+        "layers.0.mlp_in:399",
+        "layers.1.mlp_in:169",
+        "layers.1.mlp_in:269"
+      ],
+      "45": [
+        "layers.0.mlp_in:48"
+      ],
+      "46": [
+        "layers.0.mlp_in:49",
+        "layers.0.mlp_in:50",
+        "layers.0.mlp_in:146",
+        "layers.0.mlp_in:233",
+        "layers.0.mlp_in:263",
+        "layers.1.mlp_in:147",
+        "layers.1.mlp_in:193"
+      ],
+      "47": [
+        "layers.0.mlp_in:51"
+      ],
+      "48": [
+        "layers.0.mlp_in:52"
+      ],
+      "49": [
+        "layers.0.mlp_in:53"
+      ],
+      "50": [
+        "layers.0.mlp_in:54"
+      ],
+      "51": [
+        "layers.0.mlp_in:55"
+      ],
+      "52": [
+        "layers.0.mlp_in:56"
+      ],
+      "53": [
+        "layers.0.mlp_in:57"
+      ],
+      "54": [
+        "layers.0.mlp_in:58"
+      ],
+      "55": [
+        "layers.0.mlp_in:59"
+      ],
+      "56": [
+        "layers.0.mlp_in:60"
+      ],
+      "57": [
+        "layers.0.mlp_in:61"
+      ],
+      "58": [
+        "layers.0.mlp_in:63"
+      ],
+      "59": [
+        "layers.0.mlp_in:64"
+      ],
+      "60": [
+        "layers.0.mlp_in:65"
+      ],
+      "61": [
+        "layers.0.mlp_in:66"
+      ],
+      "62": [
+        "layers.0.mlp_in:67"
+      ],
+      "63": [
+        "layers.0.mlp_in:68"
+      ],
+      "64": [
+        "layers.0.mlp_in:69"
+      ],
+      "65": [
+        "layers.0.mlp_in:70"
+      ],
+      "66": [
+        "layers.0.mlp_in:73"
+      ],
+      "67": [
+        "layers.0.mlp_in:74"
+      ],
+      "68": [
+        "layers.0.mlp_in:75"
+      ],
+      "69": [
+        "layers.0.mlp_in:76"
+      ],
+      "70": [
+        "layers.0.mlp_in:77"
+      ],
+      "71": [
+        "layers.0.mlp_in:78"
+      ],
+      "72": [
+        "layers.0.mlp_in:79"
+      ],
+      "73": [
+        "layers.0.mlp_in:80",
+        "layers.1.mlp_in:108",
+        "layers.1.mlp_in:271"
+      ],
+      "74": [
+        "layers.0.mlp_in:81",
+        "layers.0.mlp_in:97",
+        "layers.0.mlp_in:135",
+        "layers.0.mlp_in:268",
+        "layers.1.mlp_in:185",
+        "layers.1.mlp_in:242",
+        "layers.1.mlp_in:335",
+        "layers.1.mlp_in:340",
+        "layers.1.mlp_in:374"
+      ],
+      "75": [
+        "layers.0.mlp_in:82"
+      ],
+      "76": [
+        "layers.0.mlp_in:83"
+      ],
+      "77": [
+        "layers.0.mlp_in:85"
+      ],
+      "78": [
+        "layers.0.mlp_in:86"
+      ],
+      "79": [
+        "layers.0.mlp_in:87"
+      ],
+      "80": [
+        "layers.0.mlp_in:88"
+      ],
+      "81": [
+        "layers.0.mlp_in:89"
+      ],
+      "82": [
+        "layers.0.mlp_in:90"
+      ],
+      "83": [
+        "layers.0.mlp_in:92"
+      ],
+      "84": [
+        "layers.0.mlp_in:93"
+      ],
+      "85": [
+        "layers.0.mlp_in:94"
+      ],
+      "86": [
+        "layers.0.mlp_in:96"
+      ],
+      "87": [
+        "layers.0.mlp_in:98"
+      ],
+      "88": [
+        "layers.0.mlp_in:99"
+      ],
+      "89": [
+        "layers.0.mlp_in:102",
+        "layers.0.mlp_in:211",
+        "layers.0.mlp_in:287",
+        "layers.1.mlp_in:260",
+        "layers.1.mlp_in:313",
+        "layers.1.mlp_in:319"
+      ],
+      "90": [
+        "layers.0.mlp_in:103"
+      ],
+      "91": [
+        "layers.0.mlp_in:105"
+      ],
+      "92": [
+        "layers.0.mlp_in:106"
+      ],
+      "93": [
+        "layers.0.mlp_in:107"
+      ],
+      "94": [
+        "layers.0.mlp_in:108"
+      ],
+      "95": [
+        "layers.0.mlp_in:109"
+      ],
+      "96": [
+        "layers.0.mlp_in:110"
+      ],
+      "97": [
+        "layers.0.mlp_in:111"
+      ],
+      "98": [
+        "layers.0.mlp_in:112"
+      ],
+      "99": [
+        "layers.0.mlp_in:113"
+      ],
+      "100": [
+        "layers.0.mlp_in:114"
+      ],
+      "101": [
+        "layers.0.mlp_in:115"
+      ],
+      "102": [
+        "layers.0.mlp_in:116"
+      ],
+      "103": [
+        "layers.0.mlp_in:117"
+      ],
+      "104": [
+        "layers.0.mlp_in:118"
+      ],
+      "105": [
+        "layers.0.mlp_in:119"
+      ],
+      "106": [
+        "layers.0.mlp_in:121"
+      ],
+      "107": [
+        "layers.0.mlp_in:122"
+      ],
+      "108": [
+        "layers.0.mlp_in:123"
+      ],
+      "109": [
+        "layers.0.mlp_in:124"
+      ],
+      "110": [
+        "layers.0.mlp_in:125"
+      ],
+      "111": [
+        "layers.0.mlp_in:126"
+      ],
+      "112": [
+        "layers.0.mlp_in:127"
+      ],
+      "113": [
+        "layers.0.mlp_in:128"
+      ],
+      "114": [
+        "layers.0.mlp_in:129"
+      ],
+      "115": [
+        "layers.0.mlp_in:130"
+      ],
+      "116": [
+        "layers.0.mlp_in:131"
+      ],
+      "117": [
+        "layers.0.mlp_in:132"
+      ],
+      "118": [
+        "layers.0.mlp_in:134"
+      ],
+      "119": [
+        "layers.0.mlp_in:136",
+        "layers.0.mlp_in:270",
+        "layers.0.mlp_in:331",
+        "layers.1.mlp_in:86",
+        "layers.1.mlp_in:244"
+      ],
+      "120": [
+        "layers.0.mlp_in:137"
+      ],
+      "121": [
+        "layers.0.mlp_in:138"
+      ],
+      "122": [
+        "layers.0.mlp_in:139",
+        "layers.0.mlp_in:153",
+        "layers.0.mlp_in:220",
+        "layers.0.mlp_in:338",
+        "layers.1.mlp_in:30",
+        "layers.1.mlp_in:77",
+        "layers.1.mlp_in:208",
+        "layers.1.mlp_in:253",
+        "layers.1.mlp_in:265",
+        "layers.1.mlp_in:382",
+        "layers.1.mlp_in:399"
+      ],
+      "123": [
+        "layers.0.mlp_in:140",
+        "layers.0.mlp_in:187",
+        "layers.0.mlp_in:226",
+        "layers.0.mlp_in:318",
+        "layers.0.mlp_in:374",
+        "layers.1.mlp_in:99",
+        "layers.1.mlp_in:329"
+      ],
+      "124": [
+        "layers.0.mlp_in:141"
+      ],
+      "125": [
+        "layers.0.mlp_in:145"
+      ],
+      "126": [
+        "layers.0.mlp_in:147"
+      ],
+      "127": [
+        "layers.0.mlp_in:148"
+      ],
+      "128": [
+        "layers.0.mlp_in:150"
+      ],
+      "129": [
+        "layers.0.mlp_in:151"
+      ],
+      "130": [
+        "layers.0.mlp_in:152"
+      ],
+      "131": [
+        "layers.0.mlp_in:154"
+      ],
+      "132": [
+        "layers.0.mlp_in:155"
+      ],
+      "133": [
+        "layers.0.mlp_in:156"
+      ],
+      "134": [
+        "layers.0.mlp_in:157"
+      ],
+      "135": [
+        "layers.0.mlp_in:158"
+      ],
+      "136": [
+        "layers.0.mlp_in:159"
+      ],
+      "137": [
+        "layers.0.mlp_in:160"
+      ],
+      "138": [
+        "layers.0.mlp_in:162"
+      ],
+      "139": [
+        "layers.0.mlp_in:163"
+      ],
+      "140": [
+        "layers.0.mlp_in:164"
+      ],
+      "141": [
+        "layers.0.mlp_in:166"
+      ],
+      "142": [
+        "layers.0.mlp_in:167"
+      ],
+      "143": [
+        "layers.0.mlp_in:168"
+      ],
+      "144": [
+        "layers.0.mlp_in:169"
+      ],
+      "145": [
+        "layers.0.mlp_in:170"
+      ],
+      "146": [
+        "layers.0.mlp_in:171"
+      ],
+      "147": [
+        "layers.0.mlp_in:173"
+      ],
+      "148": [
+        "layers.0.mlp_in:174"
+      ],
+      "149": [
+        "layers.0.mlp_in:175"
+      ],
+      "150": [
+        "layers.0.mlp_in:176"
+      ],
+      "151": [
+        "layers.0.mlp_in:177"
+      ],
+      "152": [
+        "layers.0.mlp_in:179"
+      ],
+      "153": [
+        "layers.0.mlp_in:180"
+      ],
+      "154": [
+        "layers.0.mlp_in:181"
+      ],
+      "155": [
+        "layers.0.mlp_in:182"
+      ],
+      "156": [
+        "layers.0.mlp_in:183"
+      ],
+      "157": [
+        "layers.0.mlp_in:184"
+      ],
+      "158": [
+        "layers.0.mlp_in:186"
+      ],
+      "159": [
+        "layers.0.mlp_in:189"
+      ],
+      "160": [
+        "layers.0.mlp_in:190"
+      ],
+      "161": [
+        "layers.0.mlp_in:191"
+      ],
+      "162": [
+        "layers.0.mlp_in:192"
+      ],
+      "163": [
+        "layers.0.mlp_in:193"
+      ],
+      "164": [
+        "layers.0.mlp_in:194"
+      ],
+      "165": [
+        "layers.0.mlp_in:195"
+      ],
+      "166": [
+        "layers.0.mlp_in:196"
+      ],
+      "167": [
+        "layers.0.mlp_in:197"
+      ],
+      "168": [
+        "layers.0.mlp_in:198"
+      ],
+      "169": [
+        "layers.0.mlp_in:200"
+      ],
+      "170": [
+        "layers.0.mlp_in:201"
+      ],
+      "171": [
+        "layers.0.mlp_in:202"
+      ],
+      "172": [
+        "layers.0.mlp_in:203"
+      ],
+      "173": [
+        "layers.0.mlp_in:204"
+      ],
+      "174": [
+        "layers.0.mlp_in:205"
+      ],
+      "175": [
+        "layers.0.mlp_in:206"
+      ],
+      "176": [
+        "layers.0.mlp_in:207"
+      ],
+      "177": [
+        "layers.0.mlp_in:208"
+      ],
+      "178": [
+        "layers.0.mlp_in:209"
+      ],
+      "179": [
+        "layers.0.mlp_in:210"
+      ],
+      "180": [
+        "layers.0.mlp_in:212"
+      ],
+      "181": [
+        "layers.0.mlp_in:214",
+        "layers.0.mlp_in:222",
+        "layers.0.mlp_in:272",
+        "layers.0.mlp_in:284",
+        "layers.0.mlp_in:307",
+        "layers.0.mlp_in:334",
+        "layers.0.mlp_in:348",
+        "layers.1.mlp_in:24",
+        "layers.1.mlp_in:166",
+        "layers.1.mlp_in:285",
+        "layers.1.mlp_in:362"
+      ],
+      "182": [
+        "layers.0.mlp_in:215"
+      ],
+      "183": [
+        "layers.0.mlp_in:216"
+      ],
+      "184": [
+        "layers.0.mlp_in:217"
+      ],
+      "185": [
+        "layers.0.mlp_in:219"
+      ],
+      "186": [
+        "layers.0.mlp_in:221"
+      ],
+      "187": [
+        "layers.0.mlp_in:223"
+      ],
+      "188": [
+        "layers.0.mlp_in:224"
+      ],
+      "189": [
+        "layers.0.mlp_in:225"
+      ],
+      "190": [
+        "layers.0.mlp_in:227"
+      ],
+      "191": [
+        "layers.0.mlp_in:229"
+      ],
+      "192": [
+        "layers.0.mlp_in:230"
+      ],
+      "193": [
+        "layers.0.mlp_in:231"
+      ],
+      "194": [
+        "layers.0.mlp_in:232"
+      ],
+      "195": [
+        "layers.0.mlp_in:234",
+        "layers.0.mlp_in:291",
+        "layers.0.mlp_in:336",
+        "layers.1.mlp_in:79",
+        "layers.1.mlp_in:101",
+        "layers.1.mlp_in:180",
+        "layers.1.mlp_in:246",
+        "layers.1.mlp_in:292",
+        "layers.1.mlp_in:297",
+        "layers.1.mlp_in:330",
+        "layers.1.mlp_in:352"
+      ],
+      "196": [
+        "layers.0.mlp_in:235"
+      ],
+      "197": [
+        "layers.0.mlp_in:236"
+      ],
+      "198": [
+        "layers.0.mlp_in:237"
+      ],
+      "199": [
+        "layers.0.mlp_in:238"
+      ],
+      "200": [
+        "layers.0.mlp_in:239"
+      ],
+      "201": [
+        "layers.0.mlp_in:241"
+      ],
+      "202": [
+        "layers.0.mlp_in:242"
+      ],
+      "203": [
+        "layers.0.mlp_in:243"
+      ],
+      "204": [
+        "layers.0.mlp_in:244"
+      ],
+      "205": [
+        "layers.0.mlp_in:245"
+      ],
+      "206": [
+        "layers.0.mlp_in:246"
+      ],
+      "207": [
+        "layers.0.mlp_in:247"
+      ],
+      "208": [
+        "layers.0.mlp_in:248"
+      ],
+      "209": [
+        "layers.0.mlp_in:250"
+      ],
+      "210": [
+        "layers.0.mlp_in:251"
+      ],
+      "211": [
+        "layers.0.mlp_in:252"
+      ],
+      "212": [
+        "layers.0.mlp_in:253"
+      ],
+      "213": [
+        "layers.0.mlp_in:254"
+      ],
+      "214": [
+        "layers.0.mlp_in:255"
+      ],
+      "215": [
+        "layers.0.mlp_in:257"
+      ],
+      "216": [
+        "layers.0.mlp_in:258"
+      ],
+      "217": [
+        "layers.0.mlp_in:259"
+      ],
+      "218": [
+        "layers.0.mlp_in:260"
+      ],
+      "219": [
+        "layers.0.mlp_in:261"
+      ],
+      "220": [
+        "layers.0.mlp_in:262"
+      ],
+      "221": [
+        "layers.0.mlp_in:264"
+      ],
+      "222": [
+        "layers.0.mlp_in:266"
+      ],
+      "223": [
+        "layers.0.mlp_in:269"
+      ],
+      "224": [
+        "layers.0.mlp_in:271"
+      ],
+      "225": [
+        "layers.0.mlp_in:273"
+      ],
+      "226": [
+        "layers.0.mlp_in:274"
+      ],
+      "227": [
+        "layers.0.mlp_in:275"
+      ],
+      "228": [
+        "layers.0.mlp_in:276"
+      ],
+      "229": [
+        "layers.0.mlp_in:277"
+      ],
+      "230": [
+        "layers.0.mlp_in:278"
+      ],
+      "231": [
+        "layers.0.mlp_in:279"
+      ],
+      "232": [
+        "layers.0.mlp_in:280"
+      ],
+      "233": [
+        "layers.0.mlp_in:281"
+      ],
+      "234": [
+        "layers.0.mlp_in:282"
+      ],
+      "235": [
+        "layers.0.mlp_in:283"
+      ],
+      "236": [
+        "layers.0.mlp_in:285"
+      ],
+      "237": [
+        "layers.0.mlp_in:288"
+      ],
+      "238": [
+        "layers.0.mlp_in:289"
+      ],
+      "239": [
+        "layers.0.mlp_in:290"
+      ],
+      "240": [
+        "layers.0.mlp_in:292"
+      ],
+      "241": [
+        "layers.0.mlp_in:294"
+      ],
+      "242": [
+        "layers.0.mlp_in:295"
+      ],
+      "243": [
+        "layers.0.mlp_in:296"
+      ],
+      "244": [
+        "layers.0.mlp_in:298"
+      ],
+      "245": [
+        "layers.0.mlp_in:299"
+      ],
+      "246": [
+        "layers.0.mlp_in:300"
+      ],
+      "247": [
+        "layers.0.mlp_in:302"
+      ],
+      "248": [
+        "layers.0.mlp_in:303"
+      ],
+      "249": [
+        "layers.0.mlp_in:304"
+      ],
+      "250": [
+        "layers.0.mlp_in:306"
+      ],
+      "251": [
+        "layers.0.mlp_in:308"
+      ],
+      "252": [
+        "layers.0.mlp_in:309"
+      ],
+      "253": [
+        "layers.0.mlp_in:310"
+      ],
+      "254": [
+        "layers.0.mlp_in:311"
+      ],
+      "255": [
+        "layers.0.mlp_in:312"
+      ],
+      "256": [
+        "layers.0.mlp_in:314"
+      ],
+      "257": [
+        "layers.0.mlp_in:315"
+      ],
+      "258": [
+        "layers.0.mlp_in:316"
+      ],
+      "259": [
+        "layers.0.mlp_in:317"
+      ],
+      "260": [
+        "layers.0.mlp_in:319"
+      ],
+      "261": [
+        "layers.0.mlp_in:320"
+      ],
+      "262": [
+        "layers.0.mlp_in:321"
+      ],
+      "263": [
+        "layers.0.mlp_in:322"
+      ],
+      "264": [
+        "layers.0.mlp_in:323"
+      ],
+      "265": [
+        "layers.0.mlp_in:324"
+      ],
+      "266": [
+        "layers.0.mlp_in:325"
+      ],
+      "267": [
+        "layers.0.mlp_in:326"
+      ],
+      "268": [
+        "layers.0.mlp_in:327"
+      ],
+      "269": [
+        "layers.0.mlp_in:328"
+      ],
+      "270": [
+        "layers.0.mlp_in:329"
+      ],
+      "271": [
+        "layers.0.mlp_in:330"
+      ],
+      "272": [
+        "layers.0.mlp_in:332"
+      ],
+      "273": [
+        "layers.0.mlp_in:333"
+      ],
+      "274": [
+        "layers.0.mlp_in:335"
+      ],
+      "275": [
+        "layers.0.mlp_in:337"
+      ],
+      "276": [
+        "layers.0.mlp_in:340"
+      ],
+      "277": [
+        "layers.0.mlp_in:341"
+      ],
+      "278": [
+        "layers.0.mlp_in:342"
+      ],
+      "279": [
+        "layers.0.mlp_in:344"
+      ],
+      "280": [
+        "layers.0.mlp_in:345"
+      ],
+      "281": [
+        "layers.0.mlp_in:346"
+      ],
+      "282": [
+        "layers.0.mlp_in:349"
+      ],
+      "283": [
+        "layers.0.mlp_in:350",
+        "layers.1.mlp_in:134",
+        "layers.1.mlp_in:153",
+        "layers.1.mlp_in:392"
+      ],
+      "284": [
+        "layers.0.mlp_in:351"
+      ],
+      "285": [
+        "layers.0.mlp_in:352"
+      ],
+      "286": [
+        "layers.0.mlp_in:354"
+      ],
+      "287": [
+        "layers.0.mlp_in:355"
+      ],
+      "288": [
+        "layers.0.mlp_in:357"
+      ],
+      "289": [
+        "layers.0.mlp_in:359"
+      ],
+      "290": [
+        "layers.0.mlp_in:360"
+      ],
+      "291": [
+        "layers.0.mlp_in:361"
+      ],
+      "292": [
+        "layers.0.mlp_in:362"
+      ],
+      "293": [
+        "layers.0.mlp_in:363"
+      ],
+      "294": [
+        "layers.0.mlp_in:365"
+      ],
+      "295": [
+        "layers.0.mlp_in:366"
+      ],
+      "296": [
+        "layers.0.mlp_in:367"
+      ],
+      "297": [
+        "layers.0.mlp_in:368"
+      ],
+      "298": [
+        "layers.0.mlp_in:369"
+      ],
+      "299": [
+        "layers.0.mlp_in:370"
+      ],
+      "300": [
+        "layers.0.mlp_in:372"
+      ],
+      "301": [
+        "layers.0.mlp_in:373",
+        "layers.1.mlp_in:312"
+      ],
+      "302": [
+        "layers.0.mlp_in:375"
+      ],
+      "303": [
+        "layers.0.mlp_in:376"
+      ],
+      "304": [
+        "layers.0.mlp_in:377"
+      ],
+      "305": [
+        "layers.0.mlp_in:378"
+      ],
+      "306": [
+        "layers.0.mlp_in:379"
+      ],
+      "307": [
+        "layers.0.mlp_in:380"
+      ],
+      "308": [
+        "layers.0.mlp_in:381"
+      ],
+      "309": [
+        "layers.0.mlp_in:383"
+      ],
+      "310": [
+        "layers.0.mlp_in:385"
+      ],
+      "311": [
+        "layers.0.mlp_in:386"
+      ],
+      "312": [
+        "layers.0.mlp_in:388"
+      ],
+      "313": [
+        "layers.0.mlp_in:389"
+      ],
+      "314": [
+        "layers.0.mlp_in:390"
+      ],
+      "315": [
+        "layers.0.mlp_in:391"
+      ],
+      "316": [
+        "layers.0.mlp_in:392"
+      ],
+      "317": [
+        "layers.0.mlp_in:393"
+      ],
+      "318": [
+        "layers.0.mlp_in:394"
+      ],
+      "319": [
+        "layers.0.mlp_in:395"
+      ],
+      "320": [
+        "layers.0.mlp_in:396"
+      ],
+      "321": [
+        "layers.0.mlp_in:397"
+      ],
+      "322": [
+        "layers.0.mlp_in:398"
+      ],
+      "323": [
+        "layers.0.mlp_out:2"
+      ],
+      "324": [
+        "layers.0.mlp_out:42"
+      ],
+      "325": [
+        "layers.0.mlp_out:49"
+      ],
+      "326": [
+        "layers.0.mlp_out:52"
+      ],
+      "327": [
+        "layers.0.mlp_out:76"
+      ],
+      "328": [
+        "layers.0.mlp_out:89"
+      ],
+      "329": [
+        "layers.0.mlp_out:109"
+      ],
+      "330": [
+        "layers.0.mlp_out:155"
+      ],
+      "331": [
+        "layers.0.mlp_out:170"
+      ],
+      "332": [
+        "layers.0.mlp_out:178"
+      ],
+      "333": [
+        "layers.0.mlp_out:199"
+      ],
+      "334": [
+        "layers.0.mlp_out:219"
+      ],
+      "335": [
+        "layers.0.mlp_out:222"
+      ],
+      "336": [
+        "layers.0.mlp_out:247"
+      ],
+      "337": [
+        "layers.0.mlp_out:263"
+      ],
+      "338": [
+        "layers.0.mlp_out:274"
+      ],
+      "339": [
+        "layers.0.mlp_out:279"
+      ],
+      "340": [
+        "layers.0.mlp_out:289"
+      ],
+      "341": [
+        "layers.0.mlp_out:305"
+      ],
+      "342": [
+        "layers.0.mlp_out:321"
+      ],
+      "343": [
+        "layers.0.mlp_out:324"
+      ],
+      "344": [
+        "layers.0.mlp_out:327"
+      ],
+      "345": [
+        "layers.0.mlp_out:337"
+      ],
+      "346": [
+        "layers.0.mlp_out:338"
+      ],
+      "347": [
+        "layers.0.mlp_out:350"
+      ],
+      "348": [
+        "layers.0.mlp_out:378"
+      ],
+      "349": [
+        "layers.0.mlp_out:379"
+      ],
+      "350": [
+        "layers.0.mlp_out:380"
+      ],
+      "351": [
+        "layers.0.mlp_out:391"
+      ],
+      "352": [
+        "layers.1.mlp_in:0"
+      ],
+      "353": [
+        "layers.1.mlp_in:6"
+      ],
+      "354": [
+        "layers.1.mlp_in:8"
+      ],
+      "355": [
+        "layers.1.mlp_in:9"
+      ],
+      "356": [
+        "layers.1.mlp_in:10"
+      ],
+      "357": [
+        "layers.1.mlp_in:11"
+      ],
+      "358": [
+        "layers.1.mlp_in:12"
+      ],
+      "359": [
+        "layers.1.mlp_in:14"
+      ],
+      "360": [
+        "layers.1.mlp_in:15"
+      ],
+      "361": [
+        "layers.1.mlp_in:16"
+      ],
+      "362": [
+        "layers.1.mlp_in:17"
+      ],
+      "363": [
+        "layers.1.mlp_in:18"
+      ],
+      "364": [
+        "layers.1.mlp_in:20"
+      ],
+      "365": [
+        "layers.1.mlp_in:21"
+      ],
+      "366": [
+        "layers.1.mlp_in:23"
+      ],
+      "367": [
+        "layers.1.mlp_in:25"
+      ],
+      "368": [
+        "layers.1.mlp_in:26"
+      ],
+      "369": [
+        "layers.1.mlp_in:27"
+      ],
+      "370": [
+        "layers.1.mlp_in:28"
+      ],
+      "371": [
+        "layers.1.mlp_in:31"
+      ],
+      "372": [
+        "layers.1.mlp_in:34"
+      ],
+      "373": [
+        "layers.1.mlp_in:35"
+      ],
+      "374": [
+        "layers.1.mlp_in:37"
+      ],
+      "375": [
+        "layers.1.mlp_in:40"
+      ],
+      "376": [
+        "layers.1.mlp_in:41"
+      ],
+      "377": [
+        "layers.1.mlp_in:42"
+      ],
+      "378": [
+        "layers.1.mlp_in:44"
+      ],
+      "379": [
+        "layers.1.mlp_in:45"
+      ],
+      "380": [
+        "layers.1.mlp_in:47"
+      ],
+      "381": [
+        "layers.1.mlp_in:48"
+      ],
+      "382": [
+        "layers.1.mlp_in:51"
+      ],
+      "383": [
+        "layers.1.mlp_in:53"
+      ],
+      "384": [
+        "layers.1.mlp_in:54"
+      ],
+      "385": [
+        "layers.1.mlp_in:56"
+      ],
+      "386": [
+        "layers.1.mlp_in:57"
+      ],
+      "387": [
+        "layers.1.mlp_in:58"
+      ],
+      "388": [
+        "layers.1.mlp_in:59"
+      ],
+      "389": [
+        "layers.1.mlp_in:62"
+      ],
+      "390": [
+        "layers.1.mlp_in:66"
+      ],
+      "391": [
+        "layers.1.mlp_in:68"
+      ],
+      "392": [
+        "layers.1.mlp_in:70"
+      ],
+      "393": [
+        "layers.1.mlp_in:72"
+      ],
+      "394": [
+        "layers.1.mlp_in:73"
+      ],
+      "395": [
+        "layers.1.mlp_in:74"
+      ],
+      "396": [
+        "layers.1.mlp_in:75"
+      ],
+      "397": [
+        "layers.1.mlp_in:76"
+      ],
+      "398": [
+        "layers.1.mlp_in:82"
+      ],
+      "399": [
+        "layers.1.mlp_in:87"
+      ],
+      "400": [
+        "layers.1.mlp_in:89"
+      ],
+      "401": [
+        "layers.1.mlp_in:90"
+      ],
+      "402": [
+        "layers.1.mlp_in:94"
+      ],
+      "403": [
+        "layers.1.mlp_in:95"
+      ],
+      "404": [
+        "layers.1.mlp_in:102"
+      ],
+      "405": [
+        "layers.1.mlp_in:104"
+      ],
+      "406": [
+        "layers.1.mlp_in:109"
+      ],
+      "407": [
+        "layers.1.mlp_in:110"
+      ],
+      "408": [
+        "layers.1.mlp_in:112"
+      ],
+      "409": [
+        "layers.1.mlp_in:113"
+      ],
+      "410": [
+        "layers.1.mlp_in:114"
+      ],
+      "411": [
+        "layers.1.mlp_in:115"
+      ],
+      "412": [
+        "layers.1.mlp_in:116"
+      ],
+      "413": [
+        "layers.1.mlp_in:117"
+      ],
+      "414": [
+        "layers.1.mlp_in:118"
+      ],
+      "415": [
+        "layers.1.mlp_in:119"
+      ],
+      "416": [
+        "layers.1.mlp_in:120"
+      ],
+      "417": [
+        "layers.1.mlp_in:121"
+      ],
+      "418": [
+        "layers.1.mlp_in:123"
+      ],
+      "419": [
+        "layers.1.mlp_in:125"
+      ],
+      "420": [
+        "layers.1.mlp_in:127"
+      ],
+      "421": [
+        "layers.1.mlp_in:130"
+      ],
+      "422": [
+        "layers.1.mlp_in:131"
+      ],
+      "423": [
+        "layers.1.mlp_in:132"
+      ],
+      "424": [
+        "layers.1.mlp_in:135"
+      ],
+      "425": [
+        "layers.1.mlp_in:136"
+      ],
+      "426": [
+        "layers.1.mlp_in:138"
+      ],
+      "427": [
+        "layers.1.mlp_in:142"
+      ],
+      "428": [
+        "layers.1.mlp_in:146"
+      ],
+      "429": [
+        "layers.1.mlp_in:148"
+      ],
+      "430": [
+        "layers.1.mlp_in:149"
+      ],
+      "431": [
+        "layers.1.mlp_in:150"
+      ],
+      "432": [
+        "layers.1.mlp_in:151"
+      ],
+      "433": [
+        "layers.1.mlp_in:152"
+      ],
+      "434": [
+        "layers.1.mlp_in:155"
+      ],
+      "435": [
+        "layers.1.mlp_in:156"
+      ],
+      "436": [
+        "layers.1.mlp_in:161"
+      ],
+      "437": [
+        "layers.1.mlp_in:162"
+      ],
+      "438": [
+        "layers.1.mlp_in:168"
+      ],
+      "439": [
+        "layers.1.mlp_in:170"
+      ],
+      "440": [
+        "layers.1.mlp_in:171"
+      ],
+      "441": [
+        "layers.1.mlp_in:172"
+      ],
+      "442": [
+        "layers.1.mlp_in:173"
+      ],
+      "443": [
+        "layers.1.mlp_in:174"
+      ],
+      "444": [
+        "layers.1.mlp_in:175"
+      ],
+      "445": [
+        "layers.1.mlp_in:179"
+      ],
+      "446": [
+        "layers.1.mlp_in:181"
+      ],
+      "447": [
+        "layers.1.mlp_in:183"
+      ],
+      "448": [
+        "layers.1.mlp_in:184"
+      ],
+      "449": [
+        "layers.1.mlp_in:187"
+      ],
+      "450": [
+        "layers.1.mlp_in:190"
+      ],
+      "451": [
+        "layers.1.mlp_in:191"
+      ],
+      "452": [
+        "layers.1.mlp_in:194"
+      ],
+      "453": [
+        "layers.1.mlp_in:195",
+        "layers.1.mlp_in:295",
+        "layers.1.mlp_in:348",
+        "layers.1.mlp_in:356"
+      ],
+      "454": [
+        "layers.1.mlp_in:196"
+      ],
+      "455": [
+        "layers.1.mlp_in:198"
+      ],
+      "456": [
+        "layers.1.mlp_in:199"
+      ],
+      "457": [
+        "layers.1.mlp_in:201"
+      ],
+      "458": [
+        "layers.1.mlp_in:202"
+      ],
+      "459": [
+        "layers.1.mlp_in:203"
+      ],
+      "460": [
+        "layers.1.mlp_in:204"
+      ],
+      "461": [
+        "layers.1.mlp_in:205"
+      ],
+      "462": [
+        "layers.1.mlp_in:218"
+      ],
+      "463": [
+        "layers.1.mlp_in:221"
+      ],
+      "464": [
+        "layers.1.mlp_in:222"
+      ],
+      "465": [
+        "layers.1.mlp_in:223"
+      ],
+      "466": [
+        "layers.1.mlp_in:224"
+      ],
+      "467": [
+        "layers.1.mlp_in:231"
+      ],
+      "468": [
+        "layers.1.mlp_in:232"
+      ],
+      "469": [
+        "layers.1.mlp_in:233"
+      ],
+      "470": [
+        "layers.1.mlp_in:237"
+      ],
+      "471": [
+        "layers.1.mlp_in:238"
+      ],
+      "472": [
+        "layers.1.mlp_in:239"
+      ],
+      "473": [
+        "layers.1.mlp_in:241"
+      ],
+      "474": [
+        "layers.1.mlp_in:243"
+      ],
+      "475": [
+        "layers.1.mlp_in:245"
+      ],
+      "476": [
+        "layers.1.mlp_in:247"
+      ],
+      "477": [
+        "layers.1.mlp_in:248"
+      ],
+      "478": [
+        "layers.1.mlp_in:249"
+      ],
+      "479": [
+        "layers.1.mlp_in:251"
+      ],
+      "480": [
+        "layers.1.mlp_in:257"
+      ],
+      "481": [
+        "layers.1.mlp_in:258"
+      ],
+      "482": [
+        "layers.1.mlp_in:261"
+      ],
+      "483": [
+        "layers.1.mlp_in:263"
+      ],
+      "484": [
+        "layers.1.mlp_in:266"
+      ],
+      "485": [
+        "layers.1.mlp_in:270"
+      ],
+      "486": [
+        "layers.1.mlp_in:273",
+        "layers.1.mlp_in:358"
+      ],
+      "487": [
+        "layers.1.mlp_in:274"
+      ],
+      "488": [
+        "layers.1.mlp_in:276"
+      ],
+      "489": [
+        "layers.1.mlp_in:279"
+      ],
+      "490": [
+        "layers.1.mlp_in:284"
+      ],
+      "491": [
+        "layers.1.mlp_in:287"
+      ],
+      "492": [
+        "layers.1.mlp_in:289"
+      ],
+      "493": [
+        "layers.1.mlp_in:290"
+      ],
+      "494": [
+        "layers.1.mlp_in:291"
+      ],
+      "495": [
+        "layers.1.mlp_in:294"
+      ],
+      "496": [
+        "layers.1.mlp_in:296"
+      ],
+      "497": [
+        "layers.1.mlp_in:299"
+      ],
+      "498": [
+        "layers.1.mlp_in:300"
+      ],
+      "499": [
+        "layers.1.mlp_in:302"
+      ],
+      "500": [
+        "layers.1.mlp_in:303"
+      ],
+      "501": [
+        "layers.1.mlp_in:305"
+      ],
+      "502": [
+        "layers.1.mlp_in:306"
+      ],
+      "503": [
+        "layers.1.mlp_in:310"
+      ],
+      "504": [
+        "layers.1.mlp_in:315"
+      ],
+      "505": [
+        "layers.1.mlp_in:316"
+      ],
+      "506": [
+        "layers.1.mlp_in:317"
+      ],
+      "507": [
+        "layers.1.mlp_in:322"
+      ],
+      "508": [
+        "layers.1.mlp_in:327"
+      ],
+      "509": [
+        "layers.1.mlp_in:328"
+      ],
+      "510": [
+        "layers.1.mlp_in:331"
+      ],
+      "511": [
+        "layers.1.mlp_in:332"
+      ],
+      "512": [
+        "layers.1.mlp_in:333"
+      ],
+      "513": [
+        "layers.1.mlp_in:334"
+      ],
+      "514": [
+        "layers.1.mlp_in:336"
+      ],
+      "515": [
+        "layers.1.mlp_in:337"
+      ],
+      "516": [
+        "layers.1.mlp_in:338"
+      ],
+      "517": [
+        "layers.1.mlp_in:341"
+      ],
+      "518": [
+        "layers.1.mlp_in:342"
+      ],
+      "519": [
+        "layers.1.mlp_in:343"
+      ],
+      "520": [
+        "layers.1.mlp_in:344"
+      ],
+      "521": [
+        "layers.1.mlp_in:347"
+      ],
+      "522": [
+        "layers.1.mlp_in:350"
+      ],
+      "523": [
+        "layers.1.mlp_in:353"
+      ],
+      "524": [
+        "layers.1.mlp_in:354"
+      ],
+      "525": [
+        "layers.1.mlp_in:357"
+      ],
+      "526": [
+        "layers.1.mlp_in:359"
+      ],
+      "527": [
+        "layers.1.mlp_in:360"
+      ],
+      "528": [
+        "layers.1.mlp_in:361"
+      ],
+      "529": [
+        "layers.1.mlp_in:363"
+      ],
+      "530": [
+        "layers.1.mlp_in:364"
+      ],
+      "531": [
+        "layers.1.mlp_in:365"
+      ],
+      "532": [
+        "layers.1.mlp_in:366"
+      ],
+      "533": [
+        "layers.1.mlp_in:373"
+      ],
+      "534": [
+        "layers.1.mlp_in:376"
+      ],
+      "535": [
+        "layers.1.mlp_in:377"
+      ],
+      "536": [
+        "layers.1.mlp_in:378"
+      ],
+      "537": [
+        "layers.1.mlp_in:380"
+      ],
+      "538": [
+        "layers.1.mlp_in:381"
+      ],
+      "539": [
+        "layers.1.mlp_in:383"
+      ],
+      "540": [
+        "layers.1.mlp_in:384"
+      ],
+      "541": [
+        "layers.1.mlp_in:385"
+      ],
+      "542": [
+        "layers.1.mlp_in:386"
+      ],
+      "543": [
+        "layers.1.mlp_in:387"
+      ],
+      "544": [
+        "layers.1.mlp_in:394"
+      ],
+      "545": [
+        "layers.1.mlp_in:395"
+      ],
+      "546": [
+        "layers.1.mlp_out:1"
+      ],
+      "547": [
+        "layers.1.mlp_out:2"
+      ],
+      "548": [
+        "layers.1.mlp_out:3"
+      ],
+      "549": [
+        "layers.1.mlp_out:4"
+      ],
+      "550": [
+        "layers.1.mlp_out:6"
+      ],
+      "551": [
+        "layers.1.mlp_out:7"
+      ],
+      "552": [
+        "layers.1.mlp_out:8"
+      ],
+      "553": [
+        "layers.1.mlp_out:10"
+      ],
+      "554": [
+        "layers.1.mlp_out:11"
+      ],
+      "555": [
+        "layers.1.mlp_out:12"
+      ],
+      "556": [
+        "layers.1.mlp_out:14"
+      ],
+      "557": [
+        "layers.1.mlp_out:15"
+      ],
+      "558": [
+        "layers.1.mlp_out:16"
+      ],
+      "559": [
+        "layers.1.mlp_out:18"
+      ],
+      "560": [
+        "layers.1.mlp_out:20"
+      ],
+      "561": [
+        "layers.1.mlp_out:21"
+      ],
+      "562": [
+        "layers.1.mlp_out:22"
+      ],
+      "563": [
+        "layers.1.mlp_out:23"
+      ],
+      "564": [
+        "layers.1.mlp_out:25"
+      ],
+      "565": [
+        "layers.1.mlp_out:27"
+      ],
+      "566": [
+        "layers.1.mlp_out:28"
+      ],
+      "567": [
+        "layers.1.mlp_out:29"
+      ],
+      "568": [
+        "layers.1.mlp_out:31"
+      ],
+      "569": [
+        "layers.1.mlp_out:32"
+      ],
+      "570": [
+        "layers.1.mlp_out:33"
+      ],
+      "571": [
+        "layers.1.mlp_out:34"
+      ],
+      "572": [
+        "layers.1.mlp_out:36"
+      ],
+      "573": [
+        "layers.1.mlp_out:38"
+      ],
+      "574": [
+        "layers.1.mlp_out:40"
+      ],
+      "575": [
+        "layers.1.mlp_out:41"
+      ],
+      "576": [
+        "layers.1.mlp_out:42"
+      ],
+      "577": [
+        "layers.1.mlp_out:43"
+      ],
+      "578": [
+        "layers.1.mlp_out:45"
+      ],
+      "579": [
+        "layers.1.mlp_out:46"
+      ],
+      "580": [
+        "layers.1.mlp_out:47"
+      ],
+      "581": [
+        "layers.1.mlp_out:48"
+      ],
+      "582": [
+        "layers.1.mlp_out:49"
+      ],
+      "583": [
+        "layers.1.mlp_out:50"
+      ],
+      "584": [
+        "layers.1.mlp_out:51"
+      ],
+      "585": [
+        "layers.1.mlp_out:52"
+      ],
+      "586": [
+        "layers.1.mlp_out:53"
+      ],
+      "587": [
+        "layers.1.mlp_out:54"
+      ],
+      "588": [
+        "layers.1.mlp_out:56"
+      ],
+      "589": [
+        "layers.1.mlp_out:58"
+      ],
+      "590": [
+        "layers.1.mlp_out:59"
+      ],
+      "591": [
+        "layers.1.mlp_out:61"
+      ],
+      "592": [
+        "layers.1.mlp_out:62"
+      ],
+      "593": [
+        "layers.1.mlp_out:63"
+      ],
+      "594": [
+        "layers.1.mlp_out:65"
+      ],
+      "595": [
+        "layers.1.mlp_out:67"
+      ],
+      "596": [
+        "layers.1.mlp_out:68"
+      ],
+      "597": [
+        "layers.1.mlp_out:69"
+      ],
+      "598": [
+        "layers.1.mlp_out:70"
+      ],
+      "599": [
+        "layers.1.mlp_out:71"
+      ],
+      "600": [
+        "layers.1.mlp_out:73"
+      ],
+      "601": [
+        "layers.1.mlp_out:75"
+      ],
+      "602": [
+        "layers.1.mlp_out:76"
+      ],
+      "603": [
+        "layers.1.mlp_out:77"
+      ],
+      "604": [
+        "layers.1.mlp_out:79"
+      ],
+      "605": [
+        "layers.1.mlp_out:80"
+      ],
+      "606": [
+        "layers.1.mlp_out:81"
+      ],
+      "607": [
+        "layers.1.mlp_out:82"
+      ],
+      "608": [
+        "layers.1.mlp_out:84"
+      ],
+      "609": [
+        "layers.1.mlp_out:86"
+      ],
+      "610": [
+        "layers.1.mlp_out:87"
+      ],
+      "611": [
+        "layers.1.mlp_out:89"
+      ],
+      "612": [
+        "layers.1.mlp_out:90"
+      ],
+      "613": [
+        "layers.1.mlp_out:91"
+      ],
+      "614": [
+        "layers.1.mlp_out:92"
+      ],
+      "615": [
+        "layers.1.mlp_out:93"
+      ],
+      "616": [
+        "layers.1.mlp_out:94"
+      ],
+      "617": [
+        "layers.1.mlp_out:95"
+      ],
+      "618": [
+        "layers.1.mlp_out:96"
+      ],
+      "619": [
+        "layers.1.mlp_out:97"
+      ],
+      "620": [
+        "layers.1.mlp_out:98"
+      ],
+      "621": [
+        "layers.1.mlp_out:99"
+      ],
+      "622": [
+        "layers.1.mlp_out:100"
+      ],
+      "623": [
+        "layers.1.mlp_out:102"
+      ],
+      "624": [
+        "layers.1.mlp_out:104"
+      ],
+      "625": [
+        "layers.1.mlp_out:105"
+      ],
+      "626": [
+        "layers.1.mlp_out:106"
+      ],
+      "627": [
+        "layers.1.mlp_out:107"
+      ],
+      "628": [
+        "layers.1.mlp_out:108"
+      ],
+      "629": [
+        "layers.1.mlp_out:109"
+      ],
+      "630": [
+        "layers.1.mlp_out:110"
+      ],
+      "631": [
+        "layers.1.mlp_out:111"
+      ],
+      "632": [
+        "layers.1.mlp_out:112"
+      ],
+      "633": [
+        "layers.1.mlp_out:114"
+      ],
+      "634": [
+        "layers.1.mlp_out:115"
+      ],
+      "635": [
+        "layers.1.mlp_out:117"
+      ],
+      "636": [
+        "layers.1.mlp_out:119"
+      ],
+      "637": [
+        "layers.1.mlp_out:122"
+      ],
+      "638": [
+        "layers.1.mlp_out:123"
+      ],
+      "639": [
+        "layers.1.mlp_out:124"
+      ],
+      "640": [
+        "layers.1.mlp_out:125"
+      ],
+      "641": [
+        "layers.1.mlp_out:126"
+      ],
+      "642": [
+        "layers.1.mlp_out:127"
+      ],
+      "643": [
+        "layers.1.mlp_out:128"
+      ],
+      "644": [
+        "layers.1.mlp_out:129"
+      ],
+      "645": [
+        "layers.1.mlp_out:130"
+      ],
+      "646": [
+        "layers.1.mlp_out:131"
+      ],
+      "647": [
+        "layers.1.mlp_out:132"
+      ],
+      "648": [
+        "layers.1.mlp_out:133"
+      ],
+      "649": [
+        "layers.1.mlp_out:134"
+      ],
+      "650": [
+        "layers.1.mlp_out:136"
+      ],
+      "651": [
+        "layers.1.mlp_out:137"
+      ],
+      "652": [
+        "layers.1.mlp_out:138"
+      ],
+      "653": [
+        "layers.1.mlp_out:139"
+      ],
+      "654": [
+        "layers.1.mlp_out:140"
+      ],
+      "655": [
+        "layers.1.mlp_out:141"
+      ],
+      "656": [
+        "layers.1.mlp_out:142"
+      ],
+      "657": [
+        "layers.1.mlp_out:143"
+      ],
+      "658": [
+        "layers.1.mlp_out:144"
+      ],
+      "659": [
+        "layers.1.mlp_out:146"
+      ],
+      "660": [
+        "layers.1.mlp_out:147"
+      ],
+      "661": [
+        "layers.1.mlp_out:148"
+      ],
+      "662": [
+        "layers.1.mlp_out:149"
+      ],
+      "663": [
+        "layers.1.mlp_out:150"
+      ],
+      "664": [
+        "layers.1.mlp_out:151"
+      ],
+      "665": [
+        "layers.1.mlp_out:153"
+      ],
+      "666": [
+        "layers.1.mlp_out:154"
+      ],
+      "667": [
+        "layers.1.mlp_out:155"
+      ],
+      "668": [
+        "layers.1.mlp_out:157"
+      ],
+      "669": [
+        "layers.1.mlp_out:158"
+      ],
+      "670": [
+        "layers.1.mlp_out:161"
+      ],
+      "671": [
+        "layers.1.mlp_out:162"
+      ],
+      "672": [
+        "layers.1.mlp_out:163"
+      ],
+      "673": [
+        "layers.1.mlp_out:164"
+      ],
+      "674": [
+        "layers.1.mlp_out:165"
+      ],
+      "675": [
+        "layers.1.mlp_out:166"
+      ],
+      "676": [
+        "layers.1.mlp_out:168"
+      ],
+      "677": [
+        "layers.1.mlp_out:169"
+      ],
+      "678": [
+        "layers.1.mlp_out:170"
+      ],
+      "679": [
+        "layers.1.mlp_out:171"
+      ],
+      "680": [
+        "layers.1.mlp_out:174"
+      ],
+      "681": [
+        "layers.1.mlp_out:176"
+      ],
+      "682": [
+        "layers.1.mlp_out:178"
+      ],
+      "683": [
+        "layers.1.mlp_out:179"
+      ],
+      "684": [
+        "layers.1.mlp_out:181"
+      ],
+      "685": [
+        "layers.1.mlp_out:182"
+      ],
+      "686": [
+        "layers.1.mlp_out:183"
+      ],
+      "687": [
+        "layers.1.mlp_out:185"
+      ],
+      "688": [
+        "layers.1.mlp_out:186"
+      ],
+      "689": [
+        "layers.1.mlp_out:187"
+      ],
+      "690": [
+        "layers.1.mlp_out:189"
+      ],
+      "691": [
+        "layers.1.mlp_out:192"
+      ],
+      "692": [
+        "layers.1.mlp_out:193"
+      ],
+      "693": [
+        "layers.1.mlp_out:194"
+      ],
+      "694": [
+        "layers.1.mlp_out:195"
+      ],
+      "695": [
+        "layers.1.mlp_out:196"
+      ],
+      "696": [
+        "layers.1.mlp_out:197"
+      ],
+      "697": [
+        "layers.1.mlp_out:198"
+      ],
+      "698": [
+        "layers.1.mlp_out:199"
+      ],
+      "699": [
+        "layers.1.mlp_out:201"
+      ],
+      "700": [
+        "layers.1.mlp_out:202"
+      ],
+      "701": [
+        "layers.1.mlp_out:203"
+      ],
+      "702": [
+        "layers.1.mlp_out:204"
+      ],
+      "703": [
+        "layers.1.mlp_out:206"
+      ],
+      "704": [
+        "layers.1.mlp_out:209"
+      ],
+      "705": [
+        "layers.1.mlp_out:210"
+      ],
+      "706": [
+        "layers.1.mlp_out:211"
+      ],
+      "707": [
+        "layers.1.mlp_out:213"
+      ],
+      "708": [
+        "layers.1.mlp_out:218"
+      ],
+      "709": [
+        "layers.1.mlp_out:219"
+      ],
+      "710": [
+        "layers.1.mlp_out:220"
+      ],
+      "711": [
+        "layers.1.mlp_out:221"
+      ],
+      "712": [
+        "layers.1.mlp_out:222"
+      ],
+      "713": [
+        "layers.1.mlp_out:223"
+      ],
+      "714": [
+        "layers.1.mlp_out:225"
+      ],
+      "715": [
+        "layers.1.mlp_out:226"
+      ],
+      "716": [
+        "layers.1.mlp_out:227"
+      ],
+      "717": [
+        "layers.1.mlp_out:229"
+      ],
+      "718": [
+        "layers.1.mlp_out:230"
+      ],
+      "719": [
+        "layers.1.mlp_out:231"
+      ],
+      "720": [
+        "layers.1.mlp_out:232"
+      ],
+      "721": [
+        "layers.1.mlp_out:233"
+      ],
+      "722": [
+        "layers.1.mlp_out:234"
+      ],
+      "723": [
+        "layers.1.mlp_out:236"
+      ],
+      "724": [
+        "layers.1.mlp_out:237"
+      ],
+      "725": [
+        "layers.1.mlp_out:238"
+      ],
+      "726": [
+        "layers.1.mlp_out:240"
+      ],
+      "727": [
+        "layers.1.mlp_out:241"
+      ],
+      "728": [
+        "layers.1.mlp_out:242"
+      ],
+      "729": [
+        "layers.1.mlp_out:244"
+      ],
+      "730": [
+        "layers.1.mlp_out:246"
+      ],
+      "731": [
+        "layers.1.mlp_out:248"
+      ],
+      "732": [
+        "layers.1.mlp_out:249"
+      ],
+      "733": [
+        "layers.1.mlp_out:250"
+      ],
+      "734": [
+        "layers.1.mlp_out:251"
+      ],
+      "735": [
+        "layers.1.mlp_out:252"
+      ],
+      "736": [
+        "layers.1.mlp_out:253"
+      ],
+      "737": [
+        "layers.1.mlp_out:254"
+      ],
+      "738": [
+        "layers.1.mlp_out:255"
+      ],
+      "739": [
+        "layers.1.mlp_out:259"
+      ],
+      "740": [
+        "layers.1.mlp_out:260"
+      ],
+      "741": [
+        "layers.1.mlp_out:262"
+      ],
+      "742": [
+        "layers.1.mlp_out:263"
+      ],
+      "743": [
+        "layers.1.mlp_out:264"
+      ],
+      "744": [
+        "layers.1.mlp_out:266"
+      ],
+      "745": [
+        "layers.1.mlp_out:270"
+      ],
+      "746": [
+        "layers.1.mlp_out:271"
+      ],
+      "747": [
+        "layers.1.mlp_out:272"
+      ],
+      "748": [
+        "layers.1.mlp_out:273"
+      ],
+      "749": [
+        "layers.1.mlp_out:274"
+      ],
+      "750": [
+        "layers.1.mlp_out:276"
+      ],
+      "751": [
+        "layers.1.mlp_out:278"
+      ],
+      "752": [
+        "layers.1.mlp_out:279"
+      ],
+      "753": [
+        "layers.1.mlp_out:280"
+      ],
+      "754": [
+        "layers.1.mlp_out:281"
+      ],
+      "755": [
+        "layers.1.mlp_out:282"
+      ],
+      "756": [
+        "layers.1.mlp_out:283"
+      ],
+      "757": [
+        "layers.1.mlp_out:285"
+      ],
+      "758": [
+        "layers.1.mlp_out:287"
+      ],
+      "759": [
+        "layers.1.mlp_out:289"
+      ],
+      "760": [
+        "layers.1.mlp_out:290"
+      ],
+      "761": [
+        "layers.1.mlp_out:291"
+      ],
+      "762": [
+        "layers.1.mlp_out:292"
+      ],
+      "763": [
+        "layers.1.mlp_out:293"
+      ],
+      "764": [
+        "layers.1.mlp_out:294"
+      ],
+      "765": [
+        "layers.1.mlp_out:295"
+      ],
+      "766": [
+        "layers.1.mlp_out:296"
+      ],
+      "767": [
+        "layers.1.mlp_out:297"
+      ],
+      "768": [
+        "layers.1.mlp_out:298"
+      ],
+      "769": [
+        "layers.1.mlp_out:299"
+      ],
+      "770": [
+        "layers.1.mlp_out:300"
+      ],
+      "771": [
+        "layers.1.mlp_out:301"
+      ],
+      "772": [
+        "layers.1.mlp_out:302"
+      ],
+      "773": [
+        "layers.1.mlp_out:303"
+      ],
+      "774": [
+        "layers.1.mlp_out:304"
+      ],
+      "775": [
+        "layers.1.mlp_out:305"
+      ],
+      "776": [
+        "layers.1.mlp_out:306"
+      ],
+      "777": [
+        "layers.1.mlp_out:307"
+      ],
+      "778": [
+        "layers.1.mlp_out:308"
+      ],
+      "779": [
+        "layers.1.mlp_out:309"
+      ],
+      "780": [
+        "layers.1.mlp_out:310"
+      ],
+      "781": [
+        "layers.1.mlp_out:311"
+      ],
+      "782": [
+        "layers.1.mlp_out:313"
+      ],
+      "783": [
+        "layers.1.mlp_out:315"
+      ],
+      "784": [
+        "layers.1.mlp_out:316"
+      ],
+      "785": [
+        "layers.1.mlp_out:317"
+      ],
+      "786": [
+        "layers.1.mlp_out:318"
+      ],
+      "787": [
+        "layers.1.mlp_out:321"
+      ],
+      "788": [
+        "layers.1.mlp_out:323"
+      ],
+      "789": [
+        "layers.1.mlp_out:324"
+      ],
+      "790": [
+        "layers.1.mlp_out:325"
+      ],
+      "791": [
+        "layers.1.mlp_out:326"
+      ],
+      "792": [
+        "layers.1.mlp_out:327"
+      ],
+      "793": [
+        "layers.1.mlp_out:329"
+      ],
+      "794": [
+        "layers.1.mlp_out:330"
+      ],
+      "795": [
+        "layers.1.mlp_out:331"
+      ],
+      "796": [
+        "layers.1.mlp_out:333"
+      ],
+      "797": [
+        "layers.1.mlp_out:334"
+      ],
+      "798": [
+        "layers.1.mlp_out:335"
+      ],
+      "799": [
+        "layers.1.mlp_out:336"
+      ],
+      "800": [
+        "layers.1.mlp_out:337"
+      ],
+      "801": [
+        "layers.1.mlp_out:338"
+      ],
+      "802": [
+        "layers.1.mlp_out:339"
+      ],
+      "803": [
+        "layers.1.mlp_out:340"
+      ],
+      "804": [
+        "layers.1.mlp_out:341"
+      ],
+      "805": [
+        "layers.1.mlp_out:342"
+      ],
+      "806": [
+        "layers.1.mlp_out:343"
+      ],
+      "807": [
+        "layers.1.mlp_out:344"
+      ],
+      "808": [
+        "layers.1.mlp_out:345"
+      ],
+      "809": [
+        "layers.1.mlp_out:347"
+      ],
+      "810": [
+        "layers.1.mlp_out:349"
+      ],
+      "811": [
+        "layers.1.mlp_out:350"
+      ],
+      "812": [
+        "layers.1.mlp_out:354"
+      ],
+      "813": [
+        "layers.1.mlp_out:355"
+      ],
+      "814": [
+        "layers.1.mlp_out:356"
+      ],
+      "815": [
+        "layers.1.mlp_out:358"
+      ],
+      "816": [
+        "layers.1.mlp_out:359"
+      ],
+      "817": [
+        "layers.1.mlp_out:364"
+      ],
+      "818": [
+        "layers.1.mlp_out:365"
+      ],
+      "819": [
+        "layers.1.mlp_out:366"
+      ],
+      "820": [
+        "layers.1.mlp_out:367"
+      ],
+      "821": [
+        "layers.1.mlp_out:370"
+      ],
+      "822": [
+        "layers.1.mlp_out:371"
+      ],
+      "823": [
+        "layers.1.mlp_out:372"
+      ],
+      "824": [
+        "layers.1.mlp_out:373"
+      ],
+      "825": [
+        "layers.1.mlp_out:376"
+      ],
+      "826": [
+        "layers.1.mlp_out:377"
+      ],
+      "827": [
+        "layers.1.mlp_out:379"
+      ],
+      "828": [
+        "layers.1.mlp_out:380"
+      ],
+      "829": [
+        "layers.1.mlp_out:381"
+      ],
+      "830": [
+        "layers.1.mlp_out:384"
+      ],
+      "831": [
+        "layers.1.mlp_out:385"
+      ],
+      "832": [
+        "layers.1.mlp_out:386"
+      ],
+      "833": [
+        "layers.1.mlp_out:387"
+      ],
+      "834": [
+        "layers.1.mlp_out:388"
+      ],
+      "835": [
+        "layers.1.mlp_out:389"
+      ],
+      "836": [
+        "layers.1.mlp_out:390"
+      ],
+      "837": [
+        "layers.1.mlp_out:391"
+      ],
+      "838": [
+        "layers.1.mlp_out:393"
+      ],
+      "839": [
+        "layers.1.mlp_out:394"
+      ],
+      "840": [
+        "layers.1.mlp_out:396"
+      ],
+      "841": [
+        "layers.1.mlp_out:397"
+      ],
+      "842": [
+        "layers.1.mlp_out:398"
+      ]
+    },
+    "num_groups": 843,
+    "config": {
+      "alpha": 1.0,
+      "iters": 140,
+      "activation_threshold": 0.01,
+      "merge_sampling": "range",
+      "merge_threshold": 0.05
+    },
+    "timing": {
+      "total_time": 1.0317981243133545,
+      "processing_time": 1.4066696166992188e-05,
+      "clustering_time": 1.0315792560577393,
+      "num_iterations": 140
+    },
+    "component_stats": {
+      "original": 1600,
+      "alive": 982,
+      "dead": 618
+    },
+    "dead_components": [
+      "layers.0.mlp_in:71",
+      "layers.0.mlp_in:72",
+      "layers.0.mlp_in:84",
+      "layers.0.mlp_in:91",
+      "layers.0.mlp_in:101",
+      "layers.0.mlp_in:142",
+      "layers.0.mlp_in:144",
+      "layers.0.mlp_in:161",
+      "layers.0.mlp_in:165",
+      "layers.0.mlp_in:185",
+      "layers.0.mlp_in:199",
+      "layers.0.mlp_in:267",
+      "layers.0.mlp_in:313",
+      "layers.0.mlp_in:339",
+      "layers.0.mlp_in:353",
+      "layers.0.mlp_in:358",
+      "layers.0.mlp_in:364",
+      "layers.0.mlp_out:0",
+      "layers.0.mlp_out:1",
+      "layers.0.mlp_out:3",
+      "layers.0.mlp_out:4",
+      "layers.0.mlp_out:5",
+      "layers.0.mlp_out:6",
+      "layers.0.mlp_out:7",
+      "layers.0.mlp_out:8",
+      "layers.0.mlp_out:9",
+      "layers.0.mlp_out:10",
+      "layers.0.mlp_out:11",
+      "layers.0.mlp_out:12",
+      "layers.0.mlp_out:13",
+      "layers.0.mlp_out:14",
+      "layers.0.mlp_out:15",
+      "layers.0.mlp_out:16",
+      "layers.0.mlp_out:17",
+      "layers.0.mlp_out:18",
+      "layers.0.mlp_out:19",
+      "layers.0.mlp_out:20",
+      "layers.0.mlp_out:21",
+      "layers.0.mlp_out:22",
+      "layers.0.mlp_out:23",
+      "layers.0.mlp_out:24",
+      "layers.0.mlp_out:25",
+      "layers.0.mlp_out:26",
+      "layers.0.mlp_out:27",
+      "layers.0.mlp_out:28",
+      "layers.0.mlp_out:29",
+      "layers.0.mlp_out:30",
+      "layers.0.mlp_out:31",
+      "layers.0.mlp_out:32",
+      "layers.0.mlp_out:33",
+      "layers.0.mlp_out:34",
+      "layers.0.mlp_out:35",
+      "layers.0.mlp_out:36",
+      "layers.0.mlp_out:37",
+      "layers.0.mlp_out:38",
+      "layers.0.mlp_out:39",
+      "layers.0.mlp_out:40",
+      "layers.0.mlp_out:41",
+      "layers.0.mlp_out:43",
+      "layers.0.mlp_out:44",
+      "layers.0.mlp_out:45",
+      "layers.0.mlp_out:46",
+      "layers.0.mlp_out:47",
+      "layers.0.mlp_out:48",
+      "layers.0.mlp_out:50",
+      "layers.0.mlp_out:51",
+      "layers.0.mlp_out:53",
+      "layers.0.mlp_out:54",
+      "layers.0.mlp_out:55",
+      "layers.0.mlp_out:56",
+      "layers.0.mlp_out:57",
+      "layers.0.mlp_out:58",
+      "layers.0.mlp_out:59",
+      "layers.0.mlp_out:60",
+      "layers.0.mlp_out:61",
+      "layers.0.mlp_out:62",
+      "layers.0.mlp_out:63",
+      "layers.0.mlp_out:64",
+      "layers.0.mlp_out:65",
+      "layers.0.mlp_out:66",
+      "layers.0.mlp_out:67",
+      "layers.0.mlp_out:68",
+      "layers.0.mlp_out:69",
+      "layers.0.mlp_out:70",
+      "layers.0.mlp_out:71",
+      "layers.0.mlp_out:72",
+      "layers.0.mlp_out:73",
+      "layers.0.mlp_out:74",
+      "layers.0.mlp_out:75",
+      "layers.0.mlp_out:77",
+      "layers.0.mlp_out:78",
+      "layers.0.mlp_out:79",
+      "layers.0.mlp_out:80",
+      "layers.0.mlp_out:81",
+      "layers.0.mlp_out:82",
+      "layers.0.mlp_out:83",
+      "layers.0.mlp_out:84",
+      "layers.0.mlp_out:85",
+      "layers.0.mlp_out:86",
+      "layers.0.mlp_out:87",
+      "layers.0.mlp_out:88",
+      "layers.0.mlp_out:90",
+      "layers.0.mlp_out:91",
+      "layers.0.mlp_out:92",
+      "layers.0.mlp_out:93",
+      "layers.0.mlp_out:94",
+      "layers.0.mlp_out:95",
+      "layers.0.mlp_out:96",
+      "layers.0.mlp_out:97",
+      "layers.0.mlp_out:98",
+      "layers.0.mlp_out:99",
+      "layers.0.mlp_out:100",
+      "layers.0.mlp_out:101",
+      "layers.0.mlp_out:102",
+      "layers.0.mlp_out:103",
+      "layers.0.mlp_out:104",
+      "layers.0.mlp_out:105",
+      "layers.0.mlp_out:106",
+      "layers.0.mlp_out:107",
+      "layers.0.mlp_out:108",
+      "layers.0.mlp_out:110",
+      "layers.0.mlp_out:111",
+      "layers.0.mlp_out:112",
+      "layers.0.mlp_out:113",
+      "layers.0.mlp_out:114",
+      "layers.0.mlp_out:115",
+      "layers.0.mlp_out:116",
+      "layers.0.mlp_out:117",
+      "layers.0.mlp_out:118",
+      "layers.0.mlp_out:119",
+      "layers.0.mlp_out:120",
+      "layers.0.mlp_out:121",
+      "layers.0.mlp_out:122",
+      "layers.0.mlp_out:123",
+      "layers.0.mlp_out:124",
+      "layers.0.mlp_out:125",
+      "layers.0.mlp_out:126",
+      "layers.0.mlp_out:127",
+      "layers.0.mlp_out:128",
+      "layers.0.mlp_out:129",
+      "layers.0.mlp_out:130",
+      "layers.0.mlp_out:131",
+      "layers.0.mlp_out:132",
+      "layers.0.mlp_out:133",
+      "layers.0.mlp_out:134",
+      "layers.0.mlp_out:135",
+      "layers.0.mlp_out:136",
+      "layers.0.mlp_out:137",
+      "layers.0.mlp_out:138",
+      "layers.0.mlp_out:139",
+      "layers.0.mlp_out:140",
+      "layers.0.mlp_out:141",
+      "layers.0.mlp_out:142",
+      "layers.0.mlp_out:143",
+      "layers.0.mlp_out:144",
+      "layers.0.mlp_out:145",
+      "layers.0.mlp_out:146",
+      "layers.0.mlp_out:147",
+      "layers.0.mlp_out:148",
+      "layers.0.mlp_out:149",
+      "layers.0.mlp_out:150",
+      "layers.0.mlp_out:151",
+      "layers.0.mlp_out:152",
+      "layers.0.mlp_out:153",
+      "layers.0.mlp_out:154",
+      "layers.0.mlp_out:156",
+      "layers.0.mlp_out:157",
+      "layers.0.mlp_out:158",
+      "layers.0.mlp_out:159",
+      "layers.0.mlp_out:160",
+      "layers.0.mlp_out:161",
+      "layers.0.mlp_out:162",
+      "layers.0.mlp_out:163",
+      "layers.0.mlp_out:164",
+      "layers.0.mlp_out:165",
+      "layers.0.mlp_out:166",
+      "layers.0.mlp_out:167",
+      "layers.0.mlp_out:168",
+      "layers.0.mlp_out:169",
+      "layers.0.mlp_out:171",
+      "layers.0.mlp_out:172",
+      "layers.0.mlp_out:173",
+      "layers.0.mlp_out:174",
+      "layers.0.mlp_out:175",
+      "layers.0.mlp_out:176",
+      "layers.0.mlp_out:177",
+      "layers.0.mlp_out:179",
+      "layers.0.mlp_out:180",
+      "layers.0.mlp_out:181",
+      "layers.0.mlp_out:182",
+      "layers.0.mlp_out:183",
+      "layers.0.mlp_out:184",
+      "layers.0.mlp_out:185",
+      "layers.0.mlp_out:186",
+      "layers.0.mlp_out:187",
+      "layers.0.mlp_out:188",
+      "layers.0.mlp_out:189",
+      "layers.0.mlp_out:190",
+      "layers.0.mlp_out:191",
+      "layers.0.mlp_out:192",
+      "layers.0.mlp_out:193",
+      "layers.0.mlp_out:194",
+      "layers.0.mlp_out:195",
+      "layers.0.mlp_out:196",
+      "layers.0.mlp_out:197",
+      "layers.0.mlp_out:198",
+      "layers.0.mlp_out:200",
+      "layers.0.mlp_out:201",
+      "layers.0.mlp_out:202",
+      "layers.0.mlp_out:203",
+      "layers.0.mlp_out:204",
+      "layers.0.mlp_out:205",
+      "layers.0.mlp_out:206",
+      "layers.0.mlp_out:207",
+      "layers.0.mlp_out:208",
+      "layers.0.mlp_out:209",
+      "layers.0.mlp_out:210",
+      "layers.0.mlp_out:211",
+      "layers.0.mlp_out:212",
+      "layers.0.mlp_out:213",
+      "layers.0.mlp_out:214",
+      "layers.0.mlp_out:215",
+      "layers.0.mlp_out:216",
+      "layers.0.mlp_out:217",
+      "layers.0.mlp_out:218",
+      "layers.0.mlp_out:220",
+      "layers.0.mlp_out:221",
+      "layers.0.mlp_out:223",
+      "layers.0.mlp_out:224",
+      "layers.0.mlp_out:225",
+      "layers.0.mlp_out:226",
+      "layers.0.mlp_out:227",
+      "layers.0.mlp_out:228",
+      "layers.0.mlp_out:229",
+      "layers.0.mlp_out:230",
+      "layers.0.mlp_out:231",
+      "layers.0.mlp_out:232",
+      "layers.0.mlp_out:233",
+      "layers.0.mlp_out:234",
+      "layers.0.mlp_out:235",
+      "layers.0.mlp_out:236",
+      "layers.0.mlp_out:237",
+      "layers.0.mlp_out:238",
+      "layers.0.mlp_out:239",
+      "layers.0.mlp_out:240",
+      "layers.0.mlp_out:241",
+      "layers.0.mlp_out:242",
+      "layers.0.mlp_out:243",
+      "layers.0.mlp_out:244",
+      "layers.0.mlp_out:245",
+      "layers.0.mlp_out:246",
+      "layers.0.mlp_out:248",
+      "layers.0.mlp_out:249",
+      "layers.0.mlp_out:250",
+      "layers.0.mlp_out:251",
+      "layers.0.mlp_out:252",
+      "layers.0.mlp_out:253",
+      "layers.0.mlp_out:254",
+      "layers.0.mlp_out:255",
+      "layers.0.mlp_out:256",
+      "layers.0.mlp_out:257",
+      "layers.0.mlp_out:258",
+      "layers.0.mlp_out:259",
+      "layers.0.mlp_out:260",
+      "layers.0.mlp_out:261",
+      "layers.0.mlp_out:262",
+      "layers.0.mlp_out:264",
+      "layers.0.mlp_out:265",
+      "layers.0.mlp_out:266",
+      "layers.0.mlp_out:267",
+      "layers.0.mlp_out:268",
+      "layers.0.mlp_out:269",
+      "layers.0.mlp_out:270",
+      "layers.0.mlp_out:271",
+      "layers.0.mlp_out:272",
+      "layers.0.mlp_out:273",
+      "layers.0.mlp_out:275",
+      "layers.0.mlp_out:276",
+      "layers.0.mlp_out:277",
+      "layers.0.mlp_out:278",
+      "layers.0.mlp_out:280",
+      "layers.0.mlp_out:281",
+      "layers.0.mlp_out:282",
+      "layers.0.mlp_out:283",
+      "layers.0.mlp_out:284",
+      "layers.0.mlp_out:285",
+      "layers.0.mlp_out:286",
+      "layers.0.mlp_out:287",
+      "layers.0.mlp_out:288",
+      "layers.0.mlp_out:290",
+      "layers.0.mlp_out:291",
+      "layers.0.mlp_out:292",
+      "layers.0.mlp_out:293",
+      "layers.0.mlp_out:294",
+      "layers.0.mlp_out:295",
+      "layers.0.mlp_out:296",
+      "layers.0.mlp_out:297",
+      "layers.0.mlp_out:298",
+      "layers.0.mlp_out:299",
+      "layers.0.mlp_out:300",
+      "layers.0.mlp_out:301",
+      "layers.0.mlp_out:302",
+      "layers.0.mlp_out:303",
+      "layers.0.mlp_out:304",
+      "layers.0.mlp_out:306",
+      "layers.0.mlp_out:307",
+      "layers.0.mlp_out:308",
+      "layers.0.mlp_out:309",
+      "layers.0.mlp_out:310",
+      "layers.0.mlp_out:311",
+      "layers.0.mlp_out:312",
+      "layers.0.mlp_out:313",
+      "layers.0.mlp_out:314",
+      "layers.0.mlp_out:315",
+      "layers.0.mlp_out:316",
+      "layers.0.mlp_out:317",
+      "layers.0.mlp_out:318",
+      "layers.0.mlp_out:319",
+      "layers.0.mlp_out:320",
+      "layers.0.mlp_out:322",
+      "layers.0.mlp_out:323",
+      "layers.0.mlp_out:325",
+      "layers.0.mlp_out:326",
+      "layers.0.mlp_out:328",
+      "layers.0.mlp_out:329",
+      "layers.0.mlp_out:330",
+      "layers.0.mlp_out:331",
+      "layers.0.mlp_out:332",
+      "layers.0.mlp_out:333",
+      "layers.0.mlp_out:334",
+      "layers.0.mlp_out:335",
+      "layers.0.mlp_out:336",
+      "layers.0.mlp_out:339",
+      "layers.0.mlp_out:340",
+      "layers.0.mlp_out:341",
+      "layers.0.mlp_out:342",
+      "layers.0.mlp_out:343",
+      "layers.0.mlp_out:344",
+      "layers.0.mlp_out:345",
+      "layers.0.mlp_out:346",
+      "layers.0.mlp_out:347",
+      "layers.0.mlp_out:348",
+      "layers.0.mlp_out:349",
+      "layers.0.mlp_out:351",
+      "layers.0.mlp_out:352",
+      "layers.0.mlp_out:353",
+      "layers.0.mlp_out:354",
+      "layers.0.mlp_out:355",
+      "layers.0.mlp_out:356",
+      "layers.0.mlp_out:357",
+      "layers.0.mlp_out:358",
+      "layers.0.mlp_out:359",
+      "layers.0.mlp_out:360",
+      "layers.0.mlp_out:361",
+      "layers.0.mlp_out:362",
+      "layers.0.mlp_out:363",
+      "layers.0.mlp_out:364",
+      "layers.0.mlp_out:365",
+      "layers.0.mlp_out:366",
+      "layers.0.mlp_out:367",
+      "layers.0.mlp_out:368",
+      "layers.0.mlp_out:369",
+      "layers.0.mlp_out:370",
+      "layers.0.mlp_out:371",
+      "layers.0.mlp_out:372",
+      "layers.0.mlp_out:373",
+      "layers.0.mlp_out:374",
+      "layers.0.mlp_out:375",
+      "layers.0.mlp_out:376",
+      "layers.0.mlp_out:377",
+      "layers.0.mlp_out:381",
+      "layers.0.mlp_out:382",
+      "layers.0.mlp_out:383",
+      "layers.0.mlp_out:384",
+      "layers.0.mlp_out:385",
+      "layers.0.mlp_out:386",
+      "layers.0.mlp_out:387",
+      "layers.0.mlp_out:388",
+      "layers.0.mlp_out:389",
+      "layers.0.mlp_out:390",
+      "layers.0.mlp_out:392",
+      "layers.0.mlp_out:393",
+      "layers.0.mlp_out:394",
+      "layers.0.mlp_out:395",
+      "layers.0.mlp_out:396",
+      "layers.0.mlp_out:397",
+      "layers.0.mlp_out:398",
+      "layers.0.mlp_out:399",
+      "layers.1.mlp_in:1",
+      "layers.1.mlp_in:2",
+      "layers.1.mlp_in:3",
+      "layers.1.mlp_in:4",
+      "layers.1.mlp_in:5",
+      "layers.1.mlp_in:7",
+      "layers.1.mlp_in:13",
+      "layers.1.mlp_in:22",
+      "layers.1.mlp_in:29",
+      "layers.1.mlp_in:32",
+      "layers.1.mlp_in:33",
+      "layers.1.mlp_in:36",
+      "layers.1.mlp_in:38",
+      "layers.1.mlp_in:39",
+      "layers.1.mlp_in:46",
+      "layers.1.mlp_in:49",
+      "layers.1.mlp_in:55",
+      "layers.1.mlp_in:60",
+      "layers.1.mlp_in:61",
+      "layers.1.mlp_in:64",
+      "layers.1.mlp_in:67",
+      "layers.1.mlp_in:69",
+      "layers.1.mlp_in:71",
+      "layers.1.mlp_in:80",
+      "layers.1.mlp_in:81",
+      "layers.1.mlp_in:83",
+      "layers.1.mlp_in:84",
+      "layers.1.mlp_in:91",
+      "layers.1.mlp_in:92",
+      "layers.1.mlp_in:93",
+      "layers.1.mlp_in:96",
+      "layers.1.mlp_in:98",
+      "layers.1.mlp_in:100",
+      "layers.1.mlp_in:103",
+      "layers.1.mlp_in:105",
+      "layers.1.mlp_in:107",
+      "layers.1.mlp_in:122",
+      "layers.1.mlp_in:126",
+      "layers.1.mlp_in:128",
+      "layers.1.mlp_in:133",
+      "layers.1.mlp_in:137",
+      "layers.1.mlp_in:140",
+      "layers.1.mlp_in:141",
+      "layers.1.mlp_in:143",
+      "layers.1.mlp_in:144",
+      "layers.1.mlp_in:145",
+      "layers.1.mlp_in:154",
+      "layers.1.mlp_in:157",
+      "layers.1.mlp_in:158",
+      "layers.1.mlp_in:159",
+      "layers.1.mlp_in:164",
+      "layers.1.mlp_in:165",
+      "layers.1.mlp_in:167",
+      "layers.1.mlp_in:178",
+      "layers.1.mlp_in:182",
+      "layers.1.mlp_in:186",
+      "layers.1.mlp_in:188",
+      "layers.1.mlp_in:189",
+      "layers.1.mlp_in:192",
+      "layers.1.mlp_in:197",
+      "layers.1.mlp_in:200",
+      "layers.1.mlp_in:206",
+      "layers.1.mlp_in:207",
+      "layers.1.mlp_in:210",
+      "layers.1.mlp_in:212",
+      "layers.1.mlp_in:213",
+      "layers.1.mlp_in:214",
+      "layers.1.mlp_in:217",
+      "layers.1.mlp_in:219",
+      "layers.1.mlp_in:220",
+      "layers.1.mlp_in:226",
+      "layers.1.mlp_in:227",
+      "layers.1.mlp_in:228",
+      "layers.1.mlp_in:229",
+      "layers.1.mlp_in:230",
+      "layers.1.mlp_in:234",
+      "layers.1.mlp_in:235",
+      "layers.1.mlp_in:236",
+      "layers.1.mlp_in:240",
+      "layers.1.mlp_in:254",
+      "layers.1.mlp_in:255",
+      "layers.1.mlp_in:256",
+      "layers.1.mlp_in:259",
+      "layers.1.mlp_in:262",
+      "layers.1.mlp_in:264",
+      "layers.1.mlp_in:267",
+      "layers.1.mlp_in:268",
+      "layers.1.mlp_in:272",
+      "layers.1.mlp_in:275",
+      "layers.1.mlp_in:277",
+      "layers.1.mlp_in:278",
+      "layers.1.mlp_in:280",
+      "layers.1.mlp_in:281",
+      "layers.1.mlp_in:283",
+      "layers.1.mlp_in:288",
+      "layers.1.mlp_in:293",
+      "layers.1.mlp_in:298",
+      "layers.1.mlp_in:301",
+      "layers.1.mlp_in:304",
+      "layers.1.mlp_in:307",
+      "layers.1.mlp_in:308",
+      "layers.1.mlp_in:309",
+      "layers.1.mlp_in:311",
+      "layers.1.mlp_in:318",
+      "layers.1.mlp_in:320",
+      "layers.1.mlp_in:323",
+      "layers.1.mlp_in:324",
+      "layers.1.mlp_in:325",
+      "layers.1.mlp_in:326",
+      "layers.1.mlp_in:339",
+      "layers.1.mlp_in:345",
+      "layers.1.mlp_in:346",
+      "layers.1.mlp_in:349",
+      "layers.1.mlp_in:351",
+      "layers.1.mlp_in:355",
+      "layers.1.mlp_in:367",
+      "layers.1.mlp_in:368",
+      "layers.1.mlp_in:370",
+      "layers.1.mlp_in:371",
+      "layers.1.mlp_in:375",
+      "layers.1.mlp_in:379",
+      "layers.1.mlp_in:388",
+      "layers.1.mlp_in:389",
+      "layers.1.mlp_in:391",
+      "layers.1.mlp_in:393",
+      "layers.1.mlp_in:396",
+      "layers.1.mlp_in:398",
+      "layers.1.mlp_out:0",
+      "layers.1.mlp_out:5",
+      "layers.1.mlp_out:9",
+      "layers.1.mlp_out:13",
+      "layers.1.mlp_out:17",
+      "layers.1.mlp_out:19",
+      "layers.1.mlp_out:24",
+      "layers.1.mlp_out:26",
+      "layers.1.mlp_out:30",
+      "layers.1.mlp_out:35",
+      "layers.1.mlp_out:37",
+      "layers.1.mlp_out:39",
+      "layers.1.mlp_out:44",
+      "layers.1.mlp_out:55",
+      "layers.1.mlp_out:57",
+      "layers.1.mlp_out:60",
+      "layers.1.mlp_out:64",
+      "layers.1.mlp_out:66",
+      "layers.1.mlp_out:72",
+      "layers.1.mlp_out:74",
+      "layers.1.mlp_out:78",
+      "layers.1.mlp_out:83",
+      "layers.1.mlp_out:85",
+      "layers.1.mlp_out:88",
+      "layers.1.mlp_out:101",
+      "layers.1.mlp_out:103",
+      "layers.1.mlp_out:113",
+      "layers.1.mlp_out:116",
+      "layers.1.mlp_out:118",
+      "layers.1.mlp_out:120",
+      "layers.1.mlp_out:121",
+      "layers.1.mlp_out:135",
+      "layers.1.mlp_out:145",
+      "layers.1.mlp_out:152",
+      "layers.1.mlp_out:156",
+      "layers.1.mlp_out:159",
+      "layers.1.mlp_out:160",
+      "layers.1.mlp_out:167",
+      "layers.1.mlp_out:172",
+      "layers.1.mlp_out:173",
+      "layers.1.mlp_out:175",
+      "layers.1.mlp_out:177",
+      "layers.1.mlp_out:180",
+      "layers.1.mlp_out:184",
+      "layers.1.mlp_out:188",
+      "layers.1.mlp_out:190",
+      "layers.1.mlp_out:191",
+      "layers.1.mlp_out:200",
+      "layers.1.mlp_out:205",
+      "layers.1.mlp_out:207",
+      "layers.1.mlp_out:208",
+      "layers.1.mlp_out:212",
+      "layers.1.mlp_out:214",
+      "layers.1.mlp_out:215",
+      "layers.1.mlp_out:216",
+      "layers.1.mlp_out:217",
+      "layers.1.mlp_out:224",
+      "layers.1.mlp_out:228",
+      "layers.1.mlp_out:235",
+      "layers.1.mlp_out:239",
+      "layers.1.mlp_out:243",
+      "layers.1.mlp_out:245",
+      "layers.1.mlp_out:247",
+      "layers.1.mlp_out:256",
+      "layers.1.mlp_out:257",
+      "layers.1.mlp_out:258",
+      "layers.1.mlp_out:261",
+      "layers.1.mlp_out:265",
+      "layers.1.mlp_out:267",
+      "layers.1.mlp_out:268",
+      "layers.1.mlp_out:269",
+      "layers.1.mlp_out:275",
+      "layers.1.mlp_out:277",
+      "layers.1.mlp_out:284",
+      "layers.1.mlp_out:286",
+      "layers.1.mlp_out:288",
+      "layers.1.mlp_out:312",
+      "layers.1.mlp_out:314",
+      "layers.1.mlp_out:319",
+      "layers.1.mlp_out:320",
+      "layers.1.mlp_out:322",
+      "layers.1.mlp_out:328",
+      "layers.1.mlp_out:332",
+      "layers.1.mlp_out:346",
+      "layers.1.mlp_out:348",
+      "layers.1.mlp_out:351",
+      "layers.1.mlp_out:352",
+      "layers.1.mlp_out:353",
+      "layers.1.mlp_out:357",
+      "layers.1.mlp_out:360",
+      "layers.1.mlp_out:361",
+      "layers.1.mlp_out:362",
+      "layers.1.mlp_out:363",
+      "layers.1.mlp_out:368",
+      "layers.1.mlp_out:369",
+      "layers.1.mlp_out:374",
+      "layers.1.mlp_out:375",
+      "layers.1.mlp_out:378",
+      "layers.1.mlp_out:382",
+      "layers.1.mlp_out:383",
+      "layers.1.mlp_out:392",
+      "layers.1.mlp_out:395",
+      "layers.1.mlp_out:399"
+    ],
+    "selected_pairs": [
+      [
+        538,
+        633
+      ],
+      [
+        367,
+        478
+      ],
+      [
+        260,
+        525
+      ],
+      [
+        209,
+        146
+      ],
+      [
+        146,
+        669
+      ],
+      [
+        661,
+        328
+      ],
+      [
+        328,
+        169
+      ],
+      [
+        99,
+        676
+      ],
+      [
+        207,
+        284
+      ],
+      [
+        445,
+        553
+      ],
+      [
+        674,
+        146
+      ],
+      [
+        443,
+        553
+      ],
+      [
+        651,
+        425
+      ],
+      [
+        251,
+        509
+      ],
+      [
+        99,
+        3
+      ],
+      [
+        127,
+        168
+      ],
+      [
+        269,
+        257
+      ],
+      [
+        590,
+        127
+      ],
+      [
+        3,
+        556
+      ],
+      [
+        451,
+        270
+      ],
+      [
+        418,
+        3
+      ],
+      [
+        214,
+        3
+      ],
+      [
+        581,
+        78
+      ],
+      [
+        562,
+        462
+      ],
+      [
+        283,
+        438
+      ],
+      [
+        585,
+        358
+      ],
+      [
+        256,
+        208
+      ],
+      [
+        318,
+        145
+      ],
+      [
+        437,
+        91
+      ],
+      [
+        145,
+        541
+      ],
+      [
+        510,
+        205
+      ],
+      [
+        602,
+        597
+      ],
+      [
+        201,
+        208
+      ],
+      [
+        596,
+        566
+      ],
+      [
+        417,
+        324
+      ],
+      [
+        467,
+        646
+      ],
+      [
+        324,
+        201
+      ],
+      [
+        267,
+        274
+      ],
+      [
+        610,
+        606
+      ],
+      [
+        515,
+        353
+      ],
+      [
+        614,
+        526
+      ],
+      [
+        520,
+        605
+      ],
+      [
+        614,
+        516
+      ],
+      [
+        133,
+        145
+      ],
+      [
+        449,
+        464
+      ],
+      [
+        204,
+        7
+      ],
+      [
+        351,
+        141
+      ],
+      [
+        161,
+        437
+      ],
+      [
+        322,
+        634
+      ],
+      [
+        266,
+        557
+      ],
+      [
+        352,
+        498
+      ],
+      [
+        424,
+        7
+      ],
+      [
+        463,
+        352
+      ],
+      [
+        129,
+        512
+      ],
+      [
+        590,
+        209
+      ],
+      [
+        222,
+        91
+      ],
+      [
+        127,
+        354
+      ],
+      [
+        446,
+        277
+      ],
+      [
+        351,
+        7
+      ],
+      [
+        6,
+        7
+      ],
+      [
+        243,
+        49
+      ],
+      [
+        244,
+        275
+      ],
+      [
+        520,
+        3
+      ],
+      [
+        450,
+        501
+      ],
+      [
+        438,
+        132
+      ],
+      [
+        135,
+        244
+      ],
+      [
+        128,
+        529
+      ],
+      [
+        3,
+        465
+      ],
+      [
+        236,
+        3
+      ],
+      [
+        78,
+        128
+      ],
+      [
+        3,
+        126
+      ],
+      [
+        78,
+        242
+      ],
+      [
+        49,
+        135
+      ],
+      [
+        501,
+        587
+      ],
+      [
+        312,
+        478
+      ],
+      [
+        257,
+        96
+      ],
+      [
+        311,
+        465
+      ],
+      [
+        436,
+        137
+      ],
+      [
+        131,
+        205
+      ],
+      [
+        9,
+        61
+      ],
+      [
+        94,
+        132
+      ],
+      [
+        135,
+        524
+      ],
+      [
+        518,
+        438
+      ],
+      [
+        9,
+        155
+      ],
+      [
+        502,
+        6
+      ],
+      [
+        399,
+        129
+      ],
+      [
+        552,
+        426
+      ],
+      [
+        135,
+        168
+      ],
+      [
+        207,
+        435
+      ],
+      [
+        207,
+        541
+      ],
+      [
+        9,
+        191
+      ],
+      [
+        189,
+        95
+      ],
+      [
+        324,
+        546
+      ],
+      [
+        426,
+        126
+      ],
+      [
+        457,
+        423
+      ],
+      [
+        219,
+        476
+      ],
+      [
+        325,
+        130
+      ],
+      [
+        3,
+        449
+      ],
+      [
+        190,
+        292
+      ],
+      [
+        264,
+        219
+      ],
+      [
+        562,
+        518
+      ],
+      [
+        190,
+        265
+      ],
+      [
+        235,
+        126
+      ],
+      [
+        305,
+        9
+      ],
+      [
+        219,
+        89
+      ],
+      [
+        251,
+        205
+      ],
+      [
+        46,
+        339
+      ],
+      [
+        91,
+        77
+      ],
+      [
+        472,
+        49
+      ],
+      [
+        520,
+        204
+      ],
+      [
+        246,
+        295
+      ],
+      [
+        412,
+        498
+      ],
+      [
+        128,
+        499
+      ],
+      [
+        283,
+        125
+      ],
+      [
+        46,
+        312
+      ],
+      [
+        421,
+        76
+      ],
+      [
+        556,
+        77
+      ],
+      [
+        134,
+        36
+      ],
+      [
+        553,
+        6
+      ],
+      [
+        188,
+        508
+      ],
+      [
+        28,
+        93
+      ],
+      [
+        244,
+        39
+      ],
+      [
+        18,
+        89
+      ],
+      [
+        163,
+        127
+      ],
+      [
+        3,
+        521
+      ],
+      [
+        265,
+        127
+      ],
+      [
+        508,
+        463
+      ],
+      [
+        48,
+        49
+      ],
+      [
+        404,
+        199
+      ],
+      [
+        3,
+        108
+      ],
+      [
+        28,
+        23
+      ],
+      [
+        23,
+        401
+      ],
+      [
+        407,
+        124
+      ],
+      [
+        490,
+        45
+      ],
+      [
+        197,
+        277
+      ],
+      [
+        18,
+        2
+      ],
+      [
+        440,
+        44
+      ],
+      [
+        485,
+        122
+      ],
+      [
+        195,
+        46
+      ],
+      [
+        301,
+        3
+      ]
+    ],
+    "iterations_completed": 140,
+    "k_groups_per_iteration": [
+      982,
+      981,
+      980,
+      979,
+      978,
+      977,
+      976,
+      975,
+      974,
+      973,
+      972,
+      971,
+      970,
+      969,
+      968,
+      967,
+      966,
+      965,
+      964,
+      963,
+      962,
+      961,
+      960,
+      959,
+      958,
+      957,
+      956,
+      955,
+      954,
+      953,
+      952,
+      951,
+      950,
+      949,
+      948,
+      947,
+      946,
+      945,
+      944,
+      943,
+      942,
+      941,
+      940,
+      939,
+      938,
+      937,
+      936,
+      935,
+      934,
+      933,
+      932,
+      931,
+      930,
+      929,
+      928,
+      927,
+      926,
+      925,
+      924,
+      923,
+      922,
+      921,
+      920,
+      919,
+      918,
+      917,
+      916,
+      915,
+      914,
+      913,
+      912,
+      911,
+      910,
+      909,
+      908,
+      907,
+      906,
+      905,
+      904,
+      903,
+      902,
+      901,
+      900,
+      899,
+      898,
+      897,
+      896,
+      895,
+      894,
+      893,
+      892,
+      891,
+      890,
+      889,
+      888,
+      887,
+      886,
+      885,
+      884,
+      883,
+      882,
+      881,
+      880,
+      879,
+      878,
+      877,
+      876,
+      875,
+      874,
+      873,
+      872,
+      871,
+      870,
+      869,
+      868,
+      867,
+      866,
+      865,
+      864,
+      863,
+      862,
+      861,
+      860,
+      859,
+      858,
+      857,
+      856,
+      855,
+      854,
+      853,
+      852,
+      851,
+      850,
+      849,
+      848,
+      847,
+      846,
+      845,
+      844,
+      843
+    ]
+  },
+  "comparison": {
+    "notebook_clusters": 10,
+    "mdl_clusters": 843,
+    "notebook_time": 0.6194968223571777,
+    "mdl_time": 1.0317981243133545
+  }
+}

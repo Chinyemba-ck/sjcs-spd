@@ -4,7 +4,11 @@ import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from functools import wraps
-from typing import Literal, cast
+from typing import Literal, TypeVar, cast
+from typing_extensions import ParamSpec
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 import torch
 import torch.distributed as dist
@@ -20,6 +24,7 @@ class DistributedState:
     world_size: int
     local_rank: int
     backend: Literal["nccl", "gloo"]
+    gloo_group: dist.ProcessGroup | None = None  # Gloo group for CPU barriers
 
 
 def _infer_default_backend() -> Literal["nccl", "gloo"]:
@@ -59,8 +64,13 @@ def init_distributed(backend: Literal["nccl", "gloo"] | None = None) -> Distribu
     """
     assert not is_distributed(), "Already in a distributed process group"
     backend = backend if backend is not None else _infer_default_backend()
+    # Check if running under torchrun/torch.distributed.launch
+    if "RANK" in os.environ and "WORLD_SIZE" in os.environ:
+        world_size = int(os.environ["WORLD_SIZE"])
+        rank = int(os.environ["RANK"])
+        local_rank = int(os.environ.get("LOCAL_RANK", rank))
     # Check if running under MPI (OpenMPI)
-    if "OMPI_COMM_WORLD_SIZE" in os.environ:
+    elif "OMPI_COMM_WORLD_SIZE" in os.environ:
         world_size = int(os.environ["OMPI_COMM_WORLD_SIZE"])
         rank = int(os.environ["OMPI_COMM_WORLD_RANK"])
         local_rank = int(os.environ["OMPI_COMM_WORLD_LOCAL_RANK"])
@@ -81,28 +91,50 @@ def init_distributed(backend: Literal["nccl", "gloo"] | None = None) -> Distribu
     os.environ["WORLD_SIZE"] = str(world_size)
     os.environ["RANK"] = str(rank)
 
-    # Initialize PyTorch distributed
-    if not dist.is_initialized():
-        if backend == "nccl":
-            assert torch.cuda.is_available(), "CUDA is required for NCCL ddp backend"
-            local_device = torch.device(f"cuda:{local_rank}")
-        else:
-            local_device = None
-
-        dist.init_process_group(
-            backend=backend,
-            init_method="env://",
-            world_size=world_size,
-            rank=rank,
-            device_id=local_device,
-        )
-
-    # Set the default cuda device for this process
+    # Set the CUDA device BEFORE init_process_group to avoid NCCL GPU mapping issues
     if torch.cuda.is_available():
         torch.cuda.set_device(local_rank)
+        print(f"[RANK {rank}] torch.cuda.set_device({local_rank}) completed", flush=True)
+
+    # Initialize PyTorch distributed with FLIPPED dual backend approach:
+    # - NCCL primary backend for GPU collectives (DDP uses default process group)
+    # - Gloo secondary group for CPU barriers (explicit group parameter needed)
+    gloo_group: dist.ProcessGroup | None = None
+
+    if not dist.is_initialized():
+        # Initialize primary backend based on CUDA availability
+        if torch.cuda.is_available():
+            # NCCL as primary for GPU-based training
+            print(f"[RANK {rank}] Initializing NCCL primary backend for GPU collectives...", flush=True)
+            dist.init_process_group(
+                backend="nccl",
+                init_method="env://",
+                world_size=world_size,
+                rank=rank,
+            )
+            print(f"[RANK {rank}] NCCL backend initialized successfully", flush=True)
+
+            # Create Gloo secondary group for CPU barriers
+            print(f"[RANK {rank}] Creating Gloo secondary group for CPU barriers...", flush=True)
+            gloo_group = dist.new_group(backend="gloo")
+            print(f"[RANK {rank}] Gloo group created: {gloo_group}, type: {type(gloo_group)}", flush=True)
+        else:
+            # Gloo as primary for CPU-only training
+            print(f"[RANK {rank}] Initializing Gloo backend for CPU-only training...", flush=True)
+            dist.init_process_group(
+                backend="gloo",
+                init_method="env://",
+                world_size=world_size,
+                rank=rank,
+            )
+            print(f"[RANK {rank}] Gloo backend initialized successfully", flush=True)
 
     _state = DistributedState(
-        rank=rank, world_size=world_size, local_rank=local_rank, backend=backend
+        rank=rank,
+        world_size=world_size,
+        local_rank=local_rank,
+        backend=backend,  # "nccl" for GPU, "gloo" for CPU
+        gloo_group=gloo_group,  # Secondary group for CPU barriers (GPU training only)
     )
     return _state
 
@@ -115,7 +147,7 @@ def cleanup_distributed() -> None:
     _state = _init_default_state()
 
 
-def with_distributed_cleanup[**P, T](fn: Callable[P, T]) -> Callable[P, T]:
+def with_distributed_cleanup(fn: Callable[P, T]) -> Callable[P, T]:
     """Decorator to clean up distributed state after function execution."""
 
     @wraps(fn)
@@ -164,10 +196,38 @@ def get_device() -> str:
     return "cpu"
 
 
+def get_gloo_group() -> dist.ProcessGroup | None:
+    """Get the Gloo process group for CPU barriers.
+
+    Returns None if not in distributed GPU mode (CPU-only training uses default Gloo).
+    Use this group for sync_across_processes() to ensure barriers use Gloo, not NCCL.
+    """
+    return get_distributed_state().gloo_group
+
+
 def sync_across_processes() -> None:
-    """Synchronize all processes."""
-    if dist.is_initialized():
-        dist.barrier()
+    """Synchronize all processes using Gloo group for reliable CPU barriers.
+
+    Skips barrier when world_size=1 to avoid NCCL/Gloo deadlocks in single-GPU scenarios.
+    With a single process, synchronization is a no-op.
+    """
+    if dist.is_initialized() and get_world_size() > 1:
+        import sys
+        import time
+        rank = get_rank()
+        gloo_group = get_gloo_group()
+
+        print(f"[RANK {rank}] [{time.time():.2f}] Entering dist.barrier()...", flush=True)
+        sys.stdout.flush()
+
+        # Use Gloo group if available (GPU training), otherwise use default (CPU training)
+        if gloo_group is not None:
+            dist.barrier(group=gloo_group)
+        else:
+            dist.barrier()
+
+        print(f"[RANK {rank}] [{time.time():.2f}] Exited dist.barrier() successfully", flush=True)
+        sys.stdout.flush()
 
 
 def all_reduce(
@@ -181,21 +241,29 @@ def all_reduce(
 
     Returns:
         Reduced tensor
+
+    Note:
+        Skips all_reduce when world_size=1 to avoid NCCL deadlocks in single-GPU scenarios.
+        With a single process, all_reduce is mathematically a no-op (SUM([x]) = x).
     """
-    if is_distributed():
+    if is_distributed() and get_world_size() > 1:
         dist.all_reduce(tensor, op=op)
     return tensor
 
 
-def broadcast_obj[T](value: T) -> T:
-    """Broadcast an object from rank 0 to all ranks."""
-    assert dist.is_initialized()
+def broadcast_obj(value: T) -> T:
+    """Broadcast an object from rank 0 to all ranks.
+
+    Skips broadcast when world_size=1 to avoid NCCL deadlocks.
+    """
+    if not dist.is_initialized() or get_world_size() == 1:
+        return value
     payload: list[object] = [value if is_main_process() else None]
     dist.broadcast_object_list(payload, src=0)
     return cast(T, payload[0])
 
 
-def call_on_rank0_then_broadcast[**P, T](
+def call_on_rank0_then_broadcast(
     fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs
 ) -> T:
     """Call `fn` only on rank 0 and broadcast the result to all ranks."""
@@ -206,13 +274,30 @@ def call_on_rank0_then_broadcast[**P, T](
     return fn(*args, **kwargs)
 
 
-def ensure_cached_and_call[**P, T](fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
+def ensure_cached_and_call(fn: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
     """Call `fn` on rank 0 to cache any download side effects, barrier, then call on all ranks."""
+    import sys
+    import time
     if is_distributed():
+        rank = get_rank()
+        print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: START", flush=True)
+        sys.stdout.flush()
         if is_main_process():
+            print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: Rank 0 calling fn() to cache...", flush=True)
+            sys.stdout.flush()
             _ = fn(*args, **kwargs)
+            print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: Rank 0 finished fn(), ready for barrier", flush=True)
+            sys.stdout.flush()
+        else:
+            print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: Non-main rank waiting for barrier", flush=True)
+            sys.stdout.flush()
         sync_across_processes()
-        return fn(*args, **kwargs)
+        print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: All ranks passed barrier, calling fn()", flush=True)
+        sys.stdout.flush()
+        result = fn(*args, **kwargs)
+        print(f"[RANK {rank}] [{time.time():.2f}] ensure_cached_and_call: fn() completed", flush=True)
+        sys.stdout.flush()
+        return result
     return fn(*args, **kwargs)
 
 

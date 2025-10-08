@@ -4,11 +4,14 @@ import json
 import secrets
 import string
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import torch
-import wandb
 import yaml
+
+# Lazy import: wandb only used when use_wandb_id=True (rank 0 only)
+if TYPE_CHECKING:
+    import wandb
 
 from spd.settings import SPD_CACHE_DIR
 
@@ -39,6 +42,9 @@ def get_output_dir(use_wandb_id: bool = True) -> Path:
     """
     # Check if wandb is active and has a run
     if use_wandb_id:
+        # Lazy import - only rank 0 calls with use_wandb_id=True
+        import wandb
+
         assert wandb.run is not None, "WandB run is not active"
         # Get project name from wandb.run, fallback to "spd" if not available
         project = getattr(wandb.run, "project", "spd")

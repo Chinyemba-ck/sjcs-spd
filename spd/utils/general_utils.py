@@ -5,19 +5,24 @@ import random
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
+
+T = TypeVar("T")
 
 import einops
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import wandb
 import yaml
 from jaxtyping import Float
 from pydantic import BaseModel, PositiveFloat
 from pydantic.v1.utils import deep_update
 from torch import Tensor
+
+# Lazy import: wandb only used in functions called from is_main_process() blocks
+if TYPE_CHECKING:
+    import wandb
 
 from spd.log import logger
 from spd.utils.run_utils import save_file
@@ -50,7 +55,7 @@ def generate_sweep_id() -> str:
     return f"sweep_id-{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
 
-def load_config[T: BaseModel](
+def load_config(
     config_path_or_obj: Path | str | dict[str, Any] | T, config_model: type[T]
 ) -> T:
     """Load the config of class `config_model`, from various sources.
@@ -91,9 +96,9 @@ def load_config[T: BaseModel](
     return config_model(**config_dict)
 
 
-def replace_pydantic_model[BaseModelType: BaseModel](
-    model: BaseModelType, *updates: dict[str, Any]
-) -> BaseModelType:
+def replace_pydantic_model(
+    model: BaseModel, *updates: dict[str, Any]
+) -> BaseModel:
     """Create a new model with (potentially nested) updates in the form of dictionaries.
 
     Args:
@@ -248,13 +253,73 @@ def extract_batch_data(
 def calc_kl_divergence_lm(
     pred: Float[Tensor, "... vocab"],
     target: Float[Tensor, "... vocab"],
+    chunk_size: int = 16384,
 ) -> Float[Tensor, ""]:
-    """Calculate the KL divergence between two logits."""
+    """Calculate KL divergence with chunked vocabulary processing to save memory.
+
+    For large vocabularies (Gemma: 262K tokens), computing KL divergence over the entire
+    vocab simultaneously during layerwise reconstruction causes OOM. This implementation
+    processes vocabulary in chunks while maintaining mathematical equivalence.
+
+    Memory savings for Gemma-270M with 54 layerwise iterations:
+      Original: 54 × 768 MB = 41.5 GB
+      Chunked:  54 × 48 MB = 2.6 GB
+      Savings:  38.9 GB
+
+    Args:
+        pred: Predicted logits (..., vocab_size)
+        target: Target logits (..., vocab_size)
+        chunk_size: Vocabulary tokens per chunk (default 16384 = 48MB peak per iteration)
+
+    Returns:
+        Scalar KL divergence: mean(sum_vocab(P * (log P - log Q)))
+    """
     assert pred.shape == target.shape
-    log_q = torch.log_softmax(pred, dim=-1)  # log Q
-    p = torch.softmax(target, dim=-1)  # P
-    kl = F.kl_div(log_q, p, reduction="none")  # P · (log P − log Q)
-    return kl.sum(dim=-1).mean()  # Σ_vocab / (batch·seq)
+    vocab_size = pred.shape[-1]
+
+    # Fast path for small vocabularies
+    if vocab_size <= chunk_size:
+        log_q = torch.log_softmax(pred, dim=-1)
+        p = torch.softmax(target, dim=-1)
+        kl = F.kl_div(log_q, p, reduction="none")
+        return kl.sum(dim=-1).mean()
+
+    # Chunked processing: compute softmax denominators in chunks to avoid OOM
+    pred_max = pred.max(dim=-1, keepdim=True).values
+    target_max = target.max(dim=-1, keepdim=True).values
+
+    # Initialize accumulators for denominators
+    pred_exp_sum = torch.zeros(pred.shape[:-1] + (1,), device=pred.device, dtype=pred.dtype)
+    target_exp_sum = torch.zeros(target.shape[:-1] + (1,), device=target.device, dtype=target.dtype)
+
+    # Compute denominators chunk-by-chunk
+    for start_idx in range(0, vocab_size, chunk_size):
+        end_idx = min(start_idx + chunk_size, vocab_size)
+        pred_chunk = pred[..., start_idx:end_idx]
+        target_chunk = target[..., start_idx:end_idx]
+
+        pred_exp_sum += torch.exp(pred_chunk - pred_max).sum(dim=-1, keepdim=True)
+        target_exp_sum += torch.exp(target_chunk - target_max).sum(dim=-1, keepdim=True)
+
+    kl_sum = torch.zeros(pred.shape[:-1], device=pred.device, dtype=pred.dtype)
+
+    # Process vocabulary in chunks
+    for start_idx in range(0, vocab_size, chunk_size):
+        end_idx = min(start_idx + chunk_size, vocab_size)
+
+        # Extract chunk
+        pred_chunk = pred[..., start_idx:end_idx]
+        target_chunk = target[..., start_idx:end_idx]
+
+        # Compute probabilities for this chunk
+        log_q_chunk = (pred_chunk - pred_max) - torch.log(pred_exp_sum)
+        p_chunk = torch.exp(target_chunk - target_max) / target_exp_sum
+
+        # KL divergence for chunk: P · (log P − log Q)
+        kl_chunk = p_chunk * (torch.log(p_chunk + 1e-10) - log_q_chunk)
+        kl_sum += kl_chunk.sum(dim=-1)
+
+    return kl_sum.mean()
 
 
 def apply_nested_updates(base_dict: dict[str, Any], updates: dict[str, Any]) -> dict[str, Any]:
@@ -282,7 +347,7 @@ def apply_nested_updates(base_dict: dict[str, Any], updates: dict[str, Any]) -> 
     return result
 
 
-def runtime_cast[T](type_: type[T], obj: Any) -> T:
+def runtime_cast(type_: type[T], obj: Any) -> T:
     """typecast with a runtime check"""
     if not isinstance(obj, type_):
         raise TypeError(f"Expected {type_}, got {type(obj)}")
@@ -301,9 +366,27 @@ def _fetch_latest_checkpoint_name(filenames: list[str], prefix: str | None = Non
     if len(filenames) == 1:
         latest_checkpoint_name = filenames[0]
     else:
-        latest_checkpoint_name = sorted(
-            filenames, key=lambda x: int(x.split(".pth")[0].split("_")[-1])
-        )[-1]
+        # Separate numbered checkpoints from non-numbered ones
+        numbered_checkpoints = []
+        non_numbered_checkpoints = []
+
+        for filename in filenames:
+            # Try to extract step number from filename
+            parts = filename.split(".pth")[0].split("_")
+            if len(parts) > 1 and parts[-1].isdigit():
+                # This is a numbered checkpoint like model_40000.pth
+                numbered_checkpoints.append((filename, int(parts[-1])))
+            else:
+                # This is a non-numbered checkpoint like tms.pth
+                non_numbered_checkpoints.append(filename)
+
+        # Prefer numbered checkpoints (they have explicit iteration info)
+        if numbered_checkpoints:
+            # Sort by step number and get the latest
+            latest_checkpoint_name = sorted(numbered_checkpoints, key=lambda x: x[1])[-1][0]
+        else:
+            # If no numbered checkpoints, just return the first non-numbered one
+            latest_checkpoint_name = non_numbered_checkpoints[0]
     return latest_checkpoint_name
 
 
@@ -325,6 +408,8 @@ def save_pre_run_info(
     task_name: str | None,
 ) -> None:
     """Save run information locally and optionally to wandb."""
+    # Lazy import - only called from is_main_process() blocks
+    import wandb
 
     files_to_save = {
         "final_config.yaml": spd_config.model_dump(mode="json"),
