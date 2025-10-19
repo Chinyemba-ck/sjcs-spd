@@ -1,0 +1,176 @@
+# SPD Configuration for SmolLM2-135M-Instruct
+# 3-LAYER ATTENTION DECOMPOSITION (Layers 14-16) - TEST LOW REGULARIZATION
+#
+# This config decomposes attention modules in 3 adjacent middle layers.
+#
+# HYPOTHESIS TEST:
+#   Previous attempts with C=2000 failed:
+#   - Run 1 (lyric-lion-9): coeff=0.0003 → 51 components survived → FAILURE
+#   - Run 2 (zesty-sea-10): coeff=0.0008 → 24 components survived → WORSE FAILURE
+#
+#   Pattern discovered: HIGHER coefficient → FEWER components → WORSE performance
+#   This suggests EXCESSIVE regularization, not insufficient regularization.
+#
+#   Root cause hypothesis: Attention components are being killed too aggressively.
+#   MLP baseline (balmy-cloud-8) with coeff=0.0003 achieved 54.6 components (0.61%)
+#   and succeeded. For attention with 24,000 components, we need ~146 components
+#   (0.61%) to match that survival rate.
+#
+#   Test: Reduce coefficient to 0.0001 (3.3× weaker than original 0.0003)
+#   Expected: ~100-150 components survive, KL gap stays negative, performance improves
+#
+#   This is a FAST TEST (1500 steps, ~45 min) to validate the hypothesis direction.
+#   If successful, will run full 30K steps.
+#
+# Rationale for C=2000 (24,000 total components):
+#   - Attention mechanisms (QK^T interactions, multi-head structure) are more
+#     complex than MLP transformations
+#   - Higher capacity enables finer-grained decomposition of attention patterns
+#   - NON-NEGOTIABLE: We need high C for attention decomposition
+
+# --- WandB ---
+wandb_project: smollm2-spd
+wandb_run_name: null
+wandb_run_name_prefix: "smollm2_135m_3layer_attn_test_low_reg"
+
+# --- General ---
+seed: 0
+C: 2000  # High capacity for attention mechanisms (12 modules × 2000 = 24,000 total components)
+n_mask_samples: 1
+gate_type: "vector_mlp"  # Use vector MLP gates for richer component interactions
+gate_hidden_dims: [12]  # Standard for language models
+sigmoid_type: "hard"  # Allow true zeros for dead component detection
+
+# TARGET: Layers 14-16 ATTENTION (middle layers of 30-layer model, ~47-53% depth)
+# 12 attention modules → 24,000 total components (vs MLP's 9,000 with 9 modules)
+target_module_patterns:
+  - "model.layers.14.self_attn.q_proj"
+  - "model.layers.14.self_attn.k_proj"
+  - "model.layers.14.self_attn.v_proj"
+  - "model.layers.14.self_attn.o_proj"
+  - "model.layers.15.self_attn.q_proj"
+  - "model.layers.15.self_attn.k_proj"
+  - "model.layers.15.self_attn.v_proj"
+  - "model.layers.15.self_attn.o_proj"
+  - "model.layers.16.self_attn.q_proj"
+  - "model.layers.16.self_attn.k_proj"
+  - "model.layers.16.self_attn.v_proj"
+  - "model.layers.16.self_attn.o_proj"
+
+identity_module_patterns: null
+sampling: "continuous"
+use_delta_component: true
+
+# --- Loss Coefficients ---
+faithfulness_coeff: null
+ci_recon_coeff: null
+stochastic_recon_coeff: 0.2  # Standard for LMs with layerwise enabled
+ci_recon_layerwise_coeff: null
+stochastic_recon_layerwise_coeff: 2.0  # Layerwise loss for measuring component impact on final predictions
+importance_minimality_coeff: 0.0001  # TEST: Reduced from 0.0008 to allow more component survival
+pnorm: 2.0  # L2 norm - standard for all language models
+p_anneal_start_frac: 0.0
+p_anneal_final_p: 0.3
+p_anneal_end_frac: 1.0
+output_loss_type: kl  # KL divergence - standard for all language models
+
+# --- Training ---
+batch_size: 64  # Total effective batch (divided across GPUs: 64÷2=32 per GPU on 2×H100)
+eval_batch_size: 64  # Total effective batch (32 per GPU on 2×H100)
+steps: 1500  # FAST TEST: Short run to validate hypothesis (full run will be 30K if successful)
+lr: 0.0005
+lr_schedule: cosine
+lr_warmup_pct: 0.01
+lr_exponential_halflife: null
+gradient_accumulation_steps: 1  # No gradient accumulation (effective batch = batch_size = 64)
+
+# --- Logging & Saving ---
+train_log_freq: 100
+eval_freq: 250  # More frequent evals for fast test (every 250 instead of 500)
+slow_eval_freq: 1250  # Must be multiple of eval_freq (5×250)
+slow_eval_on_first_step: false  # Skip initial eval to avoid OOM before training starts
+n_eval_steps: 5
+save_freq: 250  # Frequent checkpoints for fast test
+ci_alive_threshold: 0.001  # Components need >0.1% activation to stay alive
+n_examples_until_dead: 307200  # Die after 1% of training without firing
+
+# Evaluation metrics with focus on component activation patterns
+# Track only layers 14-16 since those are the only decomposed layers
+eval_metrics:
+  - classname: "CIHistograms"
+    extra_init_kwargs:
+      n_batches_accum: 5
+  - classname: "ComponentActivationDensity"
+    extra_init_kwargs: {}
+  - classname: "CI_L0"
+    extra_init_kwargs:
+      groups:
+        total: ["*"]  # Total L0 across decomposed layers
+        layer_14: ["model.layers.14.*"]
+        layer_15: ["model.layers.15.*"]
+        layer_16: ["model.layers.16.*"]
+        # Track by attention component type
+        q_proj: ["*.self_attn.q_proj"]
+        k_proj: ["*.self_attn.k_proj"]
+        v_proj: ["*.self_attn.v_proj"]
+        o_proj: ["*.self_attn.o_proj"]
+  - classname: "CEandKLLosses"
+    extra_init_kwargs:
+      rounding_threshold: 0.0
+  - classname: "CIMeanPerComponent"
+  - classname: "SubsetReconstructionLoss"
+    extra_init_kwargs:
+      n_mask_samples: 1
+      include_patterns:
+        # Track cross-layer patterns within our 3-layer window
+        layer_14_only: ["model.layers.14.*"]
+        layer_15_only: ["model.layers.15.*"]
+        layer_16_only: ["model.layers.16.*"]
+        layers_14_15: ["model.layers.1[4-5].*"]
+        layers_15_16: ["model.layers.1[5-6].*"]
+        # Track by attention component type
+        q_only: ["*.self_attn.q_proj"]
+        k_only: ["*.self_attn.k_proj"]
+        v_only: ["*.self_attn.v_proj"]
+        o_only: ["*.self_attn.o_proj"]
+      exclude_patterns:
+        all_but_layer_14: ["model.layers.14.*"]
+        all_but_layer_15: ["model.layers.15.*"]
+        all_but_layer_16: ["model.layers.16.*"]
+  - classname: "FaithfulnessLoss"
+
+# --- Pretrained model info ---
+pretrained_model_class: transformers.LlamaForCausalLM
+pretrained_model_name: HuggingFaceTB/SmolLM2-135M-Instruct
+pretrained_model_path: null
+pretrained_model_output_attr: logits
+tokenizer_name: HuggingFaceTB/SmolLM2-135M-Instruct
+
+# --- Task Specific ---
+task_config:
+  task_name: lm
+  max_seq_len: 256  # Shorter sequences for analysis
+  buffer_size: 1000
+  # Use wikitext-2 for SPD decomposition
+  dataset_name: "wikitext"
+  dataset_config: "wikitext-2-v1"
+  column_name: "text"
+  train_data_split: "train"
+  eval_data_split: "test"
+  shuffle_each_epoch: true
+  is_tokenized: false
+  streaming: false
+
+# Model details from HuggingFace:
+# - 135M parameters (50% of Gemma's 268M)
+# - 30 hidden layers (decomposing only layers 14-16)
+# - Hidden size: 576
+# - Intermediate size: 1536
+# - 9 attention heads, 3 KV heads (GQA)
+# - Vocab size: 49,152 (5.3× smaller than Gemma's 262k)
+# - Context length: 8192 tokens
+# - Architecture: Llama-based with SiLU activation
+
+# FAST TEST COST:
+# 1500 steps, 2× H100 → ~45 minutes → $4.50
+# Early stopping criteria at steps 500, 1000, 1500
