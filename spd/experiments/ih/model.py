@@ -1,7 +1,7 @@
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import override
+from typing_extensions import override
 
 import torch
 import wandb
@@ -23,7 +23,7 @@ from spd.utils.wandb_utils import (
 
 
 @dataclass
-class InductionModelTargetRunInfo(RunInfo[InductionHeadsTrainConfig]):
+class InductionModelTargetRunInfo(RunInfo):
     """Run info from training an InductionModel."""
 
     @override
@@ -290,7 +290,7 @@ class InductionTransformer(LoadableModule):
 
     @classmethod
     @override
-    def from_run_info(cls, run_info: RunInfo[InductionHeadsTrainConfig]) -> "InductionTransformer":
+    def from_run_info(cls, run_info: RunInfo) -> "InductionTransformer":
         """Load a pretrained model from a run info object."""
         induction_model = cls(cfg=run_info.config.ih_model_config)
         induction_model.load_state_dict(

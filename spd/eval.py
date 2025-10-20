@@ -8,7 +8,8 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Iterator, Mapping
 from fnmatch import fnmatch
-from typing import Any, ClassVar, override
+from typing import Any, ClassVar
+from typing_extensions import override
 
 import einops
 import torch

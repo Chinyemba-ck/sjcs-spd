@@ -1,0 +1,563 @@
+"""Run SPD on a model."""
+
+import gc
+import json
+from collections import defaultdict
+from collections.abc import Mapping
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Union, cast
+
+import torch
+import torch.nn as nn
+import torch.nn.parallel
+import torch.optim as optim
+from jaxtyping import Float, Int
+from PIL import Image
+from torch import Tensor
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+
+# Lazy import: wandb is only used in is_main_process() blocks
+# Import at runtime inside functions to avoid multi-process file locking deadlock
+if TYPE_CHECKING:
+    import wandb
+
+from spd.configs import Config
+from spd.data import loop_dataloader
+from spd.eval import evaluate
+from spd.identity_insertion import insert_identity_operations_
+from spd.log import logger
+from spd.losses import calculate_losses
+from spd.models.component_model import ComponentModel
+from spd.utils.alive_components_tracker import AliveComponentsTracker
+from spd.utils.component_utils import calc_ci_l_zero
+from spd.utils.distributed_utils import (
+    avg_eval_metrics_across_ranks,
+    avg_metrics_across_ranks,
+    get_world_size,
+    is_distributed,
+    is_main_process,
+    sync_across_processes,
+)
+from spd.utils.general_utils import (
+    extract_batch_data,
+    get_linear_annealed_p,
+    get_lr_schedule_fn,
+    get_lr_with_warmup,
+)
+from spd.utils.module_utils import replace_std_values_in_layernorm
+# Checkpoint saving uses torch.save() directly
+
+
+def local_log(
+    data: Mapping[str, Union[float, Image.Image, "wandb.plot.CustomChart"]],
+    step: int,
+    out_dir: Path,
+) -> None:
+    # Lazy import - only called from is_main_process() blocks
+    import wandb
+
+    metrics_file = out_dir / "metrics.jsonl"
+    metrics_file.touch(exist_ok=True)
+
+    fig_dir = out_dir / "figures"
+    fig_dir.mkdir(exist_ok=True)
+
+    metrics_without_images = {}
+    for k, v in data.items():
+        if isinstance(v, Image.Image):
+            filename = f"{k.replace('/', '_')}_{step}.png"
+            v.save(fig_dir / filename)
+            tqdm.write(f"Saved figure {k} to {fig_dir / filename}")
+        elif isinstance(v, wandb.plot.CustomChart):
+            json_path = fig_dir / f"{k.replace('/', '_')}_{step}.json"
+            payload = {"columns": list(v.table.columns), "data": list(v.table.data), "step": step}
+            with open(json_path, "w") as f:
+                json.dump(payload, f, default=str)
+            tqdm.write(f"Saved custom chart data {k} to {json_path}")
+        else:
+            metrics_without_images[k] = v
+
+    with open(metrics_file, "a") as f:
+        f.write(json.dumps({"step": step, **metrics_without_images}) + "\n")
+
+
+def load_checkpoint(checkpoint_path: str | Path) -> dict[str, Any]:
+    """Load a checkpoint file and return its contents with validation.
+
+    Args:
+        checkpoint_path: Path to checkpoint file (local or wandb path)
+
+    Returns:
+        Dictionary containing checkpoint data
+
+    Raises:
+        ValueError: If checkpoint is corrupted or incompatible
+    """
+    logger.info(f"Loading checkpoint from: {checkpoint_path}")
+
+    # Load checkpoint
+    checkpoint_path_obj = Path(checkpoint_path) if isinstance(checkpoint_path, str) else checkpoint_path
+
+    if not checkpoint_path_obj.exists():
+        raise FileNotFoundError(f"Checkpoint file not found: {checkpoint_path}")
+
+    # Load checkpoint using torch.load (handles complex Python objects)
+    checkpoint = torch.load(checkpoint_path_obj, map_location="cpu", weights_only=False)
+
+    logger.info(f"Checkpoint loaded with {len(checkpoint)} keys")
+
+    # Validate checkpoint structure
+    if isinstance(checkpoint, dict):
+        has_model = "model_state_dict" in checkpoint
+        has_optimizer = "optimizer_state_dict" in checkpoint
+        has_step = "step" in checkpoint
+
+        logger.info(f"Checkpoint contents: model={has_model}, optimizer={has_optimizer}, step={has_step}")
+
+        # Old format: just state dict keys directly
+        if not has_model and not has_optimizer:
+            logger.warning(
+                "Checkpoint appears to be old format (model weights only, no optimizer state). "
+                "Will load model weights but optimizer will be initialized fresh."
+            )
+            return {"model_state_dict": checkpoint, "optimizer_state_dict": None, "step": 0, "rng_states": None}
+
+        # New format: has nested structure
+        if not has_model:
+            raise ValueError("Checkpoint missing 'model_state_dict' key")
+
+        return checkpoint
+    else:
+        raise ValueError(f"Checkpoint has unexpected type: {type(checkpoint)}")
+
+
+def optimize(
+    target_model: nn.Module,
+    config: Config,
+    device: str,
+    train_loader: DataLoader[Int[Tensor, "..."]]
+    | DataLoader[tuple[Float[Tensor, "..."], Float[Tensor, "..."]]]
+    | DataLoader[Any],  # Accepts HuggingFace Dataset/IterableDataset for LM tasks
+    eval_loader: DataLoader[Int[Tensor, "..."]]
+    | DataLoader[tuple[Float[Tensor, "..."], Float[Tensor, "..."]]]
+    | DataLoader[Any],  # Accepts HuggingFace Dataset/IterableDataset for LM tasks
+    n_eval_steps: int,
+    out_dir: Path | None,
+    tied_weights: list[tuple[str, str]] | None = None,
+    ln_stds: dict[str, float] | None = None,
+) -> None:
+    """Run the optimization loop for LM decomposition."""
+
+    train_iterator = loop_dataloader(train_loader)
+    eval_iterator = loop_dataloader(eval_loader)
+
+    if is_main_process():
+        logger.info(f"Train+eval logs saved to directory: {out_dir}")
+
+    if config.identity_module_patterns is not None:
+        insert_identity_operations_(target_model, identity_patterns=config.identity_module_patterns)
+
+    target_model.requires_grad_(False)
+
+    # Enable CUDA optimizations for faster training
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+
+    model = ComponentModel(
+        target_model=target_model,
+        target_module_patterns=config.all_module_patterns,
+        C=config.C,
+        gate_type=config.gate_type,
+        gate_hidden_dims=config.gate_hidden_dims,
+        pretrained_model_output_attr=config.pretrained_model_output_attr,
+    )
+
+    if ln_stds is not None:
+        # model has ablated layernorms, patch in the fixed std values
+        replace_std_values_in_layernorm(model, ln_stds)
+    model.to(device)
+
+    # Wrap model with DDP if distributed
+    world_size = get_world_size()
+    wrapped_model: ComponentModel | torch.nn.parallel.DistributedDataParallel = model
+    ddp_wrapped_model: torch.nn.parallel.DistributedDataParallel | None = None
+    if world_size > 1:
+        import torch.distributed as dist
+
+        from spd.utils.distributed_utils import get_rank
+
+        rank = get_rank()
+
+        if device.startswith("cuda"):
+            # Parse device string to get device id for GPU
+            device_id = int(device.split(":")[1]) if ":" in device else 0
+
+            # TEST: Verify NCCL communication works BEFORE DDP wrapping
+            print(f"[RANK {rank}] [NCCL TEST] Testing NCCL communication before DDP...", flush=True)
+            test_tensor = torch.tensor([rank + 1], dtype=torch.float32, device=device)
+            print(f"[RANK {rank}] [NCCL TEST] Local tensor value: {test_tensor.item()}", flush=True)
+
+            print(f"[RANK {rank}] [NCCL TEST] Calling dist.all_reduce()...", flush=True)
+            dist.all_reduce(test_tensor, op=dist.ReduceOp.SUM)
+            print(f"[RANK {rank}] [NCCL TEST] After all_reduce: {test_tensor.item()}", flush=True)
+
+            expected_sum = sum(range(1, world_size + 1))  # 1+2+3 = 6 for 3 ranks
+            if abs(test_tensor.item() - expected_sum) < 0.001:
+                print(
+                    f"[RANK {rank}] [NCCL TEST] ✓ NCCL communication WORKS! Got {test_tensor.item()}, expected {expected_sum}",
+                    flush=True,
+                )
+            else:
+                print(
+                    f"[RANK {rank}] [NCCL TEST] ✗ NCCL communication FAILED! Got {test_tensor.item()}, expected {expected_sum}",
+                    flush=True,
+                )
+
+            print(
+                f"[RANK {rank}] [DDP] Wrapping model with DDP on device {device_id}...", flush=True
+            )
+            # DDP will use the default NCCL process group for GPU gradient synchronization
+            ddp_wrapped_model = torch.nn.parallel.DistributedDataParallel(
+                model,
+                device_ids=[device_id],
+                output_device=device_id,
+            )
+            wrapped_model = ddp_wrapped_model
+            print(f"[RANK {rank}] [DDP] Model wrapped successfully", flush=True)
+        else:
+            # For CPU, don't pass device_ids or output_device
+            ddp_wrapped_model = torch.nn.parallel.DistributedDataParallel(model)
+            wrapped_model = ddp_wrapped_model
+        # Access the underlying module for component operations
+        component_model = wrapped_model.module  # type: ignore[attr-defined]
+    else:
+        component_model = model
+
+    if tied_weights is not None:
+        # Tie component weights. Assume that the first element is a transpose of the second element
+        # NOTE: Tying weights will make your training nondeterministic
+        for src_name, tgt_name in tied_weights:
+            tgt = component_model.components[tgt_name]
+            src = component_model.components[src_name]
+            assert tgt is not None and src is not None, (
+                f"Cannot tie weights between {src_name} and {tgt_name} - one or both are None"
+            )
+            tgt.U.data = src.V.data.T
+            tgt.V.data = src.U.data.T
+
+    component_params: list[torch.nn.Parameter] = []
+    gate_params: list[torch.nn.Parameter] = []
+    for name, component in component_model.components.items():
+        component_params.extend(list(component.parameters()))
+        gate_params.extend(list(component_model.gates[name].parameters()))
+
+    assert len(component_params) > 0, "No parameters found in components to optimize"
+
+    optimizer = optim.AdamW(
+        component_params + gate_params, lr=config.lr, weight_decay=0, foreach=True
+    )
+
+    lr_schedule_fn = get_lr_schedule_fn(config.lr_schedule, config.lr_exponential_halflife)
+    logger.info(f"Base LR scheduler created: {config.lr_schedule}")
+
+    # Load checkpoint if resuming
+    starting_step = 0
+    if config.resume_from_checkpoint is not None:
+        logger.info(f"Resuming from checkpoint: {config.resume_from_checkpoint}")
+        checkpoint_data = load_checkpoint(config.resume_from_checkpoint)
+
+        # Load model state
+        component_model.load_state_dict(checkpoint_data["model_state_dict"])
+        logger.info("✓ Model state loaded from checkpoint")
+
+        # Load optimizer state (if available)
+        if checkpoint_data["optimizer_state_dict"] is not None:
+            optimizer.load_state_dict(checkpoint_data["optimizer_state_dict"])
+            logger.info("✓ Optimizer state loaded from checkpoint")
+
+            # Verify optimizer state is non-empty
+            state_count = sum(len(state) for state in optimizer.state.values())
+            logger.info(f"  Optimizer has state for {state_count} tensors")
+        else:
+            logger.warning(
+                "⚠ Checkpoint has no optimizer state - optimizer will start fresh. "
+                "This means training dynamics will differ from continuous training."
+            )
+
+        # Get starting step
+        starting_step = checkpoint_data.get("step", 0)
+        logger.info(f"✓ Resuming from step {starting_step}")
+
+        # Restore RNG states for reproducibility
+        if checkpoint_data.get("rng_states") is not None:
+            import random
+            import numpy as np
+
+            rng_states = checkpoint_data["rng_states"]
+            random.setstate(rng_states["python"])
+            np.random.set_state(rng_states["numpy"])
+            torch.set_rng_state(rng_states["torch"])
+            if rng_states["torch_cuda"] is not None and torch.cuda.is_available():
+                torch.cuda.set_rng_state_all(rng_states["torch_cuda"])
+            logger.info("✓ RNG states restored for reproducibility")
+
+    # Track which components are alive based on firing frequency
+    alive_tracker = AliveComponentsTracker(
+        module_names=list(component_model.components.keys()),
+        C=config.C,
+        n_examples_until_dead=config.n_examples_until_dead,
+        device=device,
+        ci_alive_threshold=config.ci_alive_threshold,
+    )
+
+    for step in tqdm(range(starting_step, config.steps + 1), ncols=0, initial=starting_step, total=config.steps + 1):
+        optimizer.zero_grad()
+
+        step_lr = get_lr_with_warmup(
+            step=step,
+            steps=config.steps,
+            lr=config.lr,
+            lr_schedule_fn=lr_schedule_fn,
+            lr_warmup_pct=config.lr_warmup_pct,
+        )
+
+        for group in optimizer.param_groups:
+            group["lr"] = step_lr
+
+        microbatch_log_data: defaultdict[str, float] = defaultdict(float)
+        current_p = config.pnorm  # Initialize with default value
+
+        # Ensure gradient accumulation loop executes at least once
+        assert (
+            config.gradient_accumulation_steps >= 1
+        ), "gradient_accumulation_steps must be >= 1"
+
+        # Initialize variables that will be set in the loop and deleted after
+        # These are guaranteed to be set because we assert gradient_accumulation_steps >= 1
+        weight_deltas: dict[str, Float[Tensor, " d_out d_in"]] = {}
+        batch: Int[Tensor, "..."] = torch.empty(0)
+        target_out: Tensor = torch.empty(0)
+        pre_weight_acts: dict[str, Tensor] = {}
+        causal_importances: dict[str, Float[Tensor, "batch C"]] = {}
+        causal_importances_upper_leaky: dict[str, Float[Tensor, "batch C"]] = {}
+        microbatch_total_loss: Float[Tensor, ""] = torch.tensor(0.0)
+        microbatch_loss_terms: dict[str, float] = {}
+
+        for i_microbatch in range(config.gradient_accumulation_steps):
+            weight_deltas = component_model.calc_weight_deltas()
+            batch = extract_batch_data(next(train_iterator)).to(device)
+
+            target_out, pre_weight_acts = wrapped_model(
+                batch,
+                mode="input_cache",
+                module_names=list(component_model.components.keys()),
+            )
+            # NOTE: pre_weight_acts are now part of the DDP computation graph, so when they pass
+            # through the parameters in calc_causal_importances below, the DDP hook will get called
+            # and gradients will be properly synced across ranks on the next backward pass.
+            causal_importances, causal_importances_upper_leaky = (
+                component_model.calc_causal_importances(
+                    pre_weight_acts=pre_weight_acts,
+                    sigmoid_type=config.sigmoid_type,
+                    detach_inputs=False,
+                    sampling=config.sampling,
+                )
+            )
+
+            alive_tracker.watch_batch(causal_importances)
+
+            # Calculate current p value with annealing
+            current_p = get_linear_annealed_p(
+                step=step,
+                steps=config.steps,
+                initial_p=config.pnorm,
+                p_anneal_start_frac=config.p_anneal_start_frac,
+                p_anneal_final_p=config.p_anneal_final_p,
+                p_anneal_end_frac=config.p_anneal_end_frac,
+            )
+
+            # Memory logging: before calculate_losses
+            mem_before_losses = torch.cuda.memory_allocated(device) / (1024**3)
+            print(
+                f"[MEMORY] Step {step}, microbatch {i_microbatch}: Before calculate_losses: {mem_before_losses:.3f} GB allocated"
+            )
+
+            microbatch_total_loss, microbatch_loss_terms = calculate_losses(
+                model=component_model,
+                batch=batch,
+                config=config,
+                causal_importances=causal_importances,
+                causal_importances_upper_leaky=causal_importances_upper_leaky,
+                target_out=target_out,
+                weight_deltas=weight_deltas,
+                device=device,
+                current_p=current_p,
+                ddp_model=ddp_wrapped_model,
+                gradient_accumulation_steps=config.gradient_accumulation_steps,
+            )
+
+            # Memory logging: after calculate_losses
+            mem_after_losses = torch.cuda.memory_allocated(device) / (1024**3)
+            print(
+                f"[MEMORY] Step {step}, microbatch {i_microbatch}: After calculate_losses: {mem_after_losses:.3f} GB (+{mem_after_losses - mem_before_losses:.3f} GB)"
+            )
+
+            # Only backward if total_loss has gradients (e.g., faithfulness_loss enabled)
+            if microbatch_total_loss.requires_grad:
+                microbatch_total_loss.div_(config.gradient_accumulation_steps).backward()
+
+                # Memory logging: after backward
+                mem_after_backward = torch.cuda.memory_allocated(device) / (1024**3)
+                print(
+                    f"[MEMORY] Step {step}, microbatch {i_microbatch}: After backward: {mem_after_backward:.3f} GB (+{mem_after_backward - mem_after_losses:.3f} GB)"
+                )
+
+            for loss_name, loss_value in microbatch_loss_terms.items():
+                microbatch_log_data[f"train/loss/{loss_name}"] += (
+                    loss_value / config.gradient_accumulation_steps
+                )
+
+            for layer_name, layer_ci in causal_importances.items():
+                l0_val = calc_ci_l_zero(layer_ci, config.ci_alive_threshold)
+                microbatch_log_data[f"train/{layer_name}/l0"] += (
+                    l0_val / config.gradient_accumulation_steps
+                )
+
+        # Free tensors from last gradient accumulation iteration before optimizer.step()
+        # These variables are created in the loop above but no longer used after it completes
+        # Frees ~1.7 GB: target_out (768 MB) + pre_weight_acts (200 MB) +
+        #                causal_importances (332 MB) + causal_importances_upper_leaky (332 MB) +
+        #                batch (10 MB) + weight_deltas (50 MB)
+        # This prevents OOM at optimizer.step() which needs 30 MB when only 10.31 MB was free
+        mem_before_cleanup = torch.cuda.memory_allocated(device) / (1024**3)
+        del (
+            target_out,
+            pre_weight_acts,
+            batch,
+            weight_deltas,
+            causal_importances,
+            causal_importances_upper_leaky,
+            microbatch_total_loss,
+            microbatch_loss_terms,
+        )
+        torch.cuda.empty_cache()
+        mem_after_cleanup = torch.cuda.memory_allocated(device) / (1024**3)
+        print(
+            f"[MEMORY] Step {step}: After cleanup: {mem_after_cleanup:.3f} GB (freed {mem_before_cleanup - mem_after_cleanup:.3f} GB)"
+        )
+
+        # --- Train Logging --- #
+        if step % config.train_log_freq == 0:
+            if is_distributed():
+                avg_metrics = avg_metrics_across_ranks(microbatch_log_data, device=device)
+                microbatch_log_data = cast(defaultdict[str, float], avg_metrics)
+
+            # Already reduced alive counts across ranks, so no need to reduce again
+            for layer_name, n_alive_count in alive_tracker.n_alive().items():
+                n_alive_key = f"train/{layer_name}/n_alive_{alive_tracker.ci_alive_threshold}"
+                microbatch_log_data[n_alive_key] = n_alive_count
+
+            grad_norm: Float[Tensor, ""] = torch.zeros((), device=device)
+            for param in component_params + gate_params:
+                if param.grad is not None:
+                    grad_norm += param.grad.data.flatten().pow(2).sum()
+            microbatch_log_data["train/misc/grad_norm"] = grad_norm.sqrt().item()
+            microbatch_log_data["train/misc/lr"] = step_lr
+            microbatch_log_data["train/misc/current_p"] = current_p
+
+            if is_main_process():
+                # Lazy import - only rank 0 reaches here
+                import wandb
+
+                tqdm.write(f"--- Step {step} ---")
+                tqdm.write(f"LR: {step_lr:.6f}")
+                for name, value in microbatch_log_data.items():
+                    tqdm.write(f"{name}: {value:.15f}")
+                if out_dir is not None:
+                    local_log(microbatch_log_data, step, out_dir)
+                if config.wandb_project:
+                    wandb.log(microbatch_log_data, step=step)
+
+        # --- Evaluation --- #
+        # Skip evaluation at step 0 to prevent memory exhaustion before any training occurs
+        if step > 0 and step % config.eval_freq == 0:
+            with torch.inference_mode():
+                run_slow: bool = (
+                    config.slow_eval_on_first_step
+                    if step == 0
+                    else step % config.slow_eval_freq == 0
+                )
+
+                metrics = evaluate(
+                    model=component_model,  # No backward passes so DDP wrapped_model not needed
+                    eval_iterator=eval_iterator,
+                    device=device,
+                    config=config,
+                    run_slow=run_slow,
+                    n_steps=n_eval_steps,
+                )
+
+                if is_distributed():
+                    metrics = avg_eval_metrics_across_ranks(metrics, device=device)
+
+                if is_main_process():
+                    # Lazy import - only main process needs wandb
+                    import wandb
+
+                    for k, v in metrics.items():
+                        tqdm.write(f"eval/{k}: {v}")
+                    if out_dir is not None:
+                        local_log(metrics, step, out_dir)
+                    if config.wandb_project:
+                        wandb_logs: dict[str, int | float | str | wandb.Image] = {
+                            f"eval/{k}": wandb.Image(v) if isinstance(v, Image.Image) else v
+                            for k, v in metrics.items()
+                        }
+                        wandb.log(wandb_logs, step=step)
+
+                del metrics
+                torch.cuda.empty_cache()
+                gc.collect()
+
+        # --- Saving Checkpoint --- #
+        if (
+            (
+                (config.save_freq is not None and step % config.save_freq == 0 and step > 0)
+                or step == config.steps
+            )
+            and out_dir is not None
+            and is_main_process()
+        ):
+            # Lazy import - only main process needs wandb
+            import wandb
+            import random
+            import numpy as np
+
+            # Save complete training state for proper resuming
+            checkpoint = {
+                "model_state_dict": component_model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "step": step,
+                "config": config.model_dump(),  # Save config for verification
+                "rng_states": {
+                    "python": random.getstate(),
+                    "numpy": np.random.get_state(),
+                    "torch": torch.get_rng_state(),
+                    "torch_cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+                },
+            }
+
+            torch.save(checkpoint, out_dir / f"model_{step}.pth")
+            logger.info(f"Saved complete checkpoint (model + optimizer + step) to {out_dir / f'model_{step}.pth'}")
+            if config.wandb_project:
+                wandb.save(str(out_dir / f"model_{step}.pth"), base_path=str(out_dir), policy="now")
+
+        # Skip gradient step if we are at the last step (last step just for plotting and logging)
+        if step != config.steps:
+            sync_across_processes()
+            optimizer.step()
+
+    if is_main_process():
+        logger.info("Finished training loop.")

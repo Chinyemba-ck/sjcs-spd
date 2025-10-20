@@ -13,14 +13,29 @@ SPD (Stochastic Parameter Decomposition) is a research framework for analyzing n
 
 **Available experiments** (defined in `spd/registry.py`):
 
+TMS (Toy Model of Superposition):
 - `tms_5-2` - TMS with 5 features, 2 hidden dimensions
 - `tms_5-2-id` - TMS with 5 features, 2 hidden dimensions (fixed identity in-between)
-- `tms_40-10` - TMS with 40 features, 10 hidden dimensions  
+- `tms_40-10` - TMS with 40 features, 10 hidden dimensions
 - `tms_40-10-id` - TMS with 40 features, 10 hidden dimensions (fixed identity in-between)
+
+ResidualMLP:
 - `resid_mlp1` - ResidualMLP with 1 layer
 - `resid_mlp2` - ResidualMLP with 2 layers
 - `resid_mlp3` - ResidualMLP with 3 layers
-- `ss_emb` - Language model experiments (loaded from HuggingFace)
+
+Language Models (loaded from HuggingFace):
+- `ss_llama` - Simple Stories Llama model
+- `ss_llama_single` - Simple Stories Llama model (single GPU configuration)
+- `ss_gpt2` - Simple Stories GPT-2 model
+- `gpt2` - GPT-2 model
+- `ss_gpt2_simple` - Simplified Simple Stories GPT-2 model
+- `ss_gpt2_simple_noln` - Simplified Simple Stories GPT-2 without layer normalization
+- `smollm2_135m_3layer` - SmolLM2-135M-Instruct (3-layer decomposition, layers 14-16)
+- `smollm2_135m_5layer` - SmolLM2-135M-Instruct (5-layer decomposition, layers 13-17)
+
+**Experimental** (not in registry, may have limited support):
+- `ih` - Induction head experiment (`spd/experiments/ih/`)
 
 ## Research Papers
 
@@ -59,6 +74,7 @@ This repository implements methods from two key research papers on parameter dec
 
 - `make test` - Run tests (excluding slow tests)
 - `make test-all` - Run all tests including slow ones
+- `make coverage` - Run tests with coverage reporting (outputs to `docs/coverage/`)
 - `python -m pytest tests/test_specific.py` - Run specific test file
 - `python -m pytest tests/test_specific.py::test_function` - Run specific test
 
@@ -128,11 +144,20 @@ Alternatively, you can run individual experiments directly:
 ```bash
 uv run spd/experiments/tms/tms_decomposition.py spd/experiments/tms/tms_5-2_config.yaml
 uv run spd/experiments/resid_mlp/resid_mlp_decomposition.py spd/experiments/resid_mlp/resid_mlp1_config.yaml
-uv run spd/experiments/lm/lm_decomposition.py spd/experiments/lm/ss_emb_config.yaml
+uv run spd/experiments/lm/lm_decomposition.py spd/experiments/lm/ss_gpt2_config.yaml
 ```
 
 A run will output the important losses and the paths to which important figures are saved. Use these
 to analyse the result of the runs.
+
+**Training Target Models:**
+
+Some experiments support training target models from scratch:
+- TMS: `uv run spd/experiments/tms/train_tms.py <config.yaml>`
+- ResidualMLP: `uv run spd/experiments/resid_mlp/train_resid_mlp.py <config.yaml>`
+
+Language model experiments load pretrained models from HuggingFace and don't require training.
+Induction head experiment: `uv run spd/experiments/ih/train_ih.py <config.yaml>` (experimental)
 
 **Metrics and Figures:**
 
@@ -155,7 +180,7 @@ spd-run --sweep --n-agents 10                                 # Sweep all experi
 spd-run --experiments tms_5-2 --sweep custom.yaml --n-agents 2 # Use custom sweep params file
 ```
 
-**Supported experiments:** `tms_5-2`, `tms_5-2-id`, `tms_40-10`, `tms_40-10-id`, `resid_mlp1`, `resid_mlp2`, `resid_mlp3`, `ss_emb`
+**Supported experiments:** All experiments listed above in "Available experiments"
 
 **How it works:**
 
@@ -167,6 +192,7 @@ spd-run --experiments tms_5-2 --sweep custom.yaml --n-agents 2 # Use custom swee
 **Sweep parameters:**
 
 - Default sweep parameters are loaded from `spd/scripts/sweep_params.yaml`
+- See `spd/scripts/sweep_params.yaml.example` for parameter structure reference
 - You can specify a custom sweep parameters file by passing its path to `--sweep`
 - Sweep parameters support both experiment-specific and global configurations:
   ```yaml
@@ -213,11 +239,49 @@ spd-run --no-create_report                   # Skip W&B report creation
 - This includes not setting off multiple sweeps/evals that total >8 GPUs
 - Monitor jobs with: `squeue --format="%.18i %.9P %.15j %.12u %.12T %.10M %.9l %.6D %b %R" --me`
 
-## github
-- To view github issues and PRs, use the github cli (e.g. `gh issue view 28` or `gh pr view 30`).
-- When making PRs, use the github template defined in `.github/pull_request_template.md`.
-- Only commit the files that include the relevant changes, don't commit all files.
-- Use branch names `refactor/X` or `feature/Y` or `fix/Z`.
+**Model Comparison:**
+
+Compare geometric similarities between two SPD models:
+
+```bash
+python spd/scripts/compare_models/compare_models.py spd/scripts/compare_models/compare_models_config.yaml
+
+# Or with command line arguments:
+python spd/scripts/compare_models/compare_models.py --current_model_path="wandb:..." --reference_model_path="wandb:..."
+```
+
+See `spd/scripts/compare_models/README.md` for detailed usage. Results are saved to `spd/scripts/compare_models/out/`.
+
+**Clustering Analysis:**
+
+CLI tool for clustering analysis on SPD runs:
+
+```bash
+spd-cluster <arguments>  # Run clustering analysis on SPD outputs
+```
+
+**Clustering Comparison Interface:**
+
+Interactive Streamlit app for comparing clustering methods on SPD runs:
+
+```bash
+streamlit run spd/comparison/clustering_comparison.py --server.port 8510
+```
+
+Features:
+- Load SPD runs from WandB or local paths
+- Compare different clustering algorithms (K-means, Agglomerative, etc.)
+- Dead component filtering and analysis
+- MDL (Minimum Description Length) clustering evaluation
+- Side-by-side metrics comparison and visualization
+
+## GitHub and Contributing
+- To view GitHub issues and PRs, use the GitHub CLI (e.g. `gh issue view 28` or `gh pr view 30`)
+- Follow the contribution guidelines in `CONTRIBUTING.md`
+- When making PRs, use the GitHub template defined in `.github/pull_request_template.md`
+- Only commit the files that include the relevant changes, don't commit all files
+- Use branch names `refactor/X` or `feature/Y` or `fix/Z`
+- Before requesting review: run `make check`, review your diff, merge latest changes from `dev` branch
 
 ## Coding Guidelines
 see @STYLE.md

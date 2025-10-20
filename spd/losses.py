@@ -2,7 +2,8 @@ from typing import Literal
 
 import torch
 from jaxtyping import Float, Int
-from torch import Tensor
+from torch import Tensor, nn
+from torch.nn.parallel import DistributedDataParallel
 
 from spd.configs import Config
 from spd.models.component_model import ComponentModel
@@ -45,10 +46,16 @@ def calc_masked_recon_layerwise_loss(
     target_out: Float[Tensor, "... d_model_out"],
     loss_type: Literal["mse", "kl"],
     device: str,
-) -> Float[Tensor, ""]:
+    loss_coeff: float,
+    ddp_model: DistributedDataParallel | None = None,
+    retain_graph: bool = False,
+) -> float:
     """Calculate the recon loss when augmenting the model one (masked) component layer at a time.
 
     This function takes the mean loss over all masks in mask_infos_list.
+
+    NOTE: This function calls .backward() internally on each loss to reduce memory usage by
+    immediately freeing computation graphs. Gradients accumulate across all backward calls.
 
     Args:
         model: The component model
@@ -58,23 +65,74 @@ def calc_masked_recon_layerwise_loss(
         target_out: Target model output
         loss_type: Type of loss to calculate
         device: Device to run computations on
+        loss_coeff: Loss coefficient to scale gradients (e.g., stochastic_recon_layerwise_coeff)
+        ddp_model: DDP wrapper model for no_sync() context manager (None if not distributed)
+        retain_graph: If True, retain computation graph after each backward pass. Set to True
+            when other losses will use the same computation graph after this function returns.
+            Default False.
 
     Returns:
-        The recon loss
+        The average loss value as a Python float (for logging purposes)
     """
     assert loss_type in ["mse", "kl"], f"Invalid loss type: {loss_type}"
-    total_loss = torch.tensor(0.0, device=device)
-    for mask_infos in mask_infos_list:
-        for module_name, mask_info in mask_infos.items():
+
+    # Verify no_sync() method exists if DDP model provided
+    if ddp_model is not None:
+        assert hasattr(ddp_model, 'no_sync'), (
+            f"ddp_model of type {type(ddp_model).__name__} does not have no_sync() method. "
+            "Expected torch.nn.parallel.DistributedDataParallel. "
+            "This requires PyTorch >= 1.8.0."
+        )
+
+    # Calculate scaling factor for mathematical equivalence
+    # Original: (coeff * sum(losses) / N).backward()
+    # Equivalent: (coeff / N * loss_i).backward() for each loss_i
+    n_modified_components = len(mask_infos_list[0]) if mask_infos_list else 0
+    n_stochastic_sources = len(mask_infos_list)
+    total_iterations = n_modified_components * n_stochastic_sources
+
+    if total_iterations == 0:
+        return 0.0
+
+    scale_factor = loss_coeff / total_iterations
+
+    total_loss_value = 0.0
+
+    for i, mask_infos in enumerate(mask_infos_list):
+        for j, (module_name, mask_info) in enumerate(mask_infos.items()):
+            # Forward pass (creates computation graph)
             modified_out = model(batch, mode="components", mask_infos={module_name: mask_info})
+
+            # Calculate loss
             if loss_type == "mse":
                 loss = ((modified_out - target_out) ** 2).mean()
             else:
                 loss = calc_kl_divergence_lm(pred=modified_out, target=target_out)
-            total_loss += loss
-    n_modified_components = len(mask_infos_list[0])
-    n_stochastic_sources = len(mask_infos_list)
-    return total_loss / (n_modified_components * n_stochastic_sources)
+
+            # Scale loss to maintain mathematical equivalence
+            scaled_loss = scale_factor * loss
+
+            # Determine if we need to retain the graph
+            # Retain if: (1) not the last iteration in loop, OR (2) caller requests retain
+            is_last_mask_infos = (i == len(mask_infos_list) - 1)
+            is_last_module = (j == len(mask_infos) - 1)
+            is_last_iteration = is_last_mask_infos and is_last_module
+            should_retain = retain_graph or (not is_last_iteration)
+
+            # Backward pass with optional no_sync to prevent DDP gradient synchronization
+            # We use no_sync here to avoid premature synchronization.
+            # The final backward call (importance_minimality) will trigger gradient sync.
+            if ddp_model is not None:
+                with ddp_model.no_sync():
+                    scaled_loss.backward(retain_graph=should_retain)
+            else:
+                scaled_loss.backward(retain_graph=should_retain)
+
+            # Accumulate loss value for logging (detach from graph)
+            total_loss_value += loss.item()
+
+    # Return average loss value
+    return total_loss_value / total_iterations
 
 
 def calc_masked_recon_loss(
@@ -145,6 +203,8 @@ def calculate_losses(
     weight_deltas: dict[str, Float[Tensor, " d_out d_in"]],
     device: str,
     current_p: float | None = None,
+    ddp_model: DistributedDataParallel | None = None,
+    gradient_accumulation_steps: int = 1,
 ) -> tuple[Float[Tensor, ""], dict[str, float]]:
     """Calculate all losses and return total loss and individual loss terms.
 
@@ -161,6 +221,10 @@ def calculate_losses(
     Returns:
         Tuple of (total_loss, loss_terms_dict)
     """
+    # Memory logging: at start of calculate_losses
+    mem_start = torch.cuda.memory_allocated(device) / (1024**3)
+    print(f"[MEMORY-LOSSES] Start of calculate_losses: {mem_start:.3f} GB")
+
     total_loss = torch.tensor(0.0, device=device)
     loss_terms: dict[str, float] = {}
 
@@ -180,8 +244,19 @@ def calculate_losses(
             loss_type=config.output_loss_type,
             device=device,
         )
-        total_loss += config.ci_recon_coeff * ci_recon_loss
+        # Apply immediate backward to prevent graph conflicts with layerwise losses
+        scaled_loss = (config.ci_recon_coeff / gradient_accumulation_steps) * ci_recon_loss
+        if ddp_model is not None:
+            with ddp_model.no_sync():
+                scaled_loss.backward(retain_graph=True)
+        else:
+            scaled_loss.backward(retain_graph=True)
+        # NOTE: Backward already called, don't add to total_loss
         loss_terms["ci_recon"] = ci_recon_loss.item()
+
+        # Memory logging: after CI recon
+        mem_after_ci_recon = torch.cuda.memory_allocated(device) / (1024**3)
+        print(f"[MEMORY-LOSSES] After CI recon backward: {mem_after_ci_recon:.3f} GB (+{mem_after_ci_recon - mem_start:.3f} GB)")
 
     # Stochastic reconstruction loss
     if config.stochastic_recon_coeff is not None:
@@ -194,6 +269,11 @@ def calculate_losses(
             )
             for _ in range(config.n_mask_samples)
         ]
+
+        # Memory logging: after creating mask_infos
+        mem_after_mask_infos = torch.cuda.memory_allocated(device) / (1024**3)
+        print(f"[MEMORY-LOSSES] After creating stoch_mask_infos_list: {mem_after_mask_infos:.3f} GB (+{mem_after_mask_infos - mem_start:.3f} GB)")
+
         stochastic_recon_loss = calc_masked_recon_loss(
             model=model,
             batch=batch,
@@ -202,7 +282,26 @@ def calculate_losses(
             loss_type=config.output_loss_type,
             device=device,
         )
-        total_loss += config.stochastic_recon_coeff * stochastic_recon_loss
+
+        # Memory logging: after calc_masked_recon_loss
+        mem_after_stoch_loss_calc = torch.cuda.memory_allocated(device) / (1024**3)
+        print(f"[MEMORY-LOSSES] After calc stochastic_recon_loss: {mem_after_stoch_loss_calc:.3f} GB (+{mem_after_stoch_loss_calc - mem_start:.3f} GB)")
+
+        # Apply immediate backward to prevent graph conflicts with layerwise losses
+        # Both stochastic_recon and layerwise losses depend on causal_importances,
+        # so we must backward this before layerwise backwards free the shared graph
+        scaled_loss = (config.stochastic_recon_coeff / gradient_accumulation_steps) * stochastic_recon_loss
+        if ddp_model is not None:
+            with ddp_model.no_sync():
+                scaled_loss.backward(retain_graph=True)
+        else:
+            scaled_loss.backward(retain_graph=True)
+
+        # Memory logging: after stochastic recon backward (OOM location)
+        mem_after_stoch_backward = torch.cuda.memory_allocated(device) / (1024**3)
+        print(f"[MEMORY-LOSSES] After stochastic_recon backward: {mem_after_stoch_backward:.3f} GB (+{mem_after_stoch_backward - mem_start:.3f} GB)")
+
+        # NOTE: Backward already called, don't add to total_loss
         loss_terms["stochastic_recon"] = stochastic_recon_loss.item()
 
     # CI reconstruction layerwise loss
@@ -214,9 +313,12 @@ def calculate_losses(
             target_out=target_out,
             loss_type=config.output_loss_type,
             device=device,
+            loss_coeff=config.ci_recon_layerwise_coeff,
+            ddp_model=ddp_model,
+            retain_graph=True,
         )
-        total_loss += config.ci_recon_layerwise_coeff * ci_recon_layerwise_loss
-        loss_terms["ci_recon_layerwise"] = ci_recon_layerwise_loss.item()
+        # NOTE: Backward already called inside function, don't add to total_loss
+        loss_terms["ci_recon_layerwise"] = ci_recon_layerwise_loss
 
     # Stochastic reconstruction layerwise loss
     if config.stochastic_recon_layerwise_coeff is not None:
@@ -236,9 +338,12 @@ def calculate_losses(
             target_out=target_out,
             loss_type=config.output_loss_type,
             device=device,
+            loss_coeff=config.stochastic_recon_layerwise_coeff,
+            ddp_model=ddp_model,
+            retain_graph=True,
         )
-        total_loss += config.stochastic_recon_layerwise_coeff * stochastic_recon_layerwise_loss
-        loss_terms["stochastic_recon_layerwise"] = stochastic_recon_layerwise_loss.item()
+        # NOTE: Backward already called inside function, don't add to total_loss
+        loss_terms["stochastic_recon_layerwise"] = stochastic_recon_layerwise_loss
 
     # CI subset reconstruction loss
     if config.ci_masked_recon_subset_coeff is not None:
@@ -260,7 +365,14 @@ def calculate_losses(
             loss_type=config.output_loss_type,
             device=device,
         )
-        total_loss += config.ci_masked_recon_subset_coeff * ci_recon_subset_loss
+        # Apply immediate backward to prevent graph conflicts with layerwise losses
+        scaled_loss = (config.ci_masked_recon_subset_coeff / gradient_accumulation_steps) * ci_recon_subset_loss
+        if ddp_model is not None:
+            with ddp_model.no_sync():
+                scaled_loss.backward(retain_graph=True)
+        else:
+            scaled_loss.backward(retain_graph=True)
+        # NOTE: Backward already called, don't add to total_loss
         loss_terms["ci_recon_subset"] = ci_recon_subset_loss.item()
 
     # Stochastic reconstruction subset loss
@@ -282,7 +394,14 @@ def calculate_losses(
             loss_type=config.output_loss_type,
             device=device,
         )
-        total_loss += config.stochastic_recon_subset_coeff * stochastic_recon_subset_loss
+        # Apply immediate backward to prevent graph conflicts with layerwise losses
+        scaled_loss = (config.stochastic_recon_subset_coeff / gradient_accumulation_steps) * stochastic_recon_subset_loss
+        if ddp_model is not None:
+            with ddp_model.no_sync():
+                scaled_loss.backward(retain_graph=True)
+        else:
+            scaled_loss.backward(retain_graph=True)
+        # NOTE: Backward already called, don't add to total_loss
         loss_terms["stochastic_recon_subset"] = stochastic_recon_subset_loss.item()
 
     # Importance minimality loss
@@ -290,9 +409,28 @@ def calculate_losses(
     importance_minimality_loss = calc_importance_minimality_loss(
         ci_upper_leaky=causal_importances_upper_leaky, pnorm=pnorm_value
     )
-    total_loss += config.importance_minimality_coeff * importance_minimality_loss
+    # Apply immediate backward to prevent graph conflicts with layerwise losses
+    # causal_importances_upper_leaky shares computation graph with causal_importances
+    scaled_loss = (config.importance_minimality_coeff / gradient_accumulation_steps) * importance_minimality_loss
+    # IMPORTANT: This is the LAST backward call per microbatch
+    # Do NOT use no_sync() - we MUST trigger DDP gradient synchronization here
+    if ddp_model is not None:
+        scaled_loss.backward()  # No no_sync() wrapper - triggers DDP sync
+    else:
+        scaled_loss.backward()
+    # NOTE: Backward already called, don't add to total_loss
     loss_terms["importance_minimality"] = importance_minimality_loss.item()
 
+    # Memory logging: at end of calculate_losses (before return)
+    mem_end = torch.cuda.memory_allocated(device) / (1024**3)
+    print(f"[MEMORY-LOSSES] End of calculate_losses: {mem_end:.3f} GB (total added: +{mem_end - mem_start:.3f} GB)")
+
+    # total_loss only contains faithfulness (if enabled), otherwise 0.0
     loss_terms["total"] = total_loss.item()
+    # Compute actual sum of all losses for complete logging
+    loss_terms["sum_all_losses"] = sum(
+        v for k, v in loss_terms.items()
+        if k not in ["total", "sum_all_losses"] and isinstance(v, (int, float))
+    )
 
     return total_loss, loss_terms

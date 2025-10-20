@@ -4,7 +4,9 @@ import hashlib
 import json
 import warnings
 from pathlib import Path
-from typing import Any, Literal, Self, override
+from typing import Any, Literal
+
+from typing_extensions import Self, override
 
 import yaml
 from muutils.misc.numerical import shorten_numerical_to_str

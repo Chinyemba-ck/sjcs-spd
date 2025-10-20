@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import TypeVar
 
 import wandb
 import wandb_workspaces.reports.v2 as wr
@@ -12,6 +13,8 @@ from spd.log import logger
 from spd.registry import EXPERIMENT_REGISTRY
 from spd.settings import REPO_ROOT
 from spd.utils.general_utils import _fetch_latest_checkpoint_name, replace_pydantic_model
+
+T_config = TypeVar("T_config", bound=BaseModel)
 
 WORKSPACE_TEMPLATES = {
     "default": "https://wandb.ai/goodfire/spd?nw=css034maye",
@@ -78,7 +81,7 @@ def download_wandb_file(run: Run, wandb_run_dir: Path, file_name: str) -> Path:
     return path
 
 
-def init_wandb[T_config: BaseModel](
+def init_wandb(
     config: T_config, project: str, name: str | None = None, tags: list[str] | None = None
 ) -> T_config:
     """Initialize Weights & Biases and return a config updated with sweep hyperparameters.

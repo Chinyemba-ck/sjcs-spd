@@ -3,7 +3,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
-from typing import Any, Literal, override
+from typing import Any, Literal, get_args, get_origin
+from typing_extensions import override
 
 import torch
 import wandb
@@ -11,7 +12,7 @@ import yaml
 from jaxtyping import Float, Int
 from torch import Tensor, nn
 from torch.utils.hooks import RemovableHandle
-from transformers.modeling_utils import Conv1D as RadfordConv1D
+from transformers.pytorch_utils import Conv1D as RadfordConv1D
 from wandb.apis.public import Run
 
 from spd.configs import Config
@@ -40,8 +41,126 @@ from spd.utils.wandb_utils import (
 )
 
 
+def _get_default_for_field(field_name: str, field_info, config_data: dict) -> Any:
+    """Generate intelligent default value for a missing required field.
+
+    Args:
+        field_name: Name of the field that needs a default
+        field_info: Pydantic FieldInfo object containing field metadata
+        config_data: Existing config data to use for context-aware defaults
+
+    Returns:
+        A reasonable default value for the field
+
+    Raises:
+        ValueError: If cannot generate a sensible default for the field type
+    """
+    # Special cases for known fields based on their semantics
+    if field_name == 'n_examples_until_dead':
+        # Calculate based on existing config values
+        train_log_freq = config_data.get('train_log_freq', 100)
+        batch_size = config_data.get('batch_size', 32)
+        return train_log_freq * batch_size
+
+    # Get field type from annotation
+    field_type = field_info.annotation
+    type_origin = get_origin(field_type)
+    type_str = str(field_type)
+
+    # Handle common types and their constraints
+    if 'PositiveInt' in type_str or (field_type == int and 'positive' in field_name.lower()):
+        # Positive integer fields
+        if 'freq' in field_name or 'frequency' in field_name:
+            return 100
+        elif 'count' in field_name or 'num' in field_name or 'n_' in field_name:
+            return 10
+        elif 'size' in field_name:
+            return 32
+        elif 'samples' in field_name:
+            return 10
+        else:
+            return 1
+
+    elif 'NonNegativeInt' in type_str or field_type == int:
+        # Non-negative or regular integer fields
+        if 'freq' in field_name or 'frequency' in field_name:
+            return 100
+        elif 'count' in field_name or 'num' in field_name:
+            return 10
+        elif 'size' in field_name:
+            return 32
+        elif 'seed' in field_name:
+            return 0
+        else:
+            return 0
+
+    elif field_type == float or 'Float' in type_str:
+        # Float fields
+        if 'rate' in field_name or 'lr' in field_name:
+            return 0.001
+        elif 'threshold' in field_name:
+            return 0.5
+        elif 'epsilon' in field_name or 'eps' in field_name:
+            return 1e-8
+        else:
+            return 0.0
+
+    elif field_type == str:
+        # String fields
+        if 'name' in field_name:
+            return "default"
+        elif 'path' in field_name:
+            return ""
+        else:
+            return ""
+
+    elif field_type == bool:
+        # Boolean fields - default to False for safety
+        return False
+
+    elif type_origin == list:
+        # List fields - empty list
+        return []
+
+    elif type_origin == dict:
+        # Dict fields - empty dict
+        return {}
+
+    elif type_origin == tuple:
+        # Tuple fields - empty tuple
+        return ()
+
+    elif type_origin == set:
+        # Set fields - empty set
+        return set()
+
+    elif 'Literal' in type_str:
+        # For Literal types, try to extract the first allowed value
+        args = get_args(field_type)
+        if args:
+            return args[0]
+        else:
+            raise ValueError(f"Cannot determine default for Literal field '{field_name}' with no args")
+
+    elif type_origin is not None and hasattr(type_origin, '__mro__'):
+        # For custom types, check if they have defaults or can be instantiated
+        # This is a last resort and may not work for all types
+        try:
+            # Try to instantiate with no arguments
+            return type_origin()
+        except:
+            pass
+
+    # If we can't determine a sensible default, raise an error
+    # This is better than silently using a wrong default
+    raise ValueError(
+        f"Cannot generate default for field '{field_name}' of type {field_type}. "
+        f"Please provide a value in the config or update the default generation logic."
+    )
+
+
 @dataclass
-class SPDRunInfo(RunInfo[Config]):
+class SPDRunInfo(RunInfo):
     """Run info from training a ComponentModel (i.e. from an SPD run)."""
 
     @override
@@ -60,11 +179,93 @@ class SPDRunInfo(RunInfo[Config]):
                 wandb_path = path.removeprefix(WANDB_PATH_PREFIX)
                 comp_model_path, config_path = ComponentModel._download_wandb_files(wandb_path)
         else:
-            comp_model_path = Path(path)
-            config_path = Path(path).parent / "final_config.yaml"
+            path = Path(path)
+            # Find any YAML config file in the directory
+            yaml_files = list(path.glob("*.yaml"))
+            
+            if yaml_files:
+                # Directory contains config files - this is likely the files directory
+                # Prefer final_config.yaml if it exists, otherwise use any yaml file
+                config_candidates = [f for f in yaml_files if f.name == "final_config.yaml"]
+                config_path = config_candidates[0] if config_candidates else yaml_files[0]
+                
+                # Find the model checkpoint file
+                model_files = list(path.glob("*.pth")) + list(path.glob("*.pt")) + list(path.glob("*.bin"))
+                if model_files:
+                    comp_model_path = model_files[0]
+                else:
+                    comp_model_path = path
+            else:
+                # No yaml files in current dir, check parent (regular SPD output structure)
+                comp_model_path = path
+                parent_yaml = list(path.parent.glob("*.yaml"))
+                if not parent_yaml:
+                    raise ValueError(f"No config files found in {path} or its parent directory")
+                config_path = parent_yaml[0]
 
         with open(config_path) as f:
-            config = Config(**yaml.safe_load(f))
+            config_data = yaml.safe_load(f)
+            
+            # Check if this is W&B sweep format (values wrapped in {value: ...} dicts)
+            # by checking if any top-level values are dicts with 'value' key
+            is_sweep_format = any(
+                isinstance(v, dict) and 'value' in v 
+                for v in config_data.values() 
+                if v is not None
+            )
+            
+            if is_sweep_format:
+                # Unwrap W&B sweep format
+                unwrapped_data = {}
+                for key, val in config_data.items():
+                    if isinstance(val, dict) and 'value' in val:
+                        unwrapped_data[key] = val['value']
+                    else:
+                        # Keep as-is if not in sweep format (e.g., _wandb metadata)
+                        if not key.startswith('_'):  # Skip metadata keys
+                            unwrapped_data[key] = val
+                config_data = unwrapped_data
+
+            # General backward compatibility handler
+            # Dynamically detect and handle schema changes
+
+            # Get all fields defined in current Config model
+            current_fields = set(Config.model_fields.keys())
+            config_fields = set(config_data.keys())
+
+            # Detect and remove deprecated fields (fields in config that aren't in model)
+            deprecated_fields = config_fields - current_fields
+            for field in deprecated_fields:
+                logger.info(f"Removing deprecated config field: {field} (value was: {config_data[field]})")
+                del config_data[field]
+
+            # Detect missing required fields and add intelligent defaults
+            missing_fields = current_fields - config_fields
+            for field_name in missing_fields:
+                field_info = Config.model_fields[field_name]
+
+                # Check if field is required (has no default)
+                if field_info.is_required():
+                    try:
+                        # Generate an intelligent default based on field characteristics
+                        default_value = _get_default_for_field(field_name, field_info, config_data)
+                        logger.info(f"Adding missing required field '{field_name}' with default value: {default_value}")
+                        config_data[field_name] = default_value
+                    except ValueError as e:
+                        # If we can't generate a default, log the error and re-raise
+                        logger.error(f"Failed to generate default for field '{field_name}': {e}")
+                        raise
+                elif field_info.default is not None:
+                    # Use the model's default if available
+                    logger.info(f"Adding missing optional field '{field_name}' with model default: {field_info.default}")
+                    config_data[field_name] = field_info.default
+                elif hasattr(field_info, 'default_factory') and field_info.default_factory is not None:
+                    # Use default factory if available
+                    default_value = field_info.default_factory()
+                    logger.info(f"Adding missing optional field '{field_name}' with factory default: {default_value}")
+                    config_data[field_name] = default_value
+
+            config = Config(**config_data)
 
         return cls(checkpoint_path=comp_model_path, config=config)
 
@@ -422,18 +623,88 @@ class ComponentModel(LoadableModule):
         api = wandb.Api()
         run: Run = api.run(wandb_project_run_id)
 
-        checkpoint = fetch_latest_wandb_checkpoint(run, prefix="model")
+        # Get any .pth or .pt checkpoint file (no specific prefix required)
+        checkpoint = fetch_latest_wandb_checkpoint(run, prefix=None)
 
         run_dir = fetch_wandb_run_dir(run.id)
 
-        final_config_path = download_wandb_file(run, run_dir, "final_config.yaml")
+        # Try to find a config file - could be named differently in different runs
+        config_files = [f.name for f in run.files() if f.name.endswith(".yaml")]
+        if not config_files:
+            raise ValueError(f"No config files found in run {wandb_project_run_id}")
+        
+        # Prefer final_config.yaml if it exists, otherwise take any yaml file
+        config_file = "final_config.yaml" if "final_config.yaml" in config_files else config_files[0]
+        
+        config_path = download_wandb_file(run, run_dir, config_file)
         checkpoint_path = download_wandb_file(run, run_dir, checkpoint.name)
 
-        return checkpoint_path, final_config_path
+        return checkpoint_path, config_path
 
     @classmethod
-    @override
-    def from_run_info(cls, run_info: RunInfo[Config]) -> "ComponentModel":
+    def _convert_old_state_dict(cls, old_state_dict: dict[str, Any]) -> dict[str, Any]:
+        """Convert old checkpoint format to new format for backwards compatibility."""
+        new_state_dict = {}
+
+        for key, value in old_state_dict.items():
+            # Convert model weights
+            if key.startswith("model."):
+                # model.linear1.weight -> patched_model.linear1.original.weight
+                # model.linear1.bias -> patched_model.linear1.original.bias
+                new_key = key.replace("model.", "patched_model.")
+                parts = new_key.split(".")
+                # Insert "original" before weight/bias
+                if parts[-1] in ["weight", "bias"]:
+                    parts.insert(-1, "original")
+                    new_key = ".".join(parts)
+                new_state_dict[new_key] = value
+
+            # Convert component weights
+            elif key.startswith("components."):
+                # components.linear1.A -> patched_model.linear1.components.V
+                # components.linear1.B -> patched_model.linear1.components.U
+                # components.linear1.bias -> patched_model.linear1.components.bias
+                module_name = key.split(".")[1]  # e.g., "linear1" or "hidden_layers-0"
+                param_name = key.split(".")[2]   # e.g., "A", "B", or "bias"
+
+                if param_name == "A":
+                    new_key = f"patched_model.{module_name.replace('-', '.')}.components.V"
+                elif param_name == "B":
+                    new_key = f"patched_model.{module_name.replace('-', '.')}.components.U"
+                else:  # bias
+                    new_key = f"patched_model.{module_name.replace('-', '.')}.components.bias"
+                new_state_dict[new_key] = value
+
+            # Convert gate weights
+            elif key.startswith("gates."):
+                # gates.linear1.mlp_in -> _gates.linear1.layers.0.W
+                # gates.linear1.in_bias -> _gates.linear1.layers.0.b
+                # gates.linear1.mlp_out -> _gates.linear1.layers.2.W
+                # gates.linear1.out_bias -> _gates.linear1.layers.2.b
+                parts = key.split(".")
+                module_name = parts[1]  # e.g., "linear1" or "hidden_layers-0"
+                param_name = parts[2]   # e.g., "mlp_in", "in_bias", "mlp_out", "out_bias"
+
+                if param_name == "mlp_in":
+                    new_key = f"_gates.{module_name}.layers.0.W"
+                elif param_name == "in_bias":
+                    new_key = f"_gates.{module_name}.layers.0.b"
+                elif param_name == "mlp_out":
+                    new_key = f"_gates.{module_name}.layers.2.W"
+                elif param_name == "out_bias":
+                    new_key = f"_gates.{module_name}.layers.2.b"
+                else:
+                    # Unknown gate parameter, keep as is
+                    new_key = key.replace("gates.", "_gates.")
+                new_state_dict[new_key] = value
+            else:
+                # Keep any other keys as-is
+                new_state_dict[key] = value
+
+        return new_state_dict
+
+    @classmethod
+    def from_run_info(cls, run_info: RunInfo) -> "ComponentModel":
         """Load a trained ComponentModel checkpoint from a run info object."""
         config = run_info.config
 

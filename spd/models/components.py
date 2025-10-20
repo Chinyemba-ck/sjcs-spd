@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Literal, override
+from typing import Literal
+from typing_extensions import override
 
 import einops
 import torch

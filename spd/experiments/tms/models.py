@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Self, override
+from typing import Any
+
+from typing_extensions import Self
+from typing_extensions import override
 
 import torch
 import wandb
@@ -23,7 +26,7 @@ from spd.utils.wandb_utils import (
 
 
 @dataclass
-class TMSTargetRunInfo(RunInfo[TMSTrainConfig]):
+class TMSTargetRunInfo(RunInfo):
     """Run info from training a TMSModel."""
 
     @override
@@ -120,7 +123,7 @@ class TMSModel(LoadableModule):
 
     @classmethod
     @override
-    def from_run_info(cls, run_info: RunInfo[TMSTrainConfig]) -> "TMSModel":
+    def from_run_info(cls, run_info: RunInfo) -> "TMSModel":
         """Load a pretrained model from a run info object."""
         tms_model = cls(config=run_info.config.tms_model_config)
         tms_model.load_state_dict(

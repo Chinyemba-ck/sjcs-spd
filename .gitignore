@@ -1,3 +1,10 @@
+# macOS metadata
+._*
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Project-specific
 spd/scripts/sweep_params.yaml
 docs/coverage/**
 artifacts/**
@@ -8,9 +15,31 @@ neuronpedia_outputs/
 .env
 .vscode/settings.json
 
+# Training artifacts
 wandb/
 .data/
 .checkpoints/
+*.log
+*_output/
+.git-rewrite/
+tmp_checkpoint_verification/
+
+# Claude Code & development tools
+.claude/
+.playwright-mcp/
+
+# Test configs and checkpoints
+test*.yaml
+test*_config.yaml
+*checkpoint_test*.yaml
+verify_checkpoint*.py
+monitor_training.sh
+
+# Deployment scripts
+deploy_to_runpod.sh
+deploy_windows.bat
+setup_runpod*.sh
+run_*gpu*.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -172,3 +201,31 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+#misc
+PLAN.md
+notebooks
+
+# Test files
+test_*.py
+CLAUDECHATHISTORY
+context
+
+# RunPod deployment scripts (contain pod IDs and secrets)
+deploy_runpod*.py
+get_ssh_runpod.py
+check_runpod*.py
+manage_runpod.py
+runpod_remote_setup.py
+runpod_execute.ps1
+runpod_setup.sh
+setup_runpod.bat
+*.runpod.yaml
+
+# Large archive files
+*.tar.gz
+sjcs-spd*.tar.gz
+
+# RunPod executables
+runpodctl.exe
+runpodctl
